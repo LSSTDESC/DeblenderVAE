@@ -18,7 +18,7 @@ from tensorflow.keras.layers import Conv2D, Input, Dense, Dropout, MaxPool2D, Fl
 
 
 #### Create encooder
-def build_encoder(latent_dim, hidden_dim, filters, kernels, conv_activation='softplus', dense_activation='softplus', nb_of_bands = nb_of_bands):
+def build_encoder(latent_dim, hidden_dim, filters, kernels,nb_of_bands, conv_activation='softplus', dense_activation='softplus'):
     """
     Return encoder as model
     latent_dim : dimension of the latent variable
@@ -110,7 +110,7 @@ def vae_model(nb_of_bands):
     kernels = [3,3,3,3]
 
     # Build the encoder
-    encoder = build_encoder(latent_dim, hidden_dim, filters, kernels)
+    encoder = build_encoder(latent_dim, hidden_dim, filters, kernels, nb_of_bands)
     # Build the decoder
     decoder = build_decoder(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None)
 

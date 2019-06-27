@@ -91,12 +91,12 @@ validation_generator = BatchGenerator_lsst_r_band(list_of_samples,total_sample_s
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,#_noisy
-                  steps_per_epoch=1800,#1800
+                  steps_per_epoch=18,#1800
                   verbose=2,
                   shuffle = True,#int(ntrain/batch_size),
                   validation_data=validation_generator,
-                  validation_steps=200,#200
-                  callbacks=callbacks,
+                  validation_steps=2,#200
+                  #callbacks=callbacks,
                   workers = 0)
 
 # Save the weights of last epoch

@@ -8,7 +8,6 @@ import random
 import tensorflow.keras
 from random import choice
 from tensorflow.python.keras.utils import Sequence
-from math_functions import sigmoid
 
 #### Generator for LSST R band VAE
 
