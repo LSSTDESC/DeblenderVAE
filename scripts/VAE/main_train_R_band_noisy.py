@@ -70,24 +70,24 @@ K.set_value(vae.optimizer.lr, 0.0001)
 # # vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=0, figname='/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v5/test_noisy_v4')#noisy_
 # Keras Callbacks
 earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
-checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v9_64ld/mse/weights.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v9_64ld/loss/weights.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v5/weights.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v5/weights.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 tbCallBack = tf.keras.callbacks.TensorBoard(log_dir='/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/v6', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
 
 ######## Define all used callbacks
 callbacks = [checkpointer_loss, checkpointer_mse]#, tbCallBack]#, alphaChanger earlystop,vae_hist, checkpointer, vae_hist, 
  
 ######## List of data samples
-list_of_samples=['/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_1_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_2_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_3_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_4_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_5_v5_test.npy',
+list_of_samples=['/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_1_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_2_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_3_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_4_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_5_v3.npy',
                 ]
 
 ######## Define the generators
-training_generator = BatchGenerator_lsst_r_band(list_of_samples,total_sample_size=180000, batch_size= batch_size, training_or_validation = 'training', noisy = True)#180000
-validation_generator = BatchGenerator_lsst_r_band(list_of_samples,total_sample_size=20000, batch_size= batch_size, training_or_validation = 'validation', noisy = True)#20000
+training_generator = BatchGenerator_lsst_r_band(list_of_samples,total_sample_size=1800, batch_size= batch_size, training_or_validation = 'training', noisy = True)#180000
+validation_generator = BatchGenerator_lsst_r_band(list_of_samples,total_sample_size=200, batch_size= batch_size, training_or_validation = 'validation', noisy = True)#20000
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,#_noisy
@@ -96,7 +96,7 @@ hist = vae.fit_generator(generator=training_generator, epochs=epochs,#_noisy
                   shuffle = True,#int(ntrain/batch_size),
                   validation_data=validation_generator,
                   validation_steps=2,#200
-                  #callbacks=callbacks,
+                  callbacks=callbacks,
                   workers = 0)
 
 # Save the weights of last epoch

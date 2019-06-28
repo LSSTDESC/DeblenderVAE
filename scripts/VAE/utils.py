@@ -23,7 +23,6 @@ def load_vae_conv(path,nb_of_bands,folder = False):
     """
     Return the loaded VAE located at the path given when the function is called
     """
-
     encoder, decoder = vae_model(nb_of_bands)
     vae_loaded, vae_utils, output_encoder = build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
   
@@ -40,7 +39,6 @@ def load_vae_decoder(path,nb_of_bands,folder = False):
     """
     Return the decoder of the VAE located at the path given when the function is called
     """
-
     encoder, decoder = vae_model(nb_of_bands)
     vae_loaded, vae_utils, output_encoder = build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
 
@@ -76,9 +74,6 @@ def load_deblender(path_deblender, path_encoder,nb_of_bands, decoder, folder = F
         vae_loaded.load_weights(latest)
 
     return deblender_loaded
-
-
-
 
 
 
