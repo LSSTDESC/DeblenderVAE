@@ -23,9 +23,10 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 from generator_vae import BatchGenerator_lsst_euclid
-import vae_functions, model
-from utils import load_vae_conv
-from callbacks import changeAlpha
+
+sys.path.insert(0,'../tools_for_VAE/')
+from tools_for_VAE import vae_functions, model
+from tools_for_VAE.callbacks import changeAlpha
 
 ######## Import data for callback (Only if VAEHistory is used)
 # x = np.load('/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_5_v5_test.npy')
@@ -73,32 +74,32 @@ alphaChanger = changeAlpha(alpha, vae, epochs)
 #vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=[2,3,5], figname='/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/v4/test_noisy_LSST_v4')
 # Keras Callbacks
 earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
-checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v4/mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v4/loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v5/mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v5/loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 
 ######## Define all used callbacks
 callbacks = [checkpointer_mse, checkpointer_loss]#, alphaChanger earlystop,vae_hist, 
  
 ######## List of data samples
-list_of_samples=['/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_1_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_2_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_3_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_4_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_5_v5_test.npy',
+list_of_samples=['/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_1_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_2_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_3_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_4_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_5_v3.npy',
                 ]
 
 ######## Define the generators
-training_generator = BatchGenerator_lsst_euclid(list_of_samples,total_sample_size=1800, batch_size= batch_size, training_or_validation = 'training', noisy = True)#180000
-validation_generator = BatchGenerator_lsst_euclid(list_of_samples,total_sample_size=200, batch_size= batch_size, training_or_validation = 'validation', noisy = True)#20000
+training_generator = BatchGenerator_lsst_euclid(list_of_samples,total_sample_size=180000, batch_size= batch_size, training_or_validation = 'training', noisy = True)#180000
+validation_generator = BatchGenerator_lsst_euclid(list_of_samples,total_sample_size=20000, batch_size= batch_size, training_or_validation = 'validation', noisy = True)#20000
 
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=18,
+                  steps_per_epoch=1800,
                   verbose=2,
                   shuffle = True,
                   validation_data=validation_generator,
-                  validation_steps=2,
+                  validation_steps=200,
                   callbacks=callbacks,
                   workers = 0)
 

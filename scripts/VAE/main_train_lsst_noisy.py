@@ -23,9 +23,10 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 from generator_vae import BatchGenerator_lsst
-import vae_functions, model
-from utils import load_vae_conv
-from callbacks import changeAlpha
+
+sys.path.insert(0,'../tools_for_VAE/')
+from tools_for_VAE import model, vae_functions
+from tools_for_VAE.callbacks import changeAlpha
 
 ######## Import data for callback (Only if VAEHistory is used)
 # x = np.load('/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_5_v5_test.npy')
@@ -72,19 +73,19 @@ alphaChanger = changeAlpha(alpha, vae, epochs)
 # Callback to display evolution of training
 #vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=[2,3,5], figname='/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/v4/test_noisy_LSST_v4')
 # Keras Callbacks
-earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
-checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v6/mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v6/loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+#earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
+checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v7/mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v7/loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 
 ######## Define all used callbacks
 callbacks = [checkpointer_mse, checkpointer_loss]#, alphaChanger earlystop,vae_hist, 
  
 ######## List of data samples
-list_of_samples=['/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_1_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_2_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_3_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_4_v5_test.npy',
-                 '/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_5_v5_test.npy',
+list_of_samples=['/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_1_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_2_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_3_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_4_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_5_v3.npy',
                 ]
 
 ######## Define the generators
