@@ -16,7 +16,7 @@ class BatchGenerator_lsst_process(tf.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST deblender
     """
-    def __init__(self, list_of_samples,total_sample_size, batch_size, training_or_validation):
+    def __init__(self, list_of_samples,total_sample_size, batch_size,size_of_lists, training_or_validation):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -40,6 +40,7 @@ class BatchGenerator_lsst_process(tf.keras.utils.Sequence):
         
 #        self.liste = np.load(self.path, mmap_mode = 'c')
         self.r = 0
+        self.size_of_lists = size_of_lists
         
     def __len__(self):
         """
@@ -62,7 +63,7 @@ class BatchGenerator_lsst_process(tf.keras.utils.Sequence):
         """
         # If the generator is a training generator, the whole sample is displayed
         if (self.training_or_validation == 'training'):
-            self.r = np.random.choice(180000-self.batch_size, replace=False)
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
             if (self.r <=19900):
                 self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
                 self.x = self.liste[self.r:self.r+self.batch_size,1,4:]
@@ -133,23 +134,20 @@ class BatchGenerator_lsst_process(tf.keras.utils.Sequence):
 
         # If the generator is a validation generator, only the part dedicated to the validation is displayed
         else:
-            self.r = np.random.choice(10000-self.batch_size, replace=False)
-            self.liste = np.load(self.list_of_samples[9], mmap_mode = 'c')
-
-            self.x = self.liste[10000+self.r:10000+self.r+self.batch_size,1,4:]
-            self.y = self.liste[10000+self.r:10000+self.r+self.batch_size,0,4:]
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
+            if self.training_or_validation == "validation":
+                self.liste = np.load(self.list_of_samples[9], mmap_mode = 'c')
+            else: 
+                self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
+            self.x = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,1,4:]
+            self.y = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,0,4:]
         # Preprocessing of the data to be easier for the network to learn
         I= [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
-        beta = 2.5
+        beta = 1
         for i in range (100):
             for j in range (6):
-                self.y[i,j] = np.tanh(np.arcsinh(self.y[i,j]/(I[j+4])))#/beta
-                self.x[i,j] = np.tanh(np.arcsinh(self.x[i,j]/(I[j+4])))#/beta
-        # Preprocessing of the data to be easier for the network to learn
-        #I_y = np.mean(self.y, keepdims=True)
-        #beta = 1000.
-        #self.y = np.tanh(self.y * np.arcsinh(I_y/beta)/I_y)
-        #self.x = np.tanh(self.x * np.arcsinh(I_y/beta)/I_y)
+                self.y[i,j] = np.tanh(np.arcsinh(self.y[i,j]/(I[j+4]/beta)))
+                self.x[i,j] = np.tanh(np.arcsinh(self.x[i,j]/(I[j+4]/beta)))
 
         # horizontal flip : flipping the image array of pixels if a random number taken between 0 and 1 is 1
         rand = np.random.randint(2)
@@ -167,7 +165,7 @@ class BatchGenerator_lsst_euclid_process(tf.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST deblender
     """
-    def __init__(self, list_of_samples,total_sample_size, batch_size, training_or_validation):
+    def __init__(self, list_of_samples,total_sample_size, batch_size,size_of_lists, training_or_validation):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -191,6 +189,7 @@ class BatchGenerator_lsst_euclid_process(tf.keras.utils.Sequence):
         
 #        self.liste = np.load(self.path, mmap_mode = 'c')
         self.r = 0
+        self.size_of_lists = size_of_lists
         
     def __len__(self):
         """
@@ -213,7 +212,7 @@ class BatchGenerator_lsst_euclid_process(tf.keras.utils.Sequence):
         """
         # If the generator is a training generator, the whole sample is displayed
         if (self.training_or_validation == 'training'):
-            self.r = np.random.choice(180000-self.batch_size, replace=False)
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
             if (self.r <=19900):
                 self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
                 self.x = self.liste[self.r:self.r+self.batch_size,1]
@@ -284,17 +283,22 @@ class BatchGenerator_lsst_euclid_process(tf.keras.utils.Sequence):
 
         # If the generator is a validation generator, only the part dedicated to the validation is displayed
         else:
-            self.r = np.random.choice(10000-self.batch_size, replace=False)
-            self.liste = np.load(self.list_of_samples[9], mmap_mode = 'c')
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
+            if self.training_or_validation == "validation":
+                self.liste = np.load(self.list_of_samples[9], mmap_mode = 'c')
+            else: 
+                self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
 
-            self.x = self.liste[10000+self.r:10000+self.r+self.batch_size,1]
-            self.y = self.liste[10000+self.r:10000+self.r+self.batch_size,0]
+            self.x = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,1]
+            self.y = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,0]
 
         # Preprocessing of the data to be easier for the network to learn
-        I_y = np.mean(self.y, keepdims=True)
-        beta = 1000.
-        self.y = np.tanh(self.y * np.arcsinh(I_y/beta)/I_y)
-        self.x = np.tanh(self.x * np.arcsinh(I_y/beta)/I_y)
+        I= [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
+        beta = 5
+        for i in range (100):
+            for j in range (10):
+                self.y[i,j] = np.tanh(np.arcsinh(self.y[i,j]/(I[j]/beta)))
+                self.x[i,j] = np.tanh(np.arcsinh(self.x[i,j]/(I[j]/beta)))
 
         # horizontal flip : flipping the image array of pixels if a random number taken between 0 and 1 is 1
         rand = np.random.randint(2)

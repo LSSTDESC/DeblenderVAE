@@ -15,7 +15,7 @@ class BatchGenerator_lsst_r_band(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST R band only VAE.
     """
-    def __init__(self, list_of_samples,total_sample_size, batch_size, training_or_validation, noisy):
+    def __init__(self, list_of_samples,total_sample_size, batch_size, size_of_lists, training_or_validation, noisy):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -41,6 +41,8 @@ class BatchGenerator_lsst_r_band(tensorflow.keras.utils.Sequence):
         self.step = 0
         self.size = self.batch_size
         self.epoch = 0
+
+        self.size_of_lists=size_of_lists
         
     def __len__(self):
         """
@@ -61,7 +63,7 @@ class BatchGenerator_lsst_r_band(tensorflow.keras.utils.Sequence):
         """
         # If the generator is a training generator, the whole sample is displayed
         if (self.training_or_validation == 'training'):
-            self.r = np.random.choice(180000-self.batch_size, replace=False)
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
             if (self.r <=39900):
                 self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
                 self.x = self.liste[self.r:self.r+self.batch_size,1,6]
@@ -95,11 +97,14 @@ class BatchGenerator_lsst_r_band(tensorflow.keras.utils.Sequence):
                                 self.y = self.liste[self.r:self.r+self.batch_size,0,6]
         # If the generator is a validation generator, only the part dedicated to the validation is displayed
         else:
-            self.r = np.random.choice(20000-self.batch_size, replace=False)
-            self.liste = np.load(self.list_of_samples[4], mmap_mode = 'c')
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
+            if self.training_or_validation == "validation":
+                self.liste = np.load(self.list_of_samples[4], mmap_mode = 'c')
+            else: 
+                self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
 
-            self.x = self.liste[20000+self.r:20000+self.r+self.batch_size,1,6]
-            self.y = self.liste[20000+self.r:20000+self.r+self.batch_size,0,6]
+            self.x = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,1,6]
+            self.y = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,0,6]
 
         # Preprocessing of the data to be easier for the network to learn
         I= [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
@@ -114,12 +119,14 @@ class BatchGenerator_lsst_r_band(tensorflow.keras.utils.Sequence):
             self.x = np.flipud(self.x)
             self.y = np.flipud(self.y)
         
-        indices = np.random.choice(self.batch_size, size=self.size, replace=False)
-        for i in indices:
-            self.x[i] = self.y[i]
+        if self.training_or_validation != None :
+            indices = np.random.choice(self.batch_size, size=self.size, replace=False)
+            for i in indices:
+                self.x[i] = self.y[i]
 
         self.r = 0
 
+        
         if (self.noisy == True):
             if self.epoch < 0 :
                 self.size =self.batch_size
@@ -143,7 +150,7 @@ class BatchGenerator_lsst(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, list_of_samples,total_sample_size, batch_size, training_or_validation, noisy):
+    def __init__(self, list_of_samples,total_sample_size, batch_size, size_of_lists, training_or_validation, noisy):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -170,6 +177,8 @@ class BatchGenerator_lsst(tensorflow.keras.utils.Sequence):
         self.size = 100
         self.epoch = 0
 
+        self.size_of_lists = size_of_lists
+
     def __len__(self):
         """
         Function to define the length of an epoch
@@ -188,7 +197,7 @@ class BatchGenerator_lsst(tensorflow.keras.utils.Sequence):
         """
         # If the generator is a training generator, the whole sample is displayed
         if (self.training_or_validation == 'training'):
-            self.r = np.random.choice(180000-self.batch_size, replace=False)
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
             if (self.r <=39900):
                 self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
                 self.x = self.liste[self.r:self.r+self.batch_size,1,4:]
@@ -222,11 +231,14 @@ class BatchGenerator_lsst(tensorflow.keras.utils.Sequence):
                                 self.y = self.liste[self.r:self.r+self.batch_size,0,4:]
         # If the generator is a validation generator, only the part dedicated to the validation is displayed
         else:
-            self.r = np.random.choice(20000-self.batch_size, replace=False)
-            self.liste = np.load(self.list_of_samples[4], mmap_mode = 'c')
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
+            if self.training_or_validation == "validation":
+                self.liste = np.load(self.list_of_samples[4], mmap_mode = 'c')
+            else: 
+                self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
 
-            self.x = self.liste[20000+self.r:20000+self.r+self.batch_size,1,4:]
-            self.y = self.liste[20000+self.r:20000+self.r+self.batch_size,0,4:]
+            self.x = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,1,4:]
+            self.y = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,0,4:]
 
         # Preprocessing of the data to be easier for the network to learn
         I= [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
@@ -242,11 +254,13 @@ class BatchGenerator_lsst(tensorflow.keras.utils.Sequence):
             self.x = np.flipud(self.x)
             self.y = np.flipud(self.y)
         
-        indices = np.random.choice(100, size=self.size, replace=False)
-        for i in indices:
-            self.x[i] = self.y[i]
+        if self.training_or_validation != None :
+            indices = np.random.choice(100, size=self.size, replace=False)
+            for i in indices:
+                self.x[i] = self.y[i]
 
         self.r = 0
+
 
         if (self.noisy == True):
             if self.epoch < 1 :
@@ -270,7 +284,7 @@ class BatchGenerator_lsst_euclid(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST + Euclid VAE.
     """
-    def __init__(self, list_of_samples,total_sample_size, batch_size, training_or_validation, noisy):
+    def __init__(self, list_of_samples,total_sample_size, batch_size, size_of_lists, training_or_validation, noisy):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -296,6 +310,8 @@ class BatchGenerator_lsst_euclid(tensorflow.keras.utils.Sequence):
         self.size = 100
         self.epoch = 0
 
+        self.size_of_lists = size_of_lists
+
     def __len__(self):
         """
         Function to define the length of an epoch
@@ -314,7 +330,7 @@ class BatchGenerator_lsst_euclid(tensorflow.keras.utils.Sequence):
         """
         # If the generator is a training generator, the whole sample is displayed
         if (self.training_or_validation == 'training'):
-            self.r = np.random.choice(180000-self.batch_size, replace=False)
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
             if (self.r <=39900):
                 self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
                 self.x = self.liste[self.r:self.r+self.batch_size,1,:]
@@ -348,11 +364,14 @@ class BatchGenerator_lsst_euclid(tensorflow.keras.utils.Sequence):
                                 self.y = self.liste[self.r:self.r+self.batch_size,0,:]
         # If the generator is a validation generator, only the part dedicated to the validation is displayed
         else:
-            self.r = np.random.choice(20000-self.batch_size, replace=False)
-            self.liste = np.load(self.list_of_samples[4], mmap_mode = 'c')
+            self.r = np.random.choice(self.total_sample_size-self.batch_size, replace=False)
+            if self.training_or_validation == "validation":
+                self.liste = np.load(self.list_of_samples[4], mmap_mode = 'c')
+            else: 
+                self.liste = np.load(self.list_of_samples[0], mmap_mode = 'c')
 
-            self.x = self.liste[20000+self.r:20000+self.r+self.batch_size,1,:]
-            self.y = self.liste[20000+self.r:20000+self.r+self.batch_size,0,:]
+            self.x = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,1,:]
+            self.y = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,0,:]
 
         # Preprocessing of the data to be easier for the network to learn
         I= [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
@@ -368,13 +387,13 @@ class BatchGenerator_lsst_euclid(tensorflow.keras.utils.Sequence):
             self.x = np.flipud(self.x)
             self.y = np.flipud(self.y)
 
-        
-        indices = np.random.choice(100, size=self.size, replace=False)
-        for i in indices:
-            self.x[i] = self.y[i]
+        if self.training_or_validation != None :
+            indices = np.random.choice(100, size=self.size, replace=False)
+            for i in indices:
+                self.x[i] = self.y[i]
 
         self.r = 0
-
+        
         if (self.noisy == True):
             if self.epoch < 1 :
                 self.size =100

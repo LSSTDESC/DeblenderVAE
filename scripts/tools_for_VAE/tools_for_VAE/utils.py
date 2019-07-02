@@ -22,10 +22,38 @@ from . import model, vae_functions
 def load_vae_conv(path,nb_of_bands,folder = False):
     """
     Return the loaded VAE located at the path given when the function is called
-    """
-    encoder, decoder = model.vae_model(nb_of_bands)
-    vae_loaded, vae_utils, output_encoder = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
-  
+    """        
+    batch_size = 100 
+    epsilon_std = 1.0
+    
+    input_shape = (64,64,nb_of_bands)
+    latent_dim = 10
+    hidden_dim = 256
+    filters = [32,64, 128, 256]
+    kernels = [3,3,3,3]
+
+    # Build the encoder
+    encoder = model.build_encoder(latent_dim, hidden_dim, filters, kernels, nb_of_bands)
+    # Build the decoder
+    decoder = model.build_decoder(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None)
+
+    #### Create an input for the lambda function to compute the latent variable z
+    input_vae = Input(shape=(64,64, nb_of_bands))
+    output_encoder = encoder(input_vae)
+
+    # Lambda function to compute latent variable z
+    def sampling(args):
+        z_mean, z_log_var = args
+        epsilon = K.random_normal(shape=(batch_size, latent_dim), mean=0.,
+                                  stddev=epsilon_std)
+        return z_mean + K.exp(z_log_var / 2) * epsilon
+
+    # Build the latent variable z
+    z = Lambda(sampling, output_shape=(latent_dim,))(output_encoder)
+
+    #### Build the model
+    vae_loaded = Model(input_vae, decoder(z)) 
+
     if folder == False: 
         vae_loaded.load_weights(path)
     else:
@@ -39,8 +67,36 @@ def load_vae_decoder(path,nb_of_bands,folder = False):
     """
     Return the decoder of the VAE located at the path given when the function is called
     """
-    encoder, decoder = model.vae_model(nb_of_bands)
-    vae_loaded, vae_utils, output_encoder = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
+    batch_size = 100 
+    epsilon_std = 1.0
+    
+    input_shape = (64,64,nb_of_bands)
+    latent_dim = 10
+    hidden_dim = 256
+    filters = [32,64, 128, 256]
+    kernels = [3,3,3,3]
+
+    # Build the encoder
+    encoder = model.build_encoder(latent_dim, hidden_dim, filters, kernels, nb_of_bands)
+    # Build the decoder
+    decoder = model.build_decoder(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None)
+
+    #### Create an input for the lambda function to compute the latent variable z
+    input_vae = Input(shape=(64,64, nb_of_bands))
+    output_encoder = encoder(input_vae)
+
+    # Lambda function to compute latent variable z
+    def sampling(args):
+        z_mean, z_log_var = args
+        epsilon = K.random_normal(shape=(batch_size, latent_dim), mean=0.,
+                                  stddev=epsilon_std)
+        return z_mean + K.exp(z_log_var / 2) * epsilon
+
+    # Build the latent variable z
+    z = Lambda(sampling, output_shape=(latent_dim,))(output_encoder)
+
+    #### Build the model
+    vae_loaded = Model(input_vae, decoder(z)) 
 
     if folder == False: 
         vae_loaded.load_weights(path)
@@ -52,7 +108,7 @@ def load_vae_decoder(path,nb_of_bands,folder = False):
 
 
 # DEBLENDER
-def load_deblender(path_deblender, path_encoder,nb_of_bands, decoder, folder = False):
+def load_deblender(path_deblender, path_encoder,nb_of_bands, folder = False):
     """
     Return the loaded deblender located at the path given when the function is called
     """
@@ -62,16 +118,36 @@ def load_deblender(path_deblender, path_encoder,nb_of_bands, decoder, folder = F
     decoder.trainable = False
 
     # Deblender model
-    deb_encoder, deb_decoder = model.vae_model(nb_of_bands)
+    batch_size = 100
+    latent_dim = 10
+    hidden_dim = 256
+    filters = [32,64, 128, 256]
+    kernels = [3,3,3,3]
+    epsilon_std = 1.0
+
+    # Deblender model
+    input_deblender = Input(shape=(64,64,6))
+    # Lambda function to compute latent variable z
+    def sampling(args):
+        z_mean, z_log_var = args
+        epsilon = K.random_normal(shape=(batch_size, latent_dim), mean=0.,
+                                  stddev=epsilon_std)
+        return z_mean + K.exp(z_log_var / 2) * epsilon
+
+    encoder_d = model.build_encoder(latent_dim, hidden_dim, filters, kernels, nb_of_bands)
+
+    output_encoder_d = encoder_d(input_deblender)
+    z_d = Lambda(sampling, output_shape=(latent_dim,))(output_encoder_d)
 
     # Use the encoder of the trained VAE
-    deblender_loaded, deblender_utils, output_encoder_deb = vae_functions.build_vanilla_vae(deb_encoder, decoder, full_cov=False, coeff_KL = 0)
+    # Definition of deblender
+    deblender_loaded = Model(input_deblender, decoder(z_d))
     
     if folder == False: 
-        vae_loaded.load_weights(path_deblender)
+        deblender_loaded.load_weights(path_deblender)
     else:
         latest = tf.train.latest_checkpoint(path_deblender)
-        vae_loaded.load_weights(latest)
+        deblender_loaded.load_weights(latest)
 
     return deblender_loaded
 
@@ -103,44 +179,6 @@ def delta_r_min(shift_path):
     
     return delta_r
 
-
-###############    PLOTS     ####################
-
-def plot_rgb_lsst(ugrizy_img, ax=None):
-    RGB_img = np.zeros((int(stamp_size/2),int(stamp_size/2),3))
-    if ax is None:
-        _, ax = plt.subplots(1,1)
-    max_img = np.max(ugrizy_img)
-    ugrizy_img = ugrizy_img[:,int(stamp_size/4):int(stamp_size*3/4),int(stamp_size/4):int(stamp_size*3/4)].reshape((6,int(stamp_size/2),int(stamp_size/2)))
-    RGB_img[:,:,0] = ugrizy_img[1][:,:]
-    RGB_img[:,:,1] = ugrizy_img[2][:,:]
-    RGB_img[:,:,2] = ugrizy_img[4][:,:]
-    ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img)    
-    
-    
-def plot_rgb_lsst_euclid(ugrizy_img, ax=None):
-    RGB_img = np.zeros((int(stamp_size/2),int(stamp_size/2),3))
-    if ax is None:
-        _, ax = plt.subplots(1,1)
-    max_img = np.max(ugrizy_img[4:])
-    ugrizy_img = ugrizy_img[:,int(stamp_size/4):int(stamp_size*3/4),int(stamp_size/4):int(stamp_size*3/4)].reshape(10,int(stamp_size/2),int(stamp_size/2))
-    RGB_img[:,:,0] = ugrizy_img[5][:,:]
-    RGB_img[:,:,1] = ugrizy_img[6][:,:]
-    RGB_img[:,:,2] = ugrizy_img[8][:,:]
-    ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img)    
-    
-    
-def mean_var(x,y,bins):
-    """
-    Return mean and variance in each bins of the histogram
-    """
-    n,_ = np.histogram(x,bins=bins, weights=None)
-    ny,_ = np.histogram(x,bins=bins, weights=y)
-    mean_y = ny/n
-    ny2,_ = np.histogram(x,bins=bins, weights=y**2)
-    var_y = (ny2/n - mean_y**2)/n
-    
-    return (mean_y, var_y)
 
 
 

@@ -65,8 +65,8 @@ alpha = K.variable(0.0001)
 
 def deblender_loss(x, x_decoded_mean):
     xent_loss = original_dim*K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
-    kl_loss = - .5 * K.get_value(alpha) * K.sum(1 + output_encoder_deb[1] - K.square(output_encoder_deb[0]) - K.exp(output_encoder_deb[1]), axis=-1)
-    return (xent_loss + K.mean(kl_loss))
+    #kl_loss = - .5 * K.get_value(alpha) * K.sum(1 + output_encoder_deb[1] - K.square(output_encoder_deb[0]) - K.exp(output_encoder_deb[1]), axis=-1)
+    return xent_loss #+ K.mean(kl_loss))
 
 
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
@@ -100,18 +100,18 @@ list_of_samples=['/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_1
 
 
 
-training_generator = BatchGenerator_lsst_process(list_of_samples,total_sample_size=1900, batch_size= batch_size, training_or_validation = 'training')#190000
-validation_generator = BatchGenerator_lsst_process(list_of_samples,total_sample_size=100, batch_size= batch_size, training_or_validation = 'validation')#10000
+training_generator = BatchGenerator_lsst_process(list_of_samples,total_sample_size=10000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'training')#190000
+validation_generator = BatchGenerator_lsst_process(list_of_samples,total_sample_size=300, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'validation')#10000
 
 
 hist = deblender.fit_generator(training_generator,
         epochs=epochs,
-        steps_per_epoch=19,#1900,
+        steps_per_epoch=100,#1900,
         verbose=2,
         shuffle = True,
-        validation_steps =1,#100,
+        validation_steps =3,#100,
         validation_data=validation_generator,
-        #callbacks=callbacks,
+        callbacks=callbacks,
         workers = 0)#,)#, callbacks = [tbCallBack ])#,plot_learning
 
 # plt.plot(hist.history['mean_squared_error'])

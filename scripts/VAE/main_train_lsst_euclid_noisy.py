@@ -89,8 +89,8 @@ list_of_samples=['/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_1_v3.n
                 ]
 
 ######## Define the generators
-training_generator = BatchGenerator_lsst_euclid(list_of_samples,total_sample_size=180000, batch_size= batch_size, training_or_validation = 'training', noisy = True)#180000
-validation_generator = BatchGenerator_lsst_euclid(list_of_samples,total_sample_size=20000, batch_size= batch_size, training_or_validation = 'validation', noisy = True)#20000
+training_generator = BatchGenerator_lsst_euclid(list_of_samples,total_sample_size=180000, batch_size= batch_size, size_of_lists = 40000, training_or_validation = 'training', noisy = True)#180000
+validation_generator = BatchGenerator_lsst_euclid(list_of_samples,total_sample_size=20000, batch_size= batch_size, size_of_lists = 40000, training_or_validation = 'validation', noisy = True)#20000
 
 
 ######## Train the network
