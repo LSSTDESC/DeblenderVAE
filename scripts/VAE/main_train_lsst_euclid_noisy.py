@@ -51,14 +51,15 @@ epsilon_std = 1.0
 encoder, decoder = model.vae_model(10)
 
 ######## Build the VAE
-vae, vae_utils, output_encoder = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
+vae, vae_utils, output_encoder, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
 
 ######## Define the loss function
 alpha = K.variable(0.0001)
 
 def vae_loss(x, x_decoded_mean):
     xent_loss = original_dim*K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
-    kl_loss = - .5 * K.get_value(alpha) * K.sum(1 + output_encoder[1] - K.square(output_encoder[0]) - K.exp(output_encoder[1]), axis=-1)
+    kl = K.get_value(alpha) * Dkl
+    #kl_loss = - .5 * K.get_value(alpha) * K.sum(1 + output_encoder[1] - K.square(output_encoder[0]) - K.exp(output_encoder[1]), axis=-1)
     return xent_loss + K.mean( kl_loss)
 
 ######## Compile the VAE
