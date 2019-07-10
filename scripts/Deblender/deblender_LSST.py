@@ -22,9 +22,9 @@ import tensorflow_probability as tfp
 
 from generator_deblender import BatchGenerator_lsst_process
 
-sys.path.insert(0,'../tools_for_VAE/')
-from tools_for_VAE import model, vae_functions, utils
-
+#sys.path.insert(0,'../tools_for_VAE/')
+#from tools_for_VAE import model, vae_functions, utils
+import model, vae_functions, utils
 
 # Fix some Parameters
 batch_size = 100
@@ -50,7 +50,7 @@ for i in range (500):
 x_val = x_val.reshape((len(x_val),64,64,6))
 
 # Load decoder of VAE
-decoder = utils.load_vae_decoder('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v5/mse/',6,folder = True)
+decoder = utils.load_vae_decoder('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v7/mse/',6,folder = True)
 decoder.trainable = False
 
 # Deblender model
@@ -82,8 +82,8 @@ stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis)
 tbCallBack = tf.keras.callbacks.TensorBoard(log_dir='/sps/lsst/users/barcelin/Graph/deblender_lsst/noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
 
 #vae_hist = vae_functions.VAEHistory(x_val[:500], deblender_utils, latent_dim, alpha, plot_bands=[3,4,5], figname='/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v1/test_')
-checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v2/mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v2/loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v3/mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v3/loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 callbacks = [checkpointer_mse, checkpointer_loss]#vae_hist, 
  
 ##### If processing with generator (apply Cyrille's function)
@@ -100,16 +100,16 @@ list_of_samples=['/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_1
 
 
 
-training_generator = BatchGenerator_lsst_process(list_of_samples,total_sample_size=10000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'training')#190000
-validation_generator = BatchGenerator_lsst_process(list_of_samples,total_sample_size=300, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'validation')#10000
+training_generator = BatchGenerator_lsst_process(list_of_samples,total_sample_size=190000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'training')#190000
+validation_generator = BatchGenerator_lsst_process(list_of_samples,total_sample_size=10000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'validation')#10000
 
 
 hist = deblender.fit_generator(training_generator,
         epochs=epochs,
-        steps_per_epoch=100,#1900,
+        steps_per_epoch=1900,#1900,
         verbose=2,
         shuffle = True,
-        validation_steps =3,#100,
+        validation_steps =100,#100,
         validation_data=validation_generator,
         callbacks=callbacks,
         workers = 0)#,)#, callbacks = [tbCallBack ])#,plot_learning

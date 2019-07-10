@@ -23,14 +23,14 @@ import tensorflow_probability as tfp
 from generator_deblender import BatchGenerator_lsst_euclid_process
 #import vae, layers
 
-sys.path.insert(0,'../tools_for_VAE/')
-from tools_for_VAE import model, vae_functions, utils
-
+#sys.path.insert(0,'../tools_for_VAE/')
+#from tools_for_VAE import model, vae_functions, utils
+import model, vae_functions, utils
 
 # Fix some parameters
 batch_size = 100
 original_dim = 64*64*10
-epochs = 200
+epochs = 1000
 
 input_shape = (64,64,10)
 latent_dim = 10
@@ -52,7 +52,7 @@ x_val = x_val.reshape((len(x_val),64,64,10))
 
 
 # Load decoder of VAE
-decoder = utils.load_vae_decoder('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v5/mse/',10,folder = True)
+decoder = utils.load_vae_decoder('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v4/mse/',10,folder = True)
 decoder.trainable = False
 
 # Deblender model
@@ -84,8 +84,8 @@ stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis)
 tbCallBack = tf.keras.callbacks.TensorBoard(log_dir='/sps/lsst/users/barcelin/Graph/deblender_lsst_euclid/noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
 
 #vae_hist = vae_functions.VAEHistory(x_val[:500], deblender_utils, latent_dim, alpha, plot_bands=[3,4,5], figname='/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/deblender/noisy/v1/test_')
-checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/noisy/v2/mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/noisy/v2/loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v1/mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v1/loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 callbacks = [checkpointer_mse, checkpointer_loss]#vae_hist, 
 
  

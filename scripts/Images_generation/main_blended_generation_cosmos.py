@@ -81,7 +81,7 @@ def map(func, iter, verbose=True, timesleep=15.0, timeout=None):
     return res.get(timeout)
 
 count = 0
-N_cosmo = 100
+N_cosmo = 10000
 N_per_gal = 5
 
 ud = galsim.UniformDeviate()
@@ -97,39 +97,46 @@ import time
 
 
 
-def func(ind):
-    nb_blended_gal = np.random.randint(1,5)
-    galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy,shift, redshift = Gal_generator_noisy_test(cosmos_cat, nb_blended_gal)
+# def func(ind):
+#     nb_blended_gal = np.random.randint(1,5)
+#     galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy,shift, redshift = Gal_generator_noisy_test(cosmos_cat, nb_blended_gal)
+#     if (SNR(galaxy_noiseless, blend_noisy) == True):
+#         return np.array((galaxy_noiseless, blend_noisy)), np.array((shift, redshift))
+#     else:
+#         return func(ind+1) 
+
+# debut = time.time()
+
+# img_cube_list = map(func, itr,timesleep = 10.0)# 
+# print(len(img_cube_list, len(img_cube_list[0])))
+
+# fin = time.time()
+# print('time : '+ str(fin-debut))
+
+#np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_2_v4.npy', img_cube_list)
+
+
+i = 0
+galaxies = []
+shift_list = []
+redshift_list  = []
+magnitude_list = []
+
+while (i < N_cosmo):
+    print(i)
+    nb_blended_gal = np.random.randint(1,N_per_gal)
+    galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy,shift, redshift, mag = Gal_generator_noisy_test(cosmos_cat, nb_blended_gal)
     if (SNR(galaxy_noiseless, blend_noisy) == True):
-        return np.array((galaxy_noiseless, blend_noisy)), np.array((shift, redshift))
-    else:
-        return func(ind+1) 
-
-debut = time.time()
-
-img_cube_list = map(func, itr,timesleep = 10.0)# 
-print(len(img_cube_list, len(img_cube_list[0])))
-
-fin = time.time()
-print('time : '+ str(fin-debut))
-
-np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_2_v4.npy', img_cube_list[0])
-np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/shift_redshift_COSMOS_test_v4.npy', img_cube_list[1])
-
-
-# for j in range (10):
-#     i = 0
-#     img_cube_list = []
-#     while (i < N_cosmo):
-#         print(i)
-#         nb_blended_gal = np.random.randint(1,N_per_gal)
-#         galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy,shift, redshift = Gal_generator_noisy_test(cosmos_cat, nb_blended_gal)
-#         if (SNR(galaxy_noiseless, blend_noisy) == True):
-#             img_cube_list.append((galaxy_noiseless, blend_noisy, shift, redshift))
-#             i+=1
+        galaxies.append((galaxy_noiseless, blend_noisy))
+        shift_list.append((shift))
+        redshift_list.append((redshift))
+        magnitude_list.append((mag))
+        i+=1
 
 #     fin = time.time()
 #     print('time : '+ str(fin-debut))
 
-#     name = '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_'+str(j)+'_v4.npy'
-#     np.save(name, img_cube_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_2_v5.npy', galaxies)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_shift_v5.npy', shift_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_redshift_v5.npy', redshift_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_magnitude_v5.npy', magnitude_list)

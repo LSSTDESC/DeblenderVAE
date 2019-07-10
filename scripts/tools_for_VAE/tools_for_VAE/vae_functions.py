@@ -24,7 +24,7 @@ def build_vanilla_vae(encoder, decoder, coeff_KL,full_cov=False):
     vae = Model(input_vae, decoder(z))
     vae_utils = Model(input_vae, [*encoder(input_vae), z, Dkl, decoder(z)])
 
-    return vae, vae_utils, output_encoder
+    return vae, vae_utils, output_encoder, Dkl
 
 
 
@@ -92,14 +92,14 @@ class VAEHistory(Callback):
         self.epoch += 1
         self.plots +=1
 
-        if self.plots == 2 :
+        if self.plots == 3 :
 
 
             self.loss.append(logs.get('loss'))
             self.val_loss.append(logs.get('val_loss'))
                     
             mu, sigma, z, dkl, out = self.vae_utils.predict(self.xval_sub)
-            dkl = - .5 * K.get_value(self.alpha) * np.sum(1 + sigma - np.square(mu) - np.exp(sigma), axis=-1)
+            #dkl = - .5 * K.get_value(self.alpha) * np.sum(1 + sigma - np.square(mu) - np.exp(sigma), axis=-1)
 
             self.D_KL.append(np.mean(dkl))
 

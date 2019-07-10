@@ -311,7 +311,7 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
 
 
                 i+=1
-            return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy,shift, redshift
+            return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy,shift, redshift, mag
         except RuntimeError: 
             count +=1
     print("nb of error : "+(count))

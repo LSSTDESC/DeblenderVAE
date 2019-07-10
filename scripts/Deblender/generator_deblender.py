@@ -143,7 +143,7 @@ class BatchGenerator_lsst_process(tf.keras.utils.Sequence):
             self.y = self.liste[self.size_of_lists - self.total_sample_size+self.r:self.size_of_lists - self.total_sample_size+self.r+self.batch_size,0,4:]
         # Preprocessing of the data to be easier for the network to learn
         I= [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
-        beta = 1
+        beta = 5
         for i in range (100):
             for j in range (6):
                 self.y[i,j] = np.tanh(np.arcsinh(self.y[i,j]/(I[j+4]/beta)))

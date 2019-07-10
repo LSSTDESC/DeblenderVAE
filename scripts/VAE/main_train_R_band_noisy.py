@@ -48,14 +48,15 @@ epsilon_std = 1.0
 encoder, decoder = model.vae_model(1)
 
 ######## Build the VAE
-vae, vae_utils, output_encoder = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
+vae, vae_utils, output_encoder, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
 
 ######## Define the loss function
-alpha = K.variable(0.0001)
+alpha = K.variable(1e-6)
 
 def vae_loss(x, x_decoded_mean):
-     xent_loss = original_dim*K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
-     kl_loss = - .5 * K.get_value(alpha) * K.sum(1 + output_encoder[1] - K.square(output_encoder[0]) - K.exp(output_encoder[1]), axis=-1)
+     xent_loss = K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))#original_dim*
+     kl_loss =  K.get_value(alpha) * Dkl#- .5 * K.sum(1 + K.log(output_encoder[1]) - K.square(K.log(output_encoder[0])) - output_encoder[1], axis=-1)
+     #kl_loss = - .5 * K.get_value(alpha) * K.sum(1 + output_encoder[1] - K.square(output_encoder[0]) - K.exp(output_encoder[1]), axis=-1)
      return xent_loss + K.mean(kl_loss)
 
 ######## Compile the VAE
@@ -70,10 +71,10 @@ K.set_value(vae.optimizer.lr, 0.0001)
 # Callback to display evolution of training
 vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=0, figname='/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/test_kl/test_3/test_')#noisy_
 # Keras Callbacks
-earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
+#earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
 checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/test_KL/test_3/weights.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/test_kl/loss/weights.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-tbCallBack = tf.keras.callbacks.TensorBoard(log_dir='/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/v6', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
+#tbCallBack = tf.keras.callbacks.TensorBoard(log_dir='/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/v6', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
 
 ######## Define all used callbacks
 callbacks = [vae_hist, checkpointer_mse]#,checkpointer_loss, tbCallBack]#, alphaChanger earlystop,vae_hist, checkpointer,  
@@ -92,11 +93,11 @@ validation_generator = BatchGenerator_lsst_r_band(list_of_samples,total_sample_s
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,#_noisy
-                  steps_per_epoch=1800,#1800
+                  steps_per_epoch=18,#1800
                   verbose=2,
                   shuffle = True,#int(ntrain/batch_size),
                   validation_data=validation_generator,
-                  validation_steps=200,#200
+                  validation_steps=2,#200
                   callbacks=callbacks,
                   workers = 0)
 
