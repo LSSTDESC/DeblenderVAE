@@ -85,7 +85,7 @@ def build_decoder(input_shape, latent_dim, hidden_dim, filters, kernels, conv_ac
 
 # Function to define model
 
-def vae_model(nb_of_bands):
+def vae_model(latent_dim, nb_of_bands):
     """
     Function to create VAE model
     nb_of bands : nb of band-pass filters needed in the model
@@ -101,10 +101,9 @@ def vae_model(nb_of_bands):
     # kernels: list of the size of the kernels used for each filter of this model
 
     batch_size = 100 
-    epsilon_std = 1.0
+    # epsilon_std = 1.0
     
     input_shape = (64,64,nb_of_bands)
-    latent_dim = 10
     hidden_dim = 256
     filters = [32,64, 128, 256]
     kernels = [3,3,3,3]
@@ -114,21 +113,21 @@ def vae_model(nb_of_bands):
     # Build the decoder
     decoder = build_decoder(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None)
 
-    #### Create an input for the lambda function to compute the latent variable z
-    input_vae = Input(shape=(64,64, nb_of_bands))
-    output_encoder = encoder(input_vae)
+    # #### Create an input for the lambda function to compute the latent variable z
+    # input_vae = Input(shape=(64,64, nb_of_bands))
+    # output_encoder = encoder(input_vae)
 
-    # Lambda function to compute latent variable z
-    def sampling(args):
-        z_mean, z_log_var = args
-        epsilon = K.random_normal(shape=(batch_size, latent_dim), mean=0.,
-                                  stddev=epsilon_std)
-        return z_mean + K.exp(z_log_var / 2) * epsilon
+    # # Lambda function to compute latent variable z
+    # def sampling(args):
+    #     z_mean, z_log_var = args
+    #     epsilon = K.random_normal(shape=(batch_size, latent_dim), mean=0.,
+    #                               stddev=epsilon_std)
+    #     return z_mean + K.exp(z_log_var / 2) * epsilon
 
-    # Build the latent variable z
-    z = Lambda(sampling, output_shape=(latent_dim,))(output_encoder)
+    # # Build the latent variable z
+    # z = Lambda(sampling, output_shape=(latent_dim,))(output_encoder)
 
-    #### Build the model
-    vae = Model(input_vae, decoder(z))  
+    # #### Build the model
+    # vae = Model(input_vae, decoder(z))  
     
     return encoder, decoder

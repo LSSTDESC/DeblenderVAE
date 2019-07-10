@@ -27,69 +27,55 @@ from generator_deblender import BatchGenerator_lsst_euclid_process
 #from tools_for_VAE import model, vae_functions, utils
 import model, vae_functions, utils
 
-# Fix some parameters
+######## Set some parameters
 batch_size = 100
-original_dim = 64*64*10
+latent_dim = 32
 epochs = 1000
+bands = [0,1,2,3,4,5,6,7,8,9]
 
-input_shape = (64,64,10)
-latent_dim = 10
-hidden_dim = 256
-filters = [32,64, 128, 256]
-kernels = [3,3,3,3]
-
-
-# Test data for callback
-x = np.load('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_1_v4.npy')
-x_val = x[:500,1,:]
-
-I= [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
-beta = 5
-for i in range (500):
-    for j in range (10):
-        x_val[i,j] = np.tanh(np.arcsinh(x_val[i,j]/(I[j]/beta)))
-x_val = x_val.reshape((len(x_val),64,64,10))
-
+######## Import data for callback (Only if VAEHistory is used)
+x = np.load('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_1_v4.npy', mmap_mode = 'c')
+x_val = utils.norm(x[:500,1,bands], bands).transpose([0,2,3,1])
 
 # Load decoder of VAE
 decoder = utils.load_vae_decoder('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v4/mse/',10,folder = True)
 decoder.trainable = False
 
 # Deblender model
-deb_encoder, deb_decoder = model.vae_model(10)
+deb_encoder, deb_decoder = model.vae_model(latent_dim, 10)
 
 # Use the encoder of the trained VAE
-deblender, deblender_utils, output_deblender = vae_functions.build_vanilla_vae(deb_encoder, decoder, full_cov=False, coeff_KL = 0)
-
+deblender, deblender_utils, Dkl = vae_functions.build_vanilla_vae(deb_encoder, decoder, full_cov=False, coeff_KL = 0)
 
 # Define the loss function
 alpha = K.variable(0.0001)
 
 def deblender_loss(x, x_decoded_mean):
     xent_loss = original_dim*K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
-    #kl_loss = - .5 * K.get_value(alpha) * K.sum(1 + output_encoder_deb[1] - K.square(output_encoder_deb[0]) - K.exp(output_encoder_deb[1]), axis=-1)
+    #kl_loss = K.get_value(alpha) * Dkl
     return xent_loss #+ K.mean(kl_loss))
 
-
+######## Compile the deblender
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
-K.set_value(deblender.optimizer.lr, 0.0001)
-###### Fix some parameters
-phys_stamp_size = 6.4 # arcsec
-pixel_scale_euclid_vis = 0.1 # arcsec/pixel
 
-stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis)
-#######
+######## Fix the maximum learning rate in adam
+K.set_value(deblender.optimizer.lr, 0.0001)
+
 #######
 # Callback
-tbCallBack = tf.keras.callbacks.TensorBoard(log_dir='/sps/lsst/users/barcelin/Graph/deblender_lsst_euclid/noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
+path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v1/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v4/'
+#path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst_euclid/'
 
+tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
 #vae_hist = vae_functions.VAEHistory(x_val[:500], deblender_utils, latent_dim, alpha, plot_bands=[3,4,5], figname='/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/deblender/noisy/v1/test_')
-checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v1/mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v1/loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-callbacks = [checkpointer_mse, checkpointer_loss]#vae_hist, 
+checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 
+######## Define all used callbacks
+callbacks = [checkpointer_mse, checkpointer_loss]#vae_hist, 
  
-##### If processing with generator (apply Cyrille's function)
+######## List of data samples
 list_of_samples=['/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_1_v4.npy',
 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_2_v4.npy',
 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_3_v4.npy',
@@ -98,15 +84,15 @@ list_of_samples=['/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_1
 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_6_v4.npy',
 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_7_v4.npy',
 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_8_v4.npy',
-'/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_9_v4.npy',
-'/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_10_v4.npy']
+'/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_9_v4.npy']
 
+list_of_samples_val=['/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_10_v4.npy']
 
+######## Define the generators
+training_generator = BatchGenerator(bands, list_of_samples,total_sample_size=180000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'training')
+validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_size=20000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'validation')
 
-training_generator = BatchGenerator_lsst_euclid_process(list_of_samples,total_sample_size=190000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'training')
-validation_generator = BatchGenerator_lsst_euclid_process(list_of_samples,total_sample_size=10000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'validation')
-
-
+######## Train the network
 hist = deblender.fit_generator(training_generator,
         epochs=epochs,
         steps_per_epoch=1900,
@@ -116,15 +102,3 @@ hist = deblender.fit_generator(training_generator,
         validation_data=validation_generator, 
         callbacks=callbacks)
 
-# plt.plot(hist.history['mean_squared_error'])
-# plt.plot(hist.history['val_mean_squared_error'])
-# plt.title('model loss')
-# plt.ylabel('mse')
-# plt.xlabel('epoch')
-
-# plt.legend(['train', 'test'], loc='upper left')
-# #plt.show()
-# #plt.savefig('loss_lsst_conv_deblender_noisy_Normy.png')
-
-# deblender.save("/sps/lsst/users/barcelin/deblender-LSST_EUCLID_conv_noiseless_test_v1.hdf5") 
-# deblender.save_weights("deblender_conv_lsst_euclid_noiseless_test_v1")

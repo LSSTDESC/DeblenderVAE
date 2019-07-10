@@ -17,6 +17,21 @@ import tensorflow as tf
 
 from . import model, vae_functions
 
+############# Normalize data ############# 
+def norm(x, bands, channel_last=False):
+    I = [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
+    beta = 5.
+    if channel_last:
+        assert x.shape[-1] == len(bands)
+        for i in range (len(x)):
+            for ib, b in enumerate(bands):
+                x[i,:,:,ib] = np.tanh(np.arcsinh(x[i,:,:,ib]/(I[b]/beta)))
+    else:
+        assert x.shape[1] == len(bands)
+        for i in range (len(x)):
+            for ib, b in enumerate(bands):
+                x[i,ib] = np.tanh(np.arcsinh(x[i,ib]/(I[b]/beta)))
+    return x
 
 ############# LOAD MODEL ##################
 def load_vae_conv(path,nb_of_bands,folder = False):
