@@ -3,9 +3,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-for p in sys.path:
-     print(p)
-
 import os
 import random
 import tensorflow.keras
@@ -77,12 +74,15 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.liste = np.load(np.random.choice(self.list_of_samples, p = self.p), mmap_mode = 'c')
         self.r = np.random.choice(len(self.liste), size = self.batch_size, replace=False)
 
-        self.x = self.liste[self.r,1,self.bands]
-        self.y = self.liste[self.r,0,self.bands]
+        #print(self.bands, self.r,)
+        #print(self.liste[self.r, 1][:,[6]].shape)
+        #print(self.liste[self.r,1,self.bands].shape, self.liste[self.r,1,self.bands])
+        self.x = self.liste[self.r,1][:,self.bands]
+        self.y = self.liste[self.r,0][:,self.bands]
         
-        if len(self.bands) == 1:
-            self.x = np.expand_dims(self.x, axis = 1)
-            self.y = np.expand_dims(self.y, axis = 1)
+        #if len(self.bands) == 1:
+        #    self.x = np.expand_dims(self.x, axis = 1)
+        #    self.y = np.expand_dims(self.y, axis = 1)
 
         # Preprocessing of the data to be easier for the network to learn
         self.x = utils.norm(self.x, self.bands)

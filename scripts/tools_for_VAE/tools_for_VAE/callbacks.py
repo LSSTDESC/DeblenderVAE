@@ -18,7 +18,7 @@ from tensorflow.keras import metrics
 # Create a callback for changing KL coefficient in the loss
 class changeAlpha(Callback):
     def __init__(self, alpha, vae, vae_loss):
-        self.epoch = 0
+        self.epoch = 1
         self.alpha = alpha
         self.vae = vae
         self.vae_loss = vae_loss
@@ -36,7 +36,7 @@ class changeAlpha(Callback):
             self.vae.compile('adam', loss=self.vae_loss, metrics=['mse'])
             K.set_value(self.vae.optimizer.lr, 0.0001)
             print('loss modified')
-            self.epoch = 0
+            self.epoch = 1
         
         self.epoch +=1
 
