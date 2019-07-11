@@ -33,7 +33,7 @@ def norm(x, bands, channel_last=False):
                 x[i,ib] = np.tanh(np.arcsinh(x[i,ib]/(I[b]/beta)))
     return x
 
-def de_norm(x, bands, channel_last=False):
+def denorm(x, bands, channel_last=False):
     I = [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
     beta = 5.
     if channel_last:

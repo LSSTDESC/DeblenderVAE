@@ -2,6 +2,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+for p in sys.path:
+     print(p)
+
 import os
 import logging
 import galsim
@@ -24,7 +27,7 @@ import tensorflow_probability as tfp
 from generator_vae import BatchGenerator_lsst_r_band, BatchGenerator
 
 sys.path.insert(0,'../tools_for_VAE/')
-from tools_for_VAE import vae_functions, model, utils
+from tools_for_VAE import vae_functions, model, utils, callbacks
 from tools_for_VAE.callbacks import changeAlpha
 
 
@@ -47,9 +50,10 @@ print(vae.summary())
 
 ######## Define the loss function
 alpha = K.variable(1e-4)
+beta = K.variable(1)
 
 def vae_loss(x, x_decoded_mean):
-     xent_loss = K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
+     xent_loss = K.get_value(beta) * K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
      kl_loss =  K.get_value(alpha) * Dkl
      return xent_loss + K.mean(kl_loss)
 
@@ -64,7 +68,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/test_KL/test_3/'
 path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/test_kl/test_3/'
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
-#alphaChanger = changeAlpha(alpha, vae, epochs)
+
+alphaChanger = callbacks.changeAlpha(alpha, vae, vae_loss)
 # Callback to display evolution of training
 vae_hist = vae_functions.VAEHistory(x_val, vae_utils, latent_dim, alpha, plot_bands=0, figname=path_plots+'test_')#noisy_
 # Keras Callbacks
@@ -74,7 +79,7 @@ checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users
 #tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'v6', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
 
 ######## Define all used callbacks
-callbacks = [vae_hist, checkpointer_mse]#,checkpointer_loss, tbCallBack]#, alphaChanger earlystop,vae_hist, checkpointer,  
+callbacks = [vae_hist, checkpointer_mse, alphaChanger]#,checkpointer_loss, tbCallBack]#, alphaChanger earlystop,vae_hist, checkpointer,  
  
 ######## List of data samples
 list_of_samples=['/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_1_v3.npy',

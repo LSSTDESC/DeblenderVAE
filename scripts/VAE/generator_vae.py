@@ -3,6 +3,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+for p in sys.path:
+     print(p)
+
 import os
 import random
 import tensorflow.keras
@@ -10,7 +13,7 @@ from random import choice
 from tensorflow.python.keras.utils import Sequence
 
 sys.path.insert(0,'../tools_for_VAE/')
-from tools_for_VAE import  utils
+from tools_for_VAE import utils
 
 
 

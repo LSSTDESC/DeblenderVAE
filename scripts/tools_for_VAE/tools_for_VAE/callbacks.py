@@ -14,28 +14,29 @@ import tensorflow as tf
 from tensorflow.keras import metrics
 
 
-
 ###### Callbacks
 # Create a callback for changing KL coefficient in the loss
 class changeAlpha(Callback):
-    def __init__(self, alpha, vae, epochs):
+    def __init__(self, alpha, vae, vae_loss):
         self.epoch = 0
         self.alpha = alpha
         self.vae = vae
-        self.epochs = epochs
+        self.vae_loss = vae_loss
+        #self.epochs = epochs
     
     def on_epoch_end(self, alpha, vae):
         stable = 10
         new_alpha = 0.0001
-        if self.epoch > stable :
-            coef = self.epoch - (self.epochs + stable)/2
-            print(coef)
-            new_alpha = 1/(1+np.exp(-(coef)))*0.01
-        print(new_alpha, self.epoch)
-        K.set_value(self.alpha, new_alpha)
-        self.vae.compile('adam', loss=vae_loss, metrics=['mse'])
-        K.set_value(self.vae.optimizer.lr, 0.0001)
-        print('loss modified')
+        if self.epoch > stable and K.get_value(self.alpha)>2e-8 :
+            #coef = self.epoch - (self.epochs + stable)/2
+            #print(coef)
+            new_alpha = K.get_value(self.alpha)/2#1/(1+np.exp(-(coef)))*0.01
+            print(new_alpha, self.epoch)
+            K.set_value(self.alpha, new_alpha)
+            self.vae.compile('adam', loss=self.vae_loss, metrics=['mse'])
+            K.set_value(self.vae.optimizer.lr, 0.0001)
+            print('loss modified')
+            self.epoch = 0
         
         self.epoch +=1
 
