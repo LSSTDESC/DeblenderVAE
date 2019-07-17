@@ -54,7 +54,7 @@ def deblender_loss(x, x_decoded_mean):
     #kl_loss = K.get_value(alpha) * Dkl
     return xent_loss #+ K.mean(kl_loss))
 
-# Comment or not depending on what's necessary
+########### Comment or not depending on what's necessary
 # Load weights
 deblender = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v8/mse/', 6, folder = True)
 
@@ -75,7 +75,7 @@ tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'noiseless/', histog
 checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 
-alphaChanger = callbacks.changeAlpha(alpha, deblender, deblender_loss)
+alphaChanger = callbacks.changeAlpha(alpha, deblender, deblender_loss, path_weights)
 ######## Define all used callbacks
 callbacks = [checkpointer_mse, alphaChanger]#vae_hist, , checkpointer_loss
  
