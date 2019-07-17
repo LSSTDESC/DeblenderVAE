@@ -45,7 +45,7 @@ encoder, decoder = model.vae_model(latent_dim, 10)
 vae, vae_utils, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
 
 ######## Define the loss function
-alpha = K.variable(1e-2)
+alpha = K.variable(1e-4)
 
 def vae_loss(x, x_decoded_mean):
     xent_loss = K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
@@ -66,7 +66,7 @@ path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v4/'
 
 alphaChanger = changeAlpha(alpha, vae, vae_loss)
 # Callback to display evolution of training
-vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=[2,3,5], figname=path_plots+'test_noisy_LSST_v4')
+vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=[6], figname=path_plots+'test_noisy_LSST_v4')
 # Keras Callbacks
 earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
 checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
@@ -91,10 +91,10 @@ validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_si
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=18,
+                  steps_per_epoch=1800,
                   verbose=2,
                   shuffle = True,
                   validation_data=validation_generator,
-                  validation_steps=2,
+                  validation_steps=200,
                   callbacks=callbacks,
                   workers = 0)

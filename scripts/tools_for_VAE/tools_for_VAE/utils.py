@@ -101,7 +101,7 @@ def load_vae_decoder(path,nb_of_bands,folder = False):
     epsilon_std = 1.0
     
     input_shape = (64,64,nb_of_bands)
-    latent_dim = 10
+    latent_dim = 32
     hidden_dim = 256
     filters = [32,64, 128, 256]
     kernels = [3,3,3,3]

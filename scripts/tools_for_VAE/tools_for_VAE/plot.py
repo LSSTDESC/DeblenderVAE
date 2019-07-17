@@ -7,10 +7,10 @@ def plot_rgb_lsst(ugrizy_img, stamp_size, ax=None):
     if ax is None:
         _, ax = plt.subplots(1,1)
     max_img = np.max(ugrizy_img)
-    ugrizy_img = ugrizy_img[:,:,:].reshape((6,stamp_size,stamp_size))
-    RGB_img[:,:,0] = ugrizy_img[1][:,:]
-    RGB_img[:,:,1] = ugrizy_img[2][:,:]
-    RGB_img[:,:,2] = ugrizy_img[4][:,:]
+    ugrizy_img = ugrizy_img[:,:,:]#.reshape((6,stamp_size,stamp_size))
+    RGB_img[:,:,0] = ugrizy_img[:,:,1]#[1]
+    RGB_img[:,:,1] = ugrizy_img[:,:,2]#[2]
+    RGB_img[:,:,2] = ugrizy_img[:,:,4]#[4]
     ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img)
 
 # plot function for RGB image with the 10 LSST+Euclid bandpass filters

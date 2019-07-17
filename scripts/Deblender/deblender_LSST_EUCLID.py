@@ -21,11 +21,9 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 from generator_deblender import BatchGenerator_lsst_euclid_process
-#import vae, layers
 
-#sys.path.insert(0,'../tools_for_VAE/')
-#from tools_for_VAE import model, vae_functions, utils
-import model, vae_functions, utils
+sys.path.insert(0,'../tools_for_VAE/')
+from tools_for_VAE import model, vae_functions, utils
 
 ######## Set some parameters
 batch_size = 100

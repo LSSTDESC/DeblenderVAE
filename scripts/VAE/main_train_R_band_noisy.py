@@ -46,7 +46,7 @@ vae, vae_utils,  Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_co
 print(vae.summary())
 
 ######## Define the loss function
-alpha = K.variable(1e-2)
+alpha = K.variable(1e-4)
 beta = K.variable(1)
 
 def vae_loss(x, x_decoded_mean):
@@ -62,8 +62,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v10/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v10/'
+path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/test_KL/v11/'#/v10
+path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/test_kl/v11/'#/v10
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = callbacks.changeAlpha(alpha, vae, vae_loss)

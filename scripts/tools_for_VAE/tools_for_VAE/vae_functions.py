@@ -134,12 +134,12 @@ class VAEHistory(Callback):
                 axes[4].set_title('z~N(0,1)')
                 
                 idx = np.random.randint(0,len(self.xval_sub), size=1)
-                
+            
                 ax = axes[5]
                 #if self.plot_bands == 0:
                 #    self.xval_sub = self.xval_sub.reshape((500,64,64,1))
                 #print(self.xval_sub.reshape((500,64,64,1))[idx][:,:][self.plot_bands].shape)
-                im = ax.imshow(self.xval_sub[idx][:,:][self.plot_bands].reshape((64,64)))
+                im = ax.imshow(self.xval_sub[idx,:,:,self.plot_bands].reshape((64,64)))
                 #ax.imshow(self.xval_sub[idx])
                 if isinstance(self.plot_bands, int):
                     divider = make_axes_locatable(ax)
@@ -152,7 +152,7 @@ class VAEHistory(Callback):
                 ax = axes[6]
                 #if self.plot_bands == 0:
                 #    out = out.reshape((500,64,64,1))
-                im = ax.imshow(out[idx][:,:][self.plot_bands].reshape((64,64)))
+                im = ax.imshow(out[idx,:,:,self.plot_bands].reshape((64,64)))
                 #ax.imshow(out[idx])
                 if isinstance(self.plot_bands, int):
                     divider = make_axes_locatable(ax)
@@ -169,14 +169,13 @@ class VAEHistory(Callback):
                 # if self.plot_bands == 0:
                 #     self.xval_sub = self.xval_sub.reshape((500,64,64))
 
+                self.counter = 1
 
             except :
                 print('erreur')
                 pass
 
-            self.counter = 1
-
-        #plt.show()
+            #plt.show()
         
 
 
