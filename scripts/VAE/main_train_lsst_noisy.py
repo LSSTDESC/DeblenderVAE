@@ -62,7 +62,7 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v8/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v9/'
 path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/v4/'
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
@@ -75,7 +75,7 @@ checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'wei
 checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 
 ######## Define all used callbacks
-callbacks = [vae_hist,checkpointer_mse,  alphaChanger]# earlystop, checkpointer_loss,
+callbacks = [checkpointer_mse,  alphaChanger]# earlystop, checkpointer_loss,vae_hist,
  
 ######## List of data samples
 list_of_samples=['/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_1_v3.npy',
