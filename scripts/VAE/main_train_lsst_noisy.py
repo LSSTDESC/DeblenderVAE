@@ -54,6 +54,10 @@ def vae_loss(x, x_decoded_mean):
     kl_loss = K.get_value(alpha) * Dkl
     return xent_loss + K.mean(kl_loss)
 
+############## Comment or not depending on what's necessary
+# Load weights
+vae = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v9/', 6, folder = True)
+
 ######## Compile the VAE
 vae.compile('adam', loss=vae_loss, metrics=['mse'])
 
