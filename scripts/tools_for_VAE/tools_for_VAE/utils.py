@@ -182,6 +182,9 @@ def load_deblender(path_deblender, path_encoder,nb_of_bands, folder = False):
 
     return deblender_loaded, Dkl
 
+def load_alpha(path_alpha):
+    return np.load(path_alpha+'alpha.npy')[0]
+
 
 
 ##############   LOAD DATA    ############

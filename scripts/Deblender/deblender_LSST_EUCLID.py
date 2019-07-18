@@ -50,12 +50,12 @@ alpha = K.variable(0.0001)
 
 def deblender_loss(x, x_decoded_mean):
     xent_loss = original_dim*K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
-    #kl_loss = K.get_value(alpha) * Dkl
-    return xent_loss #+ K.mean(kl_loss))
+    kl_loss = K.get_value(alpha) * Dkl
+    return xent_loss + K.mean(kl_loss))
 
 ########### Comment or not depending on what's necessary
 # Load weights
-deblender = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v4/mse/', '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v1/mse/', 10, folder = True)
+deblender, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v4/mse/', '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v1/mse/', 10, folder = True)
 
 ######## Compile the deblender
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
