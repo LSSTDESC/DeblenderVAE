@@ -171,15 +171,16 @@ def load_deblender(path_deblender, path_encoder,nb_of_bands, folder = False):
 
     # Use the encoder of the trained VAE
     # Definition of deblender
-    deblender_loaded = Model(input_deblender, decoder(z_d))
-    
+    #deblender_loaded = Model(input_deblender, decoder(z_d))
+    deblender_loaded, deblender_utils, Dkl = vae_functions.build_vanilla_vae(encoder_d, decoder, full_cov=False, coeff_KL = 0)
+
     if folder == False: 
         deblender_loaded.load_weights(path_deblender)
     else:
         latest = tf.train.latest_checkpoint(path_deblender)
         deblender_loaded.load_weights(latest)
 
-    return deblender_loaded
+    return deblender_loaded, Dkl
 
 
 

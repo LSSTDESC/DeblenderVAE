@@ -22,6 +22,7 @@ class changeAlpha(Callback):
         self.alpha = alpha
         self.vae = vae
         self.vae_loss = vae_loss
+        self.path = path
         #self.epochs = epochs
     
     def on_epoch_end(self, alpha, vae):
@@ -37,7 +38,7 @@ class changeAlpha(Callback):
             K.set_value(self.vae.optimizer.lr, 0.0001)
             print('loss modified')
             self.epoch = 1
-            np.save(path+'alpha', self.alpha)
+            np.save(self.path+'alpha', K.get_value(self.alpha))
         
         self.epoch +=1
 
