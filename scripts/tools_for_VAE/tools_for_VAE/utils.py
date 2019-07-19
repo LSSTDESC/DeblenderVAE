@@ -180,7 +180,7 @@ def load_deblender(path_deblender, path_encoder,nb_of_bands, folder = False):
         latest = tf.train.latest_checkpoint(path_deblender)
         deblender_loaded.load_weights(latest)
 
-    return deblender_loaded, Dkl
+    return deblender_loaded, encoder_d, Dkl
 
 def load_alpha(path_alpha):
     return np.load(path_alpha+'alpha.npy')

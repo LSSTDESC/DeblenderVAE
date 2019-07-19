@@ -56,7 +56,7 @@ def deblender_loss(x, x_decoded_mean):
 
 ########### Comment or not depending on what's necessary
 # Load weights
-deblender, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v8/mse/', 6, folder = True)
+deblender, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v8/mse/', 6, folder = True)
 K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/'))
 ######## Compile the VAE
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
