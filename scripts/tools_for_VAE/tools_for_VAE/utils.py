@@ -48,6 +48,48 @@ def denorm(x, bands, channel_last=False):
                 x[i,ib] = np.sinh(np.arctanh(x[i,ib]))*(I[b]/beta)
     return x
 
+############ DELTA_R and DELTA_MAG COMPUTATION ##########
+def delta_min(shift_path, mag_path):
+    mag =np.load(mag_path)
+    shift =np.load(shift_path)
+    
+    #Reshape the list of shifts so that it is easily usable
+    shifts = np.zeros((len(shift),4,2))
+    mags = np.zeros((len(shift),4))
+
+    for i in range (len(shift)):
+        for j in range (len(shift[i])):
+            shifts[i][j] = shift[i][j]
+            mags[i][j] = mag[i][j]
+
+    # set lists
+    deltas_r= np.zeros((len(shift),4))
+    delta_r= np.zeros((len(shift)))
+
+    deltas_mag= np.zeros((len(shift),4))
+    delta_mag = np.zeros((len(shift)))
+
+    # compute the delta r for each couple of galaxies
+    for i in range (4):
+        deltas_r[:,i] = np.sqrt(np.square(shifts[:,i,0])+np.square(shifts[:,i,1]))
+        deltas_mag[:,i] = mags[:,i] - mags[:,0]
+
+    # Take the min of the non zero delta r
+    for j in range (len(shifts)):
+        # If all the deta_r are equals to 0 (there is only on galaxy on the image) then write 0
+        if (deltas_r[j,:].any() == 0):
+            delta_r[j] = 0
+            delta_mag[j] = 0
+        else:
+            x = np.where(deltas_r[j] == 0)[0]
+            deltas = np.delete(deltas_r[j],x)
+            delta_r[j] = np.min(deltas)
+            y = np.where(deltas==np.min(deltas))[0]
+            delta_mag[j] = deltas_mag[j,y[0]]
+        
+    
+    return delta_r, delta_mag
+
 ############# LOAD MODEL ##################
 def load_vae_conv(path,nb_of_bands,folder = False):
     """
