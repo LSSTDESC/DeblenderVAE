@@ -29,19 +29,12 @@ cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lss
 # Here we do the detection in R band of LSST
 def SNR(gal_noiseless,gal_noisy):
     condition = False
-    #g = Gaussian2DKernel(x_stddev=10)
-    #img_convolv_noisy = convolve(gal_noisy[6], g)
-    #img_convolv_noiseless = convolve(gal_noiseless[6], g)
-    max_img_noisy = np.max(gal_noisy[6])
+    noise = np.std(gal_noisy[6]-gal_noiseless[6])
     max_img_noiseless = np.max(gal_noiseless[6])
     
-    snr = abs(max_img_noiseless/(max_img_noisy-max_img_noiseless))
-    if snr>2 : 
-        condition = True
-    else:
-        condition = False
-
-    return condition
+    snr = abs(max_img_noiseless/noise)
+    
+    return (snr>2)
 
 
 import multiprocessing
@@ -89,9 +82,6 @@ count = 0
 N_cosmo = 40000
 N_per_gal = 1
 
-ud = galsim.UniformDeviate()
-rng = galsim.BaseDeviate()
-
 counter = 0
 
 itr = np.arange(N_cosmo)
@@ -105,7 +95,7 @@ print( 'test')
 def func(ind):
     gal_noiseless, gal_noisy, redshift=Gal_generator_noisy_pix_same(cosmos_cat)
     if (SNR(gal_noiseless,gal_noisy) == True):
-        return np.array((gal_noiseless,gal_noisy))#, np.array((redshift))
+        return np.array((gal_noiseless,gal_noisy))
     else:
         return func(ind+1) 
 
