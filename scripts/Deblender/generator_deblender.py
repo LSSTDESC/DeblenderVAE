@@ -175,6 +175,8 @@ class BatchGenerator_test(tensorflow.keras.utils.Sequence):
 
         self.mag = self.magnitude[self.r]
         self.s = self.shift[self.r]
+
+        self.delta_r, self.delta_mag = utils.delta_min(self.s, self.mag)
         
         # Preprocessing of the data to be easier for the network to learn
         self.x = utils.norm(self.x, self.bands)
@@ -183,7 +185,7 @@ class BatchGenerator_test(tensorflow.keras.utils.Sequence):
         self.x = np.transpose(self.x, axes = (0,2,3,1))
         self.y = np.transpose(self.y, axes = (0,2,3,1))
         
-        return self.x, self.y, self.mag, self.s
+        return self.x, self.y, self.mag, self.s, self.delta_r, self.delta_mag
 
 
 
