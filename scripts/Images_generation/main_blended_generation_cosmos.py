@@ -28,16 +28,11 @@ cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lss
 # Here we do the detection in R band of LSST
 def SNR(gal_noiseless,gal_noisy):
     condition = False
-    max_img_noisy = np.max(gal_noisy[6])
+    noise = np.std(gal_noisy[6]-gal_noiseless[6])
     max_img_noiseless = np.max(gal_noiseless[6])
     
-    snr = abs(max_img_noiseless/(max_img_noisy-max_img_noiseless))
-    if snr>2 : 
-        condition = True
-    else:
-        condition = False
-
-    return condition
+    snr = abs(max_img_noiseless/noise)
+    return (snr>2)
 
 import multiprocessing
 import time

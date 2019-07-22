@@ -114,10 +114,6 @@ max_stamp_size = np.max((lsst_stamp_size,nir_stamp_size,vis_stamp_size))
 
 # Generation function
 def Gal_generator_noisy_pix_same(cosmos_cat):
-    # count = 0
-    # galaxy = np.zeros((10))
-    # while (galaxy.all() == 0):
-    #     try:
     ############## SHAPE OF THE GALAXY ##################
     ud = galsim.UniformDeviate()
     gal = cosmos_cat.makeGalaxy(random.randint(0,cosmos_cat.nobjects-1), gal_type='parametric', chromatic=True, noise_pad_size = 0)
@@ -187,7 +183,6 @@ def Gal_generator_noisy_pix_same(cosmos_cat):
                 img.addNoise(poissonian_noise_vis)
                 galaxy_noisy[i] = img.array.data
             else:
-#                print('passage a LSST')
                 poissonian_noise_lsst = galsim.PoissonNoise(rng, sky_level_pixel_lsst[i-4])
                 img = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_lsst)  
                 bdfinal = galsim.Convolve([bdgal_lsst, PSF_lsst])
@@ -197,8 +192,5 @@ def Gal_generator_noisy_pix_same(cosmos_cat):
                 # Noisy galaxy
                 img.addNoise(poissonian_noise_lsst)
                 galaxy_noisy[i]= img.array.data
-        # i+=1
-            return galaxy_noiseless, galaxy_noisy, redshift
-        # except RuntimeError: 
-        #     count +=1
-        print("nb of error : "+str(count))
+    
+    return galaxy_noiseless, galaxy_noisy, redshift
