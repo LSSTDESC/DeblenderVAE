@@ -91,6 +91,8 @@ img_cube_list = []
 import time
 
 
+######## TRAINING SAMPLE 
+
 
 # def func(ind):
 #     nb_blended_gal = np.random.randint(1,5)
@@ -111,6 +113,8 @@ import time
 #np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_2_v4.npy', img_cube_list)
 
 
+
+######## TEST SAMPLE 
 i = 0
 galaxies = []
 shift_list = []
