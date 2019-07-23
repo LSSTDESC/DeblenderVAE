@@ -59,7 +59,7 @@ for filter_name in filter_names_lsst:
 pixel_scale_lsst = 0.2 # arcseconds # LSST Science book
 pixel_scale_euclid_nir = 0.3 # arcseconds # Euclid Science book
 pixel_scale_euclid_vis = 0.1 # arcseconds # Euclid Science book
-
+pixel_scale = [pixel_scale_euclid_nir]*3 + [pixel_scale_euclid_vis] + [pixel_scale_lsst]*6
 
 #################### NOISE ###################
 # Poissonian noise according to sky_level
@@ -96,6 +96,7 @@ sky_level_pixel_nir = [int((sky_level_nir_Y * 1800 * pixel_scale_euclid_nir**2))
                         int((sky_level_nir_H* 1800 * pixel_scale_euclid_nir**2))]# in e-/pixel/1800s
 sky_level_pixel_vis = int((sky_level_vis * 1800 * pixel_scale_euclid_vis**2))# in e-/pixel/1800s
 
+sky_level = sky_level_pixel_nir + [sky_level_pixel_vis] + sky_level_pixel_lsst
 
 ########### PSF #####################
 fwhm_lsst = 0.65 #pdf.rvs() #Fixed at median value : Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
@@ -106,6 +107,180 @@ beta = 2.5
 PSF_lsst = galsim.Kolmogorov(fwhm=fwhm_lsst)#galsim.Moffat(fwhm=fwhm_lsst, beta=beta)
 PSF_euclid_nir = galsim.Moffat(fwhm=fwhm_euclid_nir, beta=beta)
 PSF_euclid_vis = galsim.Moffat(fwhm=fwhm_euclid_vis, beta=beta)
+
+
+############# SIZE OF STAMPS ################
+# The stamp size of NIR instrument is taken equal to the one of LSST to have a nb of pixels which is 
+# an integer and in the same time the max_stamp_size a power of 2 (works better for FFT)
+# The physical size in NIR instrument is then larger than in the other stamps but the information needed
+# for the VAE and deblender is contained in the stamp.
+phys_stamp_size = 6.4 # Arcsecond
+lsst_stamp_size = int(phys_stamp_size/pixel_scale_lsst) # Nb of pixels
+nir_stamp_size = int(phys_stamp_size/pixel_scale_euclid_nir)+1 # Nb of pixels
+vis_stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis) # Nb of pixels
+
+max_stamp_size = np.max((lsst_stamp_size,nir_stamp_size,vis_stamp_size))
+
+shift_method='uniform'
+
+def shift_gal(gal, method='uniform'):
+    if method == 'uniform':
+        shift_x = np.random.uniform(-2.5,2.5)
+        shift_y = np.random.uniform(-2.5,2.5)
+    elif method == 'lognorm_rad':
+        raise NotImplementedError
+    else:
+        raise ValueError
+    return gal.shift((shift_x,shift_y)), (shift_x,shift_y)
+
+coeff_hst_lsst = (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_lsst
+coeff_hst_euclid = (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_euclid
+
+
+def create_images(i,filter_, sky_level_pixel, stamp_size, pixel_scale, nb_blended_gal, PSF, bdgal, add_gal):
+    # Create poissonian noise
+    poissonian_noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
+    
+    # Create images to be filled with galaxies and noise
+    img = galsim.ImageF(stamp_size,stamp_size, scale=pixel_scale)
+    img_noisy = galsim.ImageF(stamp_size,stamp_size, scale=pixel_scale)
+    img_blend_noiseless = galsim.ImageF(stamp_size,stamp_size, scale=pixel_scale)
+    img_blend_noisy = galsim.ImageF(stamp_size,stamp_size, scale=pixel_scale)
+
+    # Create noiseless image of the centered galaxy
+    bdfinal = galsim.Convolve([bdgal, PSF])
+
+    # Initialize each image: mandatory or allocation problems
+    bdfinal.drawImage(filter_, image=img)
+    bdfinal.drawImage(filter_, image=img_noisy)
+    bdfinal.drawImage(filter_, image=img_blend_noiseless)
+    bdfinal.drawImage(filter_, image=img_blend_noisy)
+
+    # Initialize blendedness lists
+    Blendedness_lsst = np.zeros((nb_blended_gal-1))
+    Blendedness_euclid = np.zeros((nb_blended_gal-1))
+
+    # Save noiseless galaxy
+    galaxy_noiseless = img.array.data
+    #img_noiseless = img
+
+    # Add noise and save noisy centered galaxy
+    img_noisy.addNoise(poissonian_noise)
+    galaxy_noisy = img_noisy.array.data
+
+    # Choose value to create blended image in NIR, VIS or LSST filter
+    if i < 3:
+        rank_img = 0
+    elif i == 3:
+        rank_img = 1
+    else:
+        rank_img = 2
+
+    # Create blended image
+    for k in range (nb_blended_gal-1):
+        img_new = galsim.ImageF(stamp_size, stamp_size, scale=pixel_scale)
+        bdfinal_new = galsim.Convolve([add_gal[k][rank_img], PSF])
+        bdfinal_new.drawImage(filter_, image=img_new)
+        img_blend_noiseless += img_new
+        img_blend_noisy += img_new
+        if i == 3 :
+            Blendedness_euclid[k]= utils.blendedness(img,img_new)
+        elif i ==6 :
+            Blendedness_lsst[k]= utils.blendedness(img,img_new)
+    
+    # Save noiseless blended image
+    blend_noiseless = img_blend_noiseless.array.data
+    
+    # Add noise and save noisy blended image
+    img_blend_noisy.addNoise(poissonian_noise)
+    blend_noisy = img_blend_noisy.array.data
+
+    return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, Blendedness_lsst, Blendedness_euclid
+
+
+
+# Generation function
+def Gal_generator_noisy_test_2(cosmos_cat, nb_blended_gal):
+    ############## GENERATION OF THE GALAXIES ##################
+    ud = galsim.UniformDeviate()
+    
+    galaxies = []
+    mag=[]
+    for i in range (nb_blended_gal):
+        galaxies.append(cosmos_cat.makeGalaxy(random.randint(0,cosmos_cat.nobjects-1), gal_type='parametric', chromatic=True, noise_pad_size = 0))
+        mag.append(galaxies[i].calculateMagnitude(filters['r'].withZeropoint(28.13)))
+
+    gal = galaxies[np.where(mag == np.min(mag))[0][0]]
+    redshift = gal.SED.redshift
+    
+    galaxies.remove(gal)
+        
+    ############ LUMINOSITY ############# 
+    # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             
+    bdgal_lsst =  gal * coeff_hst_lsst
+    bdgal_euclid_nir =  coeff_hst_euclid * gal
+    bdgal_euclid_vis =  coeff_hst_euclid * gal
+    
+    add_gal = []
+    shift=np.zeros((nb_blended_gal-1, 2))
+    for i in range (len(galaxies)):
+        gal_new = None
+        ud = galsim.UniformDeviate()
+        gal_new = galaxies[i].rotate(ud() * 360. * galsim.degrees)
+
+        gal_new, shift[i]  = shift_gal(gal_new, method=shift_method)
+            
+        bdgal_new_lsst = None
+        bdgal_new_euclid_nir =None
+        bdgal_new_euclid_vis =None
+        bdgal_new_lsst =  coeff_hst_lsst * gal_new
+        bdgal_new_euclid_nir =  coeff_hst_euclid * gal_new
+        bdgal_new_euclid_vis =  coeff_hst_euclid * gal_new
+        add_gal.append([bdgal_new_euclid_nir,bdgal_new_euclid_vis, bdgal_new_lsst])
+
+    galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
+    galaxy_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
+
+    blend_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
+    blend_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
+
+    Blendedness_lsst = np.zeros((10,nb_blended_gal-1))
+    Blendedness_euclid = np.zeros((10,nb_blended_gal-1))
+
+    i = 0
+    for filter_name, filter_ in filters.items():
+        if (i < 3):
+            galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_nir[i], max_stamp_size, pixel_scale_euclid_nir, nb_blended_gal, PSF_euclid_nir, bdgal_euclid_nir, add_gal)
+        elif (i==3):
+            galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_vis, max_stamp_size, pixel_scale_euclid_vis, nb_blended_gal, PSF_euclid_vis, bdgal_euclid_vis, add_gal)
+        else:
+            galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_lsst[i-4], max_stamp_size, pixel_scale_lsst, nb_blended_gal, PSF_lsst, bdgal_lsst, add_gal)
+        i+=1
+
+    return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -133,9 +308,9 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                 
             ############ LUMINOSITY ############# 
             # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             
-            bdgal_lsst =  (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_lsst
-            bdgal_euclid_nir =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_euclid
-            bdgal_euclid_vis =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_euclid         
+            bdgal_lsst =  gal * coeff_hst_lsst
+            bdgal_euclid_nir =  coeff_hst_euclid * gal
+            bdgal_euclid_vis =  coeff_hst_euclid * gal
 
 
             add_gal = []
@@ -144,22 +319,17 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                 gal_new = None
                 ud = galsim.UniformDeviate()
                 gal_new = galaxies[i].rotate(ud() * 360. * galsim.degrees)
-                shift_x = np.random.uniform(-2.5,2.5)
-                shift_y = np.random.uniform(-2.5,2.5)
 
-                gal_new = gal_new.shift((shift_x,shift_y))
+                gal_new, shift[i]  = shift_gal(gal_new, method=shift_method)
                    
                 bdgal_new_lsst = None
                 bdgal_new_euclid_nir =None
                 bdgal_new_euclid_vis =None
-                bdgal_new_lsst =  (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * gal_new * N_exposures_lsst
-                bdgal_new_euclid_nir =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal_new * N_exposures_euclid
-                bdgal_new_euclid_vis =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal_new * N_exposures_euclid
+                bdgal_new_lsst =  coeff_hst_lsst * gal_new
+                bdgal_new_euclid_nir =  coeff_hst_euclid * gal_new
+                bdgal_new_euclid_vis =  coeff_hst_euclid * gal_new
                 add_gal.append([bdgal_new_euclid_nir,bdgal_new_euclid_vis, bdgal_new_lsst])
-                shift[i]=(shift_x,shift_y)
 
-
-            
             #print(len(add_gal),len(add_gal[0]))
             ########### PSF #####################
             # convolve with PSF to make final profil : profil from LSST science book and (https://arxiv.org/pdf/0805.2366.pdf)
@@ -189,34 +359,9 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
             # PSF_euclid_nir = galsim.Moffat(fwhm=fwhm_euclid_nir, beta=beta)
             # PSF_euclid_vis = galsim.Moffat(fwhm=fwhm_euclid_vis, beta=beta)
 
-            ############# SIZE OF STAMPS ################
-            # The stamp size of NIR instrument is taken equal to the one of LSST to have a nb of pixels which is 
-            # an integer and in the same time the max_stamp_size a power of 2 (works better for FFT)
-            # The physical size in NIR instrument is then larger than in the other stamps but the information needed
-            # for the VAE and deblender is contained in the stamp.
-            phys_stamp_size = 6.4 # Arcsecond
-            lsst_stamp_size = int(phys_stamp_size/pixel_scale_lsst) # Nb of pixels
-            nir_stamp_size = int(phys_stamp_size/pixel_scale_euclid_nir)+1 # Nb of pixels
-            vis_stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis) # Nb of pixels
-
-            max_stamp_size = np.max((lsst_stamp_size,nir_stamp_size,vis_stamp_size))
-
-            galaxy_nir_noiseless = np.zeros((3,max_stamp_size,max_stamp_size))
-            galaxy_vis_noiseless = np.zeros((1,max_stamp_size,max_stamp_size))
-            galaxy_lsst_noiseless = np.zeros((6,max_stamp_size,max_stamp_size))
-            galaxy_nir_noisy = np.zeros((3,max_stamp_size,max_stamp_size))
-            galaxy_vis_noisy = np.zeros((1,max_stamp_size,max_stamp_size))
-            galaxy_lsst_noisy = np.zeros((6,max_stamp_size,max_stamp_size))
             galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
             galaxy_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
 
-
-            blend_nir_noiseless = np.zeros((3,max_stamp_size,max_stamp_size))
-            blend_vis_noiseless = np.zeros((1,max_stamp_size,max_stamp_size))
-            blend_lsst_noiseless = np.zeros((6,max_stamp_size,max_stamp_size))
-            blend_nir_noisy = np.zeros((3,max_stamp_size,max_stamp_size))
-            blend_vis_noisy = np.zeros((1,max_stamp_size,max_stamp_size))
-            blend_lsst_noisy = np.zeros((6,max_stamp_size,max_stamp_size))
             blend_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
             blend_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
 
@@ -237,10 +382,8 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                     bdfinal = galsim.Convolve([bdgal_euclid_nir, PSF_euclid_nir])
                     bdfinal.drawImage(filter_, image=img)
                     # Noiseless galaxy
-                    galaxy_nir_noiseless[i]= img.array.data
-                    galaxy_noiseless[i] = galaxy_nir_noiseless[i]
+                    galaxy_noiseless[i] = img.array.data
                     img_noiseless = img
-                    #print('single galaxy finished')
 
                     #### Bended image
                     img_blended = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_euclid_nir)
@@ -249,19 +392,18 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                         img_new = galsim.ImageF(max_stamp_size, max_stamp_size, scale=pixel_scale_euclid_nir)
                         bdfinal_new = galsim.Convolve([add_gal[k][0], PSF_euclid_nir])
                         bdfinal_new.drawImage(filter_, image=img_new)
-                        img_blended = img_blended + img_new
+                        img_blended += img_new
                     # Noiseless blended image
-                    blend_nir_noiseless[i]= img_blended.array.data
-                    blend_noiseless[i] = blend_nir_noiseless[i]
+                    blend_noiseless[i] = img_blended.array.data
+
+
                     # Noisy centered galaxy
                     img_blended.addNoise(poissonian_noise_nir)
-                    blend_nir_noisy[i]= img_blended.array.data
-                    blend_noisy[i] = blend_nir_noisy[i]
+                    blend_noisy[i] = img_blended.array.data
 
                     # Noisy galaxy
                     img.addNoise(poissonian_noise_nir)
-                    galaxy_nir_noisy[i]= img.array.data
-                    galaxy_noisy[i] = galaxy_nir_noisy[i]
+                    galaxy_noisy[i] = img.array.data
                 else:
                     if (i==3):
                         poissonian_noise_vis = galsim.PoissonNoise(rng, sky_level=sky_level_pixel_vis)
@@ -269,8 +411,7 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                         bdfinal = galsim.Convolve([bdgal_euclid_vis, PSF_euclid_vis])
                         bdfinal.drawImage(filter_, image=img)
                         # Noiseless galaxy
-                        galaxy_vis_noiseless[3-i]= img.array.data
-                        galaxy_noiseless[i] = galaxy_vis_noiseless[3-i]
+                        galaxy_noiseless[i] = img.array.data
                         img_noiseless = img
 
                         #### Bended image
@@ -280,23 +421,17 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                             img_new = galsim.ImageF(max_stamp_size, max_stamp_size, scale=pixel_scale_euclid_vis)
                             bdfinal_new = galsim.Convolve([add_gal[k][1], PSF_euclid_vis])
                             bdfinal_new.drawImage(filter_, image=img_new)
-                            img_blended = img_blended + img_new
-
-                            #image = np.array(img.array.data)
-                            #image_new = np.array(img_new.array.data)
-                            Blendedness_euclid[k]= utils.blendedness(img,img_new)#np.sum(image*image_new)/np.sqrt(np.sum(image*image)*np.sum(image_new*image_new))
-                        # Noiseless blended image
-                        blend_vis_noiseless[3-i]= img_blended.array.data
-                        blend_noiseless[i] = blend_vis_noiseless[3-i]
+                            img_blended += img_new
+                            Blendedness_euclid[k]= utils.blendedness(img,img_new)
+                        # Noiseless blended image 
+                        blend_noiseless[i] = img_blended.array.data
                         # Noisy centered galaxy
                         img_blended.addNoise(poissonian_noise_vis)
-                        blend_vis_noisy[3-i]= img_blended.array.data
-                        blend_noisy[i] = blend_vis_noisy[3-i]
+                        blend_noisy[i] = img_blended.array.data
 
                         # Noisy galaxy
                         img.addNoise(poissonian_noise_vis)
-                        galaxy_vis_noisy[3-i]= img.array.data
-                        galaxy_noisy[i] = galaxy_vis_noisy[3-i]
+                        galaxy_noisy[i] = img.array.data
 
                     else:
         #                print('passage a LSST')
@@ -304,11 +439,14 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                         img = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_lsst)  
                         bdfinal = galsim.Convolve([bdgal_lsst, PSF_lsst])
                         bdfinal.drawImage(filter_, image=img)
-                        bdfinal.drawImage(filter_, image=img_noiseless)
+                        #bdfinal.drawImage(filter_, image=img_noiseless)
                         # Noiseless galaxy
-                        galaxy_lsst_noiseless[i-4]= img.array.data
-                        galaxy_noiseless[i] = galaxy_lsst_noiseless[i-4]
+                        galaxy_noiseless[i] = img.array.data
                         img_noiseless = img
+
+                        # Noisy galaxy
+                        img.addNoise(poissonian_noise_lsst)
+                        galaxy_noisy[i]= img.array.data
 
                         #### Bended image
                         img_blended = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_lsst)
@@ -317,27 +455,20 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                             img_new = galsim.ImageF(max_stamp_size, max_stamp_size, scale=pixel_scale_lsst)
                             bdfinal_new = galsim.Convolve([add_gal[k][2], PSF_lsst])
                             bdfinal_new.drawImage(filter_, image=img_new)
-                            img_blended = img_blended + img_new
+                            img_blended += img_new
                             if (i==6):
-                                #image = np.array(img.array.data)
-                                #image_new = np.array(img_new.array.data)
-                                Blendedness_lsst[k]= utils.blendedness(img,img_new)#np.sum(image*image_new)/np.sqrt(np.sum(image*image)*np.sum(image_new*image_new))
+                                Blendedness_lsst[k]= utils.blendedness(img,img_new)
                         # Noiseless blended image
-                        blend_lsst_noiseless[i-4]= img_blended.array.data
-                        blend_noiseless[i] = blend_lsst_noiseless[i-4]
+                        blend_noiseless[i] = img_blended.array.data
                         # Noisy centered galaxy
                         img_blended.addNoise(poissonian_noise_lsst)
-                        blend_lsst_noisy[i-4]= img_blended.array.data
-                        blend_noisy[i] = blend_lsst_noisy[i-4]
+                        blend_noisy[i] = img_blended.array.data
 
-                        # Noisy galaxy
-                        img.addNoise(poissonian_noise_lsst)
-                        galaxy_lsst_noisy[i-4]= img.array.data
-                        galaxy_noisy[i]= galaxy_lsst_noisy[i-4]
+
 
 
                 i+=1
-            return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy,shift, mag, Blendedness_euclid, Blendedness_lsst
+            return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, shift, mag, Blendedness_euclid, Blendedness_lsst
         except RuntimeError: 
             count +=1
     print("nb of error : "+(count))
@@ -391,29 +522,7 @@ def Gal_generator_noisy_training(cosmos_cat, nb_blended_gal):
                 add_gal.append([bdgal_new_euclid_nir,bdgal_new_euclid_vis, bdgal_new_lsst])
                 shift[i]=(shift_x,shift_y)
 
-
-
-            ############# SIZE OF STAMPS ################
-            # The stamp size of NIR instrument is taken equal to the one of LSST to have a nb of pixels which is 
-            # an integer and in the same time the max_stamp_size a power of 2 (works better for FFT)
-            # The physical size in NIR instrument is then larger than in the other stamps but the information needed
-            # for the VAE and deblender is contained in the stamp.
-            phys_stamp_size = 6.4 # Arcsecond
-            lsst_stamp_size = int(phys_stamp_size/pixel_scale_lsst) # Nb of pixels
-            nir_stamp_size = int(phys_stamp_size/pixel_scale_euclid_nir)+1 # Nb of pixels
-            vis_stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis) # Nb of pixels
-
-            max_stamp_size = np.max((lsst_stamp_size,nir_stamp_size,vis_stamp_size))
-
-            galaxy_nir_noiseless = np.zeros((3,max_stamp_size,max_stamp_size))
-            galaxy_vis_noiseless = np.zeros((1,max_stamp_size,max_stamp_size))
-            galaxy_lsst_noiseless = np.zeros((6,max_stamp_size,max_stamp_size))
             galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
-
-
-            blend_nir_noisy = np.zeros((3,max_stamp_size,max_stamp_size))
-            blend_vis_noisy = np.zeros((1,max_stamp_size,max_stamp_size))
-            blend_lsst_noisy = np.zeros((6,max_stamp_size,max_stamp_size))
             blend_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
 
             i = 0
@@ -426,8 +535,7 @@ def Gal_generator_noisy_training(cosmos_cat, nb_blended_gal):
                     bdfinal = galsim.Convolve([bdgal_euclid_nir, PSF_euclid_nir])
                     bdfinal.drawImage(filter_, image=img)
                     # Noiseless galaxy
-                    galaxy_nir_noiseless[i]= img.array.data
-                    galaxy_noiseless[i] = galaxy_nir_noiseless[i]
+                    galaxy_noiseless[i] = img.array.data
                     img_noiseless = img
                     #print('single galaxy finished')
 
@@ -441,8 +549,7 @@ def Gal_generator_noisy_training(cosmos_cat, nb_blended_gal):
                         img_blended = img_blended + img_new
                     # Noisy centered galaxy
                     img_blended.addNoise(poissonian_noise_nir)
-                    blend_nir_noisy[i]= img_blended.array.data
-                    blend_noisy[i] = blend_nir_noisy[i]
+                    blend_noisy[i] = img_blended.array.data
 
                 else:
                     if (i==3):
@@ -451,8 +558,7 @@ def Gal_generator_noisy_training(cosmos_cat, nb_blended_gal):
                         bdfinal = galsim.Convolve([bdgal_euclid_vis, PSF_euclid_vis])
                         bdfinal.drawImage(filter_, image=img)
                         # Noiseless galaxy
-                        galaxy_vis_noiseless[3-i]= img.array.data
-                        galaxy_noiseless[i] = galaxy_vis_noiseless[3-i]
+                        galaxy_noiseless[i] = img.array.data
                         img_noiseless = img
 
                         #### Bended image
@@ -465,8 +571,7 @@ def Gal_generator_noisy_training(cosmos_cat, nb_blended_gal):
                             img_blended = img_blended + img_new
                         # Noisy centered galaxy
                         img_blended.addNoise(poissonian_noise_vis)
-                        blend_vis_noisy[3-i]= img_blended.array.data
-                        blend_noisy[i] = blend_vis_noisy[3-i]
+                        blend_noisy[i] = img_blended.array.data
 
 
                     else:
@@ -477,8 +582,7 @@ def Gal_generator_noisy_training(cosmos_cat, nb_blended_gal):
                         bdfinal.drawImage(filter_, image=img)
                         bdfinal.drawImage(filter_, image=img_noiseless)
                         # Noiseless galaxy
-                        galaxy_lsst_noiseless[i-4]= img.array.data
-                        galaxy_noiseless[i] = galaxy_lsst_noiseless[i-4]
+                        galaxy_noiseless[i] = img.array.data
                         img_noiseless = img
 
                         #### Bended image
@@ -491,8 +595,7 @@ def Gal_generator_noisy_training(cosmos_cat, nb_blended_gal):
                             img_blended = img_blended + img_new
                         # Noisy centered galaxy
                         img_blended.addNoise(poissonian_noise_lsst)
-                        blend_lsst_noisy[i-4]= img_blended.array.data
-                        blend_noisy[i] = blend_lsst_noisy[i-4]
+                        blend_noisy[i] = img_blended.array.data
 
                 i+=1
             return galaxy_noiseless, blend_noisy

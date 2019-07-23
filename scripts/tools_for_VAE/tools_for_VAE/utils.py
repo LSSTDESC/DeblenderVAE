@@ -58,7 +58,6 @@ def blendedness(img, img_new):
     ----------
     img, img_new : GalSim images convolved with its PSF and drawn in its filter
     """
-
     image = np.array(img.array.data)
     image_new = np.array(img_new.array.data)
     blnd = np.sum(image*image_new)/np.sqrt(np.sum(image*image)*np.sum(image_new*image_new))
