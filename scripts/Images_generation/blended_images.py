@@ -16,6 +16,10 @@ from scipy.stats import norm
 from astropy.io import fits
 from astropy.cosmology import WMAP9 as cosmo
 
+sys.path.insert(0,'../tools_for_VAE/')
+from tools_for_VAE import utils
+
+
 # Import catalog
 cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lsst/users/barcelin/COSMOS_25.2_training_sample')
 
@@ -216,8 +220,12 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
             blend_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
             blend_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
 
-            Blendedness_lsst = np.zeros((nb_blended_gal-1, 2))
-            Blendedness_euclid = np.zeros((nb_blended_gal-1, 2))
+            Blendedness_lsst = np.zeros((nb_blended_gal-1))
+            Blendedness_euclid = np.zeros((nb_blended_gal-1))
+
+
+            #image = np.zeros((64,64))
+            #image_new = np.zeros ((64,64))
 
             i = 0
             for filter_name, filter_ in filters.items():
@@ -273,7 +281,10 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                             bdfinal_new = galsim.Convolve([add_gal[k][1], PSF_euclid_vis])
                             bdfinal_new.drawImage(filter_, image=img_new)
                             img_blended = img_blended + img_new
-                            Blendedness_euclid[k]= np.sum(img.array.data*img_new.array.data)#/np.sqrt(np.sum(img.array.data*img.array.data)*np.sum(img_new.array.data*img_new.array.data))
+
+                            #image = np.array(img.array.data)
+                            #image_new = np.array(img_new.array.data)
+                            Blendedness_euclid[k]= utils.blendedness(img,img_new)#np.sum(image*image_new)/np.sqrt(np.sum(image*image)*np.sum(image_new*image_new))
                         # Noiseless blended image
                         blend_vis_noiseless[3-i]= img_blended.array.data
                         blend_noiseless[i] = blend_vis_noiseless[3-i]
@@ -308,7 +319,9 @@ def Gal_generator_noisy_test(cosmos_cat, nb_blended_gal):
                             bdfinal_new.drawImage(filter_, image=img_new)
                             img_blended = img_blended + img_new
                             if (i==6):
-                                Blendedness_lsst[k]= np.sum(img.array.data*img_new.array.data)#/np.sqrt(np.sum(img.array.data*img.array.data)*np.sum(img_new.array.data*img_new.array.data))
+                                #image = np.array(img.array.data)
+                                #image_new = np.array(img_new.array.data)
+                                Blendedness_lsst[k]= utils.blendedness(img,img_new)#np.sum(image*image_new)/np.sqrt(np.sum(image*image)*np.sum(image_new*image_new))
                         # Noiseless blended image
                         blend_lsst_noiseless[i-4]= img_blended.array.data
                         blend_noiseless[i] = blend_lsst_noiseless[i-4]

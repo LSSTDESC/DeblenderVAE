@@ -48,6 +48,24 @@ def denorm(x, bands, channel_last=False):
                 x[i,ib] = np.sinh(np.arctanh(x[i,ib]))*(I[b]/beta)
     return x
 
+
+############# COMPUTE BLENDEDNESS #############
+def blendedness(img, img_new):
+    """
+    Return blendedness computed with two images of single galaxy created with GalSim
+
+    Parameters
+    ----------
+    img, img_new : GalSim images convolved with its PSF and drawn in its filter
+    """
+
+    image = np.array(img.array.data)
+    image_new = np.array(img_new.array.data)
+    blnd = np.sum(image*image_new)/np.sqrt(np.sum(image*image)*np.sum(image_new*image_new))
+    return blnd
+
+
+
 ############ DELTA_R and DELTA_MAG COMPUTATION ##########
 def delta_min(shift,mag):#(shift_path, mag_path):
     #mag =np.load(mag_path)
