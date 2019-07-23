@@ -25,6 +25,20 @@ def plot_rgb_lsst_euclid(ugrizy_img, stamp_size, ax=None):
     RGB_img[:,:,2] = ugrizy_img[8][:,:]
     ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img)
 
+# Plot galaxies on single band and scatter number on each galaxies
+def scatter_galaxies(image, shift, pixel_scale, stamp_size):
+    """
+    Parameters:
+    ----------
+    image: single band image
+    shift: list of shift (output from blended images generation function)
+    pixel_scale: pixel scale of the bandpass filter used to plot the image
+    stamp_size: size of the stamp
+    """
+    plt.imshow(image)
+    for k in range (len(shift)):
+        plt.scatter((stamp_size/2) + shift[k][0]/pixel_scale, (stamp_size/2) + shift[k][1]/pixel_scale, s = 50 ,c='red', marker="${}$".format(k))
+
 
 # Function to compute mean and variance in each bins of histograms
 def mean_var(x,y,bins):
