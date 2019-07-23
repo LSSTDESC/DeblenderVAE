@@ -123,7 +123,21 @@ max_stamp_size = np.max((lsst_stamp_size,nir_stamp_size,vis_stamp_size))
 
 shift_method='uniform'
 
+# Coefficients to take the exposure time and the telescope size into account
+coeff_hst_lsst = (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_lsst
+coeff_hst_euclid = (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_euclid
+
+
+
 def shift_gal(gal, method='uniform'):
+    """
+    Return galaxy shifted according to the chosen shifting method
+    
+    Parameters:
+    ----------
+    gal: galaxy to shift (GalSim object)
+    method: method to use for shifting
+    """
     if method == 'uniform':
         shift_x = np.random.uniform(-2.5,2.5)
         shift_y = np.random.uniform(-2.5,2.5)
@@ -133,11 +147,25 @@ def shift_gal(gal, method='uniform'):
         raise ValueError
     return gal.shift((shift_x,shift_y)), (shift_x,shift_y)
 
-coeff_hst_lsst = (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_lsst
-coeff_hst_euclid = (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_euclid
+
 
 
 def create_images(i,filter_, sky_level_pixel, stamp_size, pixel_scale, nb_blended_gal, PSF, bdgal, add_gal):
+    """
+    Return images of the noiseless and noisy single galaxy and blend of galaxies
+    
+    Parameters:
+    ----------
+    i: number of bandpass filter (from 0 to 9: [0,1,2] are NIR, [3] is VIS, [4,5...,9] are LSST)
+    filter_: filter to use to create the image
+    sky_level_pixel: sky background
+    stamp_size: size of the image
+    pixel_scale: pixel scale corresponding to the used instrument
+    nb_blended_gal: number of galaxies to add on the blended images
+    PSF: PSF to use to create the image
+    bdgal: galaxy to add on the center of the image
+    add_gal: galaxies to add on the blended images
+    """
     # Create poissonian noise
     poissonian_noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
     
@@ -220,7 +248,7 @@ def Gal_generator_noisy_test_2(cosmos_cat, nb_blended_gal):
     bdgal_lsst =  gal * coeff_hst_lsst
     bdgal_euclid_nir =  coeff_hst_euclid * gal
     bdgal_euclid_vis =  coeff_hst_euclid * gal
-    
+
     add_gal = []
     shift=np.zeros((nb_blended_gal-1, 2))
     for i in range (len(galaxies)):
