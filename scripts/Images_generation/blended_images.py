@@ -128,7 +128,22 @@ coeff_hst_lsst = (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_lsst
 coeff_hst_euclid = (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_euclid
 
 
-shift_method='uniform'
+def get_scale_radius(gal):
+    """
+    Return the scale radius of the created galaxy
+    
+    Parameter:
+    ---------
+    gal: galaxy from which the scale radius is needed
+    """
+    try:
+        return gal.obj_list[1].original.scale_radius
+    except:
+        return gal.original.scale_radius
+
+
+#shift_method='uniform'
+shift_method='lognorm_rad'
 
 def shift_gal(gal, method='uniform'):
     """
@@ -143,10 +158,9 @@ def shift_gal(gal, method='uniform'):
         shift_x = np.random.uniform(-2.5,2.5)  #(-1,1)
         shift_y = np.random.uniform(-2.5,2.5)  #(-1,1)
     elif method == 'lognorm_rad':
-        #hlr = gal.
-        #shift_x = np.random.lognormale(mean=hlr,sigma=1,size=None)
-        #shift_y = np.random.lognormale(mean=hlr,sigma=1,size=None)
-        raise NotImplementedError
+        scale_radius = get_scale_radius(gal)
+        shift_x = np.random.lognormal(mean=2*scale_radius,sigma=1*scale_radius,size=None)
+        shift_y = np.random.lognormal(mean=2*scale_radius,sigma=1*scale_radius,size=None)
     else:
         raise ValueError
     return gal.shift((shift_x,shift_y)), (shift_x,shift_y)

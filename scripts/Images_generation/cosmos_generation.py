@@ -88,6 +88,26 @@ sky_level_pixel_nir = [int((sky_level_nir_Y * 1800 * pixel_scale_euclid_nir**2))
                         int((sky_level_nir_H* 1800 * pixel_scale_euclid_nir**2))]# in e-/pixel/1800s
 sky_level_pixel_vis = int((sky_level_vis * 1800 * pixel_scale_euclid_vis**2))# in e-/pixel/1800s
 
+########### PSF #####################
+# convolve with PSF to make final profil : profil from LSST science book and (https://arxiv.org/pdf/0805.2366.pdf)
+# mu = -0.43058681997903414
+# sigma = 0.3404334041976153
+# p_unnormed = lambda x : (np.exp(-(np.log(x) - mu)**2 / (2 * sigma**2))
+#                     / (x * sigma * np.sqrt(2 * np.pi)))#((1/(2*z0))*((z/z0)**2)*np.exp(-z/z0))
+# p_normalization = scipy.integrate.quad(p_unnormed, 0., np.inf)[0]
+# p = lambda z : p_unnormed(z) / p_normalization
+
+# from scipy import stats
+# class PSF_distribution(stats.rv_continuous):
+#     def __init__(self):
+#         super(PSF_distribution, self).__init__()
+#         self.a = 0.
+#         self.b = 10.
+#     def _pdf(self, x):
+#         return p(x)
+
+# pdf = PSF_distribution()
+# fwhm_lsst = 0.65 # pdf.rvs() ## Fixed at median value : Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
 
 fwhm_lsst = 0.65 # pdf.rvs() ## Fixed at median value : Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
 
@@ -126,34 +146,6 @@ def Gal_generator_noisy_pix_same(cosmos_cat):
     bdgal_lsst =  (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_lsst
     bdgal_euclid_nir =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_euclid
     bdgal_euclid_vis =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_euclid         
-    
-    ########### PSF #####################
-    # convolve with PSF to make final profil : profil from LSST science book and (https://arxiv.org/pdf/0805.2366.pdf)
-    # mu = -0.43058681997903414
-    # sigma = 0.3404334041976153
-    # p_unnormed = lambda x : (np.exp(-(np.log(x) - mu)**2 / (2 * sigma**2))
-    #                     / (x * sigma * np.sqrt(2 * np.pi)))#((1/(2*z0))*((z/z0)**2)*np.exp(-z/z0))
-    # p_normalization = scipy.integrate.quad(p_unnormed, 0., np.inf)[0]
-    # p = lambda z : p_unnormed(z) / p_normalization
-
-    # from scipy import stats
-    # class PSF_distribution(stats.rv_continuous):
-    #     def __init__(self):
-    #         super(PSF_distribution, self).__init__()
-    #         self.a = 0.
-    #         self.b = 10.
-    #     def _pdf(self, x):
-    #         return p(x)
-
-    # pdf = PSF_distribution()
-    # fwhm_lsst = 0.65 # pdf.rvs() ## Fixed at median value : Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
-
-    # fwhm_euclid_nir = 0.22 # EUCLID PSF is supposed invariant (no atmosphere) despite the optical and wavelengths variations
-    # fwhm_euclid_vis = 0.18 # EUCLID PSF is supposed invariant (no atmosphere) despite the optical and wavelengths variations
-    # beta = 2.5
-    # PSF_lsst = galsim.Kolmogorov(fwhm=fwhm_lsst)#galsim.Moffat(fwhm=fwhm_lsst, beta=beta)
-    # PSF_euclid_nir = galsim.Moffat(fwhm=fwhm_euclid_nir, beta=beta)
-    # PSF_euclid_vis = galsim.Moffat(fwhm=fwhm_euclid_vis, beta=beta)
     
     galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
     galaxy_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
