@@ -159,8 +159,10 @@ def shift_gal(gal, method='uniform'):
         shift_y = np.random.uniform(-2.5,2.5)  #(-1,1)
     elif method == 'lognorm_rad':
         scale_radius = get_scale_radius(gal)
-        shift_x = np.random.lognormal(mean=2*scale_radius,sigma=1*scale_radius,size=None)
-        shift_y = np.random.lognormal(mean=2*scale_radius,sigma=1*scale_radius,size=None)
+        sample_x = np.random.lognormal(mean=1*scale_radius,sigma=1*scale_radius,size=None)
+        shift_x = np.random.choice((sample_x, -sample_x), 1)[0]
+        sample_y = np.random.lognormal(mean=1*scale_radius,sigma=1*scale_radius,size=None)
+        shift_y = np.random.choice((sample_y, -sample_y), 1)[0]
     else:
         raise ValueError
     return gal.shift((shift_x,shift_y)), (shift_x,shift_y)
