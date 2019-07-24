@@ -121,13 +121,14 @@ vis_stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis) # Nb of pixels
 
 max_stamp_size = np.max((lsst_stamp_size,nir_stamp_size,vis_stamp_size))
 
-shift_method='uniform'
+
 
 # Coefficients to take the exposure time and the telescope size into account
 coeff_hst_lsst = (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_lsst
 coeff_hst_euclid = (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_euclid
 
 
+shift_method='uniform'
 
 def shift_gal(gal, method='uniform'):
     """
@@ -139,9 +140,12 @@ def shift_gal(gal, method='uniform'):
     method: method to use for shifting
     """
     if method == 'uniform':
-        shift_x = np.random.uniform(-2.5,2.5)
-        shift_y = np.random.uniform(-2.5,2.5)
+        shift_x = np.random.uniform(-2.5,2.5)  #(-1,1)
+        shift_y = np.random.uniform(-2.5,2.5)  #(-1,1)
     elif method == 'lognorm_rad':
+        #hlr = gal.
+        #shift_x = np.random.lognormale(mean=hlr,sigma=1,size=None)
+        #shift_y = np.random.lognormale(mean=hlr,sigma=1,size=None)
         raise NotImplementedError
     else:
         raise ValueError
@@ -228,7 +232,16 @@ def create_images(i,filter_, sky_level_pixel, stamp_size, pixel_scale, nb_blende
 
 
 # Generation function
-def Gal_generator_noisy_test_2(cosmos_cat, nb_blended_gal):
+def Gal_generator_noisy_test_2(cosmos_cat, nb_blended_gal, training_or_test):
+    """
+    Return numpy arrays: noiseless and noisy image of single galaxy and of blended galaxies
+
+    Parameters:
+    ----------
+    cosmos_cat: COSMOS catalog
+    nb_blended_gal: number of galaxies to add to the centered one on the blended image
+    training_or_test: choice for generating a training or testing dataset
+    """
     ############## GENERATION OF THE GALAXIES ##################
     ud = galsim.UniformDeviate()
     
@@ -284,8 +297,12 @@ def Gal_generator_noisy_test_2(cosmos_cat, nb_blended_gal):
         else:
             galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_lsst[i-4], max_stamp_size, pixel_scale_lsst, nb_blended_gal, PSF_lsst, bdgal_lsst, add_gal)
         i+=1
-
-    return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6]
+    
+    # Return outputs depending on the kind of generated dataset
+    if training_or_test == 'training':
+        return galaxy_noiseless, blend_noisy
+    if training_or_test == 'test':
+        return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6]
 
 
 
