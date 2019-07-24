@@ -24,7 +24,7 @@ from tools_for_VAE import utils
 cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lsst/users/barcelin/COSMOS_25.2_training_sample')
 
 
-path, filename = os.path.split('__file__')    
+path, filename = os.path.split('__file__')
 datapath = galsim.meta_data.share_dir
 datapath2 = os.path.abspath(os.path.join(path,'/sps/lsst/users/barcelin/EUCLID_Filters/'))
 
@@ -142,8 +142,8 @@ def get_scale_radius(gal):
         return gal.original.scale_radius
 
 
-#shift_method='uniform'
-shift_method='lognorm_rad'
+shift_method='uniform'
+#shift_method='lognorm_rad'
 
 def shift_gal(gal, method='uniform'):
     """
@@ -155,13 +155,13 @@ def shift_gal(gal, method='uniform'):
     method: method to use for shifting
     """
     if method == 'uniform':
-        shift_x = np.random.uniform(-2.5,2.5)  #(-1,1)
-        shift_y = np.random.uniform(-2.5,2.5)  #(-1,1)
+        shift_x = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
+        shift_y = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
     elif method == 'lognorm_rad':
         scale_radius = get_scale_radius(gal)
-        sample_x = np.random.lognormal(mean=1*scale_radius,sigma=1*scale_radius,size=None)
+        sample_x = np.random.lognormal(mean=0.5*scale_radius,sigma=1*scale_radius,size=None)
         shift_x = np.random.choice((sample_x, -sample_x), 1)[0]
-        sample_y = np.random.lognormal(mean=1*scale_radius,sigma=1*scale_radius,size=None)
+        sample_y = np.random.lognormal(mean=0.5*scale_radius,sigma=1*scale_radius,size=None)
         shift_y = np.random.choice((sample_y, -sample_y), 1)[0]
     else:
         raise ValueError
@@ -248,7 +248,7 @@ def create_images(i,filter_, sky_level_pixel, stamp_size, pixel_scale, nb_blende
 
 
 # Generation function
-def Gal_generator_noisy_test_2(cosmos_cat, nb_blended_gal, training_or_test):
+def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     """
     Return numpy arrays: noiseless and noisy image of single galaxy and of blended galaxies
 
@@ -316,7 +316,7 @@ def Gal_generator_noisy_test_2(cosmos_cat, nb_blended_gal, training_or_test):
     
     # Return outputs depending on the kind of generated dataset
     if training_or_test == 'training':
-        return galaxy_noiseless, blend_noisy
+        return galaxy_noiseless, galaxy_noisy, blend_noisy
     if training_or_test == 'test':
         return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6]
 
