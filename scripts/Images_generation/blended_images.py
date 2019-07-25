@@ -159,9 +159,9 @@ def shift_gal(gal,gal_to_add, method='uniform'):
         shift_x = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
         shift_y = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
     elif method == 'lognorm_rad':
-        sample_x = np.random.lognormal(mean=0.5*scale_radius,sigma=1*scale_radius,size=None)
+        sample_x = np.random.lognormal(mean=0.2*scale_radius,sigma=1*scale_radius,size=None)
         shift_x = np.random.choice((sample_x, -sample_x), 1)[0]
-        sample_y = np.random.lognormal(mean=0.5*scale_radius,sigma=1*scale_radius,size=None)
+        sample_y = np.random.lognormal(mean=0.2*scale_radius,sigma=1*scale_radius,size=None)
         shift_y = np.random.choice((sample_y, -sample_y), 1)[0]
     else:
         raise ValueError
@@ -232,9 +232,9 @@ def create_images(i,filter_, sky_level_pixel, stamp_size, pixel_scale, nb_blende
         img_blend_noiseless += img_new
         img_blend_noisy += img_new
         if i == 3 :
-            Blendedness_euclid[k]= utils.blendedness(img,img_new)
+            Blendedness_euclid[k]= utils.compute_blendedness(img,img_new)
         elif i ==6 :
-            Blendedness_lsst[k]= utils.blendedness(img,img_new)
+            Blendedness_lsst[k]= utils.compute_blendedness(img,img_new)
     
     # Save noiseless blended image
     blend_noiseless = img_blend_noiseless.array.data
@@ -263,13 +263,14 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     
     galaxies = []
     mag=[]
+    scale_radius = []
     for i in range (nb_blended_gal):
         galaxies.append(cosmos_cat.makeGalaxy(random.randint(0,cosmos_cat.nobjects-1), gal_type='parametric', chromatic=True, noise_pad_size = 0))
         mag.append(galaxies[i].calculateMagnitude(filters['r'].withZeropoint(28.13)))
+        scale_radius.append(get_scale_radius(galaxies[i]))
 
     gal = galaxies[np.where(mag == np.min(mag))[0][0]]
     redshift = gal.SED.redshift
-    scale_radius = get_scale_radius(gal)
     
     galaxies.remove(gal)
         

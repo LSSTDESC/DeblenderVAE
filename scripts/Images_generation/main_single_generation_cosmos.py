@@ -121,4 +121,4 @@ print('time : '+ str(fin-debut))
 #     name = '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_'+str(j)+'.npy'
 #     np.save(name, img_cube_list)
 
-np.save('/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_2_v4.npy', img_cube_list)
+np.save('/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_5_v4.npy', img_cube_list)
