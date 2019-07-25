@@ -72,40 +72,55 @@ def delta_min(shift,mag):#(shift_path, mag_path):
     
     #Reshape the list of shifts so that it is easily usable
     shifts = np.zeros((len(shift),3,2))
-    mags = np.zeros((len(shift),4))
+    mags = np.zeros((len(mag),4))
+    mags_new = np.zeros((len(mag),3))
 
-    for i in range (len(shift)):
-        for j in range (len(shift[i])):
-            shifts[i][j] = shift[i][j]
-        for j in range (len(mag[i])):
-            mags[i][j] = mag[i][j]
+    # Create an array of minimum magnitude for each image
+    mag_min = np.zeros(len(mag))
+    for k in range (len(mag)):
+        mag_min[k] = np.min(mag[k])
 
     # set lists
     deltas_r= np.zeros((len(shift),3))
     delta_r= np.zeros((len(shift)))
-
-    deltas_mag= np.zeros((len(shift),3))
     delta_mag = np.zeros((len(shift)))
+    deltas_mag= np.zeros((len(shift),4))
 
-    # compute the delta r for each couple of galaxies
-    for i in range (3):
-        deltas_r[:,i] = np.sqrt(np.square(shifts[:,i,0])+np.square(shifts[:,i,1]))
-        deltas_mag[:,i] = mags[:,i+1] - mags[:,0]
-
+    for i in range (len(shift)):
+        for j in range (len(shift[i])):
+            deltas_r[i][j] = np.sqrt(np.square(shift[i][j][0])+np.square(shift[i][j][1]))
+        for j in range (len(mag[i])):
+            deltas_mag [i][j] = mag[i][j] - mag_min[i]
+            
+    # Create a deltas_mag liste without all zeros: place of the centered galaxy when generated
+    deltas_mag_3= np.zeros((len(deltas_mag),3))
+    counter = 0
+    for k in range (len(deltas_mag)):
+        No_zero = True
+        for l in range (len(deltas_mag[k])):
+            if deltas_mag[k][l] == 0 and No_zero:
+                counter +=1
+                No_zero = False
+            elif No_zero == False:
+                deltas_mag_3[k][l-1] = deltas_mag[k][l]
+            else:
+                deltas_mag_3[k][l] = deltas_mag[k][l]
+                    
     # Take the min of the non zero delta r
+    c = 0
     for j in range (len(shifts)):
         # If all the deta_r are equals to 0 (there is only on galaxy on the image) then write 0
         if (deltas_r[j,:].any() == 0):
             delta_r[j] = 0
             delta_mag[j] = 0
+            c+=1
         else:
             x = np.where(deltas_r[j] == 0)[0]
             deltas = np.delete(deltas_r[j],x)
             delta_r[j] = np.min(deltas)
             y = np.where(deltas == np.min(deltas))[0]
-            delta_mag[j] = deltas_mag[j,y]  
+            delta_mag[j] = deltas_mag_3[j,y]
         
-    
     return delta_r, delta_mag
 
 ############# LOAD MODEL ##################
