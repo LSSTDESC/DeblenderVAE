@@ -145,7 +145,7 @@ def get_scale_radius(gal):
 shift_method='uniform'
 #shift_method='lognorm_rad'
 
-def shift_gal(gal, method='uniform'):
+def shift_gal(gal,gal_to_add, method='uniform'):
     """
     Return galaxy shifted according to the chosen shifting method
     
@@ -154,18 +154,18 @@ def shift_gal(gal, method='uniform'):
     gal: galaxy to shift (GalSim object)
     method: method to use for shifting
     """
+    scale_radius = get_scale_radius(gal)
     if method == 'uniform':
         shift_x = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
         shift_y = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
     elif method == 'lognorm_rad':
-        scale_radius = get_scale_radius(gal)
         sample_x = np.random.lognormal(mean=0.5*scale_radius,sigma=1*scale_radius,size=None)
         shift_x = np.random.choice((sample_x, -sample_x), 1)[0]
         sample_y = np.random.lognormal(mean=0.5*scale_radius,sigma=1*scale_radius,size=None)
         shift_y = np.random.choice((sample_y, -sample_y), 1)[0]
     else:
         raise ValueError
-    return gal.shift((shift_x,shift_y)), (shift_x,shift_y)
+    return gal_to_add.shift((shift_x,shift_y)), (shift_x,shift_y)
 
 
 
@@ -269,6 +269,7 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
 
     gal = galaxies[np.where(mag == np.min(mag))[0][0]]
     redshift = gal.SED.redshift
+    scale_radius = get_scale_radius(gal)
     
     galaxies.remove(gal)
         
@@ -285,7 +286,7 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
         ud = galsim.UniformDeviate()
         gal_new = galaxies[i].rotate(ud() * 360. * galsim.degrees)
 
-        gal_new, shift[i]  = shift_gal(gal_new, method=shift_method)
+        gal_new, shift[i]  = shift_gal(gal,gal_new, method=shift_method)
             
         bdgal_new_lsst = None
         bdgal_new_euclid_nir =None
@@ -318,7 +319,7 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     if training_or_test == 'training':
         return galaxy_noiseless, galaxy_noisy, blend_noisy
     if training_or_test == 'test':
-        return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6]
+        return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6], scale_radius
 
 
 

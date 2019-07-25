@@ -110,7 +110,7 @@ img_cube_list = map(func, itr,timesleep = 10.0)#
 fin = time.time()
 print('time : '+ str(fin-debut))
 
-np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_3_uni11_v5.npy', img_cube_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_7_uni11_v5.npy', img_cube_list)
 
 
 

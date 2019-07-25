@@ -12,7 +12,7 @@ from astropy.cosmology import WMAP9 as cosmo
 import scipy
 import scipy.integrate 
 from astropy.convolution import Gaussian1DKernel, Gaussian2DKernel, convolve
-from cosmos_generation import Gal_generator_noisy, Gal_generator_noisy_pix_same
+from cosmos_generation import Gal_generator_noisy_pix_same
 from multiprocess import *
 
 # Parameters to fix
@@ -121,4 +121,4 @@ print('time : '+ str(fin-debut))
 #     name = '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_'+str(j)+'.npy'
 #     np.save(name, img_cube_list)
 
-np.save('/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_3_v3.npy', img_cube_list)
+np.save('/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_2_v4.npy', img_cube_list)
