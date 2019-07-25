@@ -264,13 +264,14 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     galaxies = []
     mag=[]
     scale_radius = []
+    redshift = []
     for i in range (nb_blended_gal):
         galaxies.append(cosmos_cat.makeGalaxy(random.randint(0,cosmos_cat.nobjects-1), gal_type='parametric', chromatic=True, noise_pad_size = 0))
         mag.append(galaxies[i].calculateMagnitude(filters['r'].withZeropoint(28.13)))
         scale_radius.append(get_scale_radius(galaxies[i]))
+        redshift.append(galaxies[i].SED.redshift)
 
     gal = galaxies[np.where(mag == np.min(mag))[0][0]]
-    redshift = gal.SED.redshift
     
     galaxies.remove(gal)
         
@@ -320,7 +321,7 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     if training_or_test == 'training':
         return galaxy_noiseless, galaxy_noisy, blend_noisy
     if training_or_test == 'test':
-        return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6], scale_radius
+        return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6], scale_radius
 
 
 
