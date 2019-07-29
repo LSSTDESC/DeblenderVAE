@@ -65,15 +65,60 @@ def compute_blendedness(img, img_new):
 
 
 
-############ DELTA_R and DELTA_MAG COMPUTATION ##########
+############ DELTA_R and DELTA_MAG COMPUTATION FOR MOST BLENDED GALAXY WITH THE CENTERED ONE ##########
+def compute_deltas_for_most_blended(shift,mag,blendedness):#(shift_path, mag_path):
+    #mag =np.load(mag_path)
+    #shift =np.load(shift_path)
+
+    # Create an array of minimum magnitude and maximum blendedness for each image
+    mag_min = np.zeros(len(mag))
+    blend_max = np.zeros(len(blendedness))
+    for k in range (len(mag)):
+        mag_min[k] = np.min(mag[k])
+        if (len(blendedness[k])>=1):
+            blend_max[k] = np.max(blendedness[k])
+        else:
+            blend_max[k] = 0
+
+    # set lists
+    deltas_r= np.zeros((len(shift),3))
+    delta_r= np.zeros((len(shift)))
+    delta_mag = np.zeros((len(shift)))
+    deltas_mag= np.zeros((len(shift),4))
+
+    for i in range (len(shift)):
+        for j in range (len(shift[i])):
+            deltas_r[i][j] = np.sqrt(np.square(shift[i][j][0])+np.square(shift[i][j][1]))
+        for j in range (len(mag[i])):
+            deltas_mag [i][j] = mag[i][j] - mag_min[i]
+            
+    # Create a deltas_mag liste without all zeros: place of the centered galaxy when generated
+    deltas_mag_3= np.zeros((len(deltas_mag),3))
+    counter = 0
+    for k in range (len(deltas_mag)):
+        No_zero = True
+        for l in range (len(deltas_mag[k])):
+            if deltas_mag[k][l] == 0 and No_zero:
+                counter +=1
+                No_zero = False
+            elif No_zero == False:
+                deltas_mag_3[k][l-1] = deltas_mag[k][l]
+            else:
+                deltas_mag_3[k][l] = deltas_mag[k][l]
+    
+    # Return delta_mag and delta_r for most blended galaxies
+    for i in range (len(blendedness)):
+        for k in range (len(blendedness[i])):
+            if blendedness[i][k] == blend_max[i]:
+                delta_mag[i] = deltas_mag_3[i,k]
+                delta_r[i ]=  deltas_r[i,k]
+
+    return delta_r, delta_mag, blend_max
+
+############ DELTA_R and DELTA_MAG COMPUTATION FOR DELTA_R MIN ##########
 def delta_min(shift,mag):#(shift_path, mag_path):
     #mag =np.load(mag_path)
     #shift =np.load(shift_path)
-    
-    #Reshape the list of shifts so that it is easily usable
-    shifts = np.zeros((len(shift),3,2))
-    mags = np.zeros((len(mag),4))
-    mags_new = np.zeros((len(mag),3))
 
     # Create an array of minimum magnitude for each image
     mag_min = np.zeros(len(mag))
@@ -108,7 +153,7 @@ def delta_min(shift,mag):#(shift_path, mag_path):
                     
     # Take the min of the non zero delta r
     c = 0
-    for j in range (len(shifts)):
+    for j in range (len(shift)):
         # If all the deta_r are equals to 0 (there is only on galaxy on the image) then write 0
         if (deltas_r[j,:].any() == 0):
             delta_r[j] = 0

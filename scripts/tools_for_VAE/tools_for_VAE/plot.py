@@ -27,7 +27,7 @@ def plot_rgb_lsst_euclid(ugrizy_img, stamp_size, ax=None):
 
 
 # Plot galaxies on single band and scatter number on each galaxies
-def scatter_galaxies(image, shift, pixel_scale, stamp_size, ax=None):
+def scatter_galaxies(image, shift, pixel_scale, stamp_size, scatter = 'numbers', blendedness = None, ax=None):
     """
     Parameters:
     ----------
@@ -37,8 +37,13 @@ def scatter_galaxies(image, shift, pixel_scale, stamp_size, ax=None):
     stamp_size: size of the stamp
     """
     ax.imshow(image)
-    for k in range (len(shift)):
-        ax.scatter((stamp_size/2) + shift[k][0]/pixel_scale, (stamp_size/2) + shift[k][1]/pixel_scale, s = 50 ,c='red', marker="${}$".format(k))
+    if scatter == 'numbers':
+        for k in range (len(shift)):
+            ax.scatter((stamp_size/2) + shift[k][0]/pixel_scale, (stamp_size/2) + shift[k][1]/pixel_scale, s = 50 ,c='red', marker="${}$".format(k))
+    elif scatter == 'blendedness':
+        #print(len(shift), len(blendedness))
+        for k in range (len(shift)):
+            ax.scatter((stamp_size/2) + shift[k][0]/pixel_scale, (stamp_size/2) + shift[k][1]/pixel_scale, s = 500 ,c='red', marker="${}$".format(blendedness[k]))
 
 
 # Function to compute mean and variance in each bins of histograms
