@@ -41,9 +41,8 @@ def scatter_galaxies(image, shift, pixel_scale, stamp_size, scatter = 'numbers',
         for k in range (len(shift)):
             ax.scatter((stamp_size/2) + shift[k][0]/pixel_scale, (stamp_size/2) + shift[k][1]/pixel_scale, s = 50 ,c='red', marker="${}$".format(k))
     elif scatter == 'blendedness':
-        #print(len(shift), len(blendedness))
-        for k in range (len(shift)):
-            ax.scatter((stamp_size/2) + shift[k][0]/pixel_scale, (stamp_size/2) + shift[k][1]/pixel_scale, s = 500 ,c='red', marker="${}$".format(blendedness[k]))
+        for k in range (len(blendedness)):
+            ax.scatter((stamp_size/2) + shift[k][0]/pixel_scale, (stamp_size/2) + shift[k][1]/pixel_scale, s = 500 ,c='red', marker="${0:.2f}$".format(blendedness[k]))
 
 
 # Function to compute mean and variance in each bins of histograms
