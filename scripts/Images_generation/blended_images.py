@@ -99,12 +99,34 @@ sky_level_pixel_vis = int((sky_level_vis * 1800 * pixel_scale_euclid_vis**2))# i
 sky_level = sky_level_pixel_nir + [sky_level_pixel_vis] + sky_level_pixel_lsst
 
 ########### PSF #####################
-fwhm_lsst = 0.65 #pdf.rvs() #Fixed at median value : Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
+def lsst_PSF():
+    #Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
+    mu = -0.43058681997903414
+    sigma = 0.3404334041976153
+    p_unnormed = lambda x : (np.exp(-(np.log(x) - mu)**2 / (2 * sigma**2))
+                    / (x * sigma * np.sqrt(2 * np.pi)))#((1/(2*z0))*((z/z0)**2)*np.exp(-z/z0))
+    p_normalization = scipy.integrate.quad(p_unnormed, 0., np.inf)[0]
+    p = lambda z : p_unnormed(z) / p_normalization
+
+    from scipy import stats
+    class PSF_distribution(stats.rv_continuous):
+        def __init__(self):
+            super(PSF_distribution, self).__init__()
+            self.a = 0.
+            self.b = 10.
+        def _pdf(self, x):
+            return p(x)
+
+    pdf = PSF_distribution()
+    return pdf.rvs()
+
+
+#fwhm_lsst = 0.65 #pdf.rvs() #Fixed at median value : Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
 
 fwhm_euclid_nir = 0.22 # EUCLID PSF is supposed invariant (no atmosphere) despite the optical and wavelengths variations
 fwhm_euclid_vis = 0.18 # EUCLID PSF is supposed invariant (no atmosphere) despite the optical and wavelengths variations
 beta = 2.5
-PSF_lsst = galsim.Kolmogorov(fwhm=fwhm_lsst)#galsim.Moffat(fwhm=fwhm_lsst, beta=beta)
+#PSF_lsst = galsim.Kolmogorov(fwhm=fwhm_lsst)#galsim.Moffat(fwhm=fwhm_lsst, beta=beta)
 PSF_euclid_nir = galsim.Moffat(fwhm=fwhm_euclid_nir, beta=beta)
 PSF_euclid_vis = galsim.Moffat(fwhm=fwhm_euclid_vis, beta=beta)
 
@@ -281,6 +303,7 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     bdgal_euclid_nir =  coeff_hst_euclid * gal
     bdgal_euclid_vis =  coeff_hst_euclid * gal
 
+    # Generate the blends
     add_gal = []
     shift=np.zeros((nb_blended_gal-1, 2))
     for i in range (len(galaxies)):
@@ -298,6 +321,7 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
         bdgal_new_euclid_vis =  coeff_hst_euclid * gal_new
         add_gal.append([bdgal_new_euclid_nir,bdgal_new_euclid_vis, bdgal_new_lsst])
 
+    # Initialize some lists
     galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
     galaxy_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
 
@@ -307,6 +331,11 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     Blendedness_lsst = np.zeros((10,nb_blended_gal-1))
     Blendedness_euclid = np.zeros((10,nb_blended_gal-1))
 
+    # Generate LSST PSF
+    fwhm_lsst = lsst_PSF()
+    PSF_lsst = galsim.Kolmogorov(fwhm=fwhm_lsst)
+
+    # Generate images
     i = 0
     for filter_name, filter_ in filters.items():
         if (i < 3):

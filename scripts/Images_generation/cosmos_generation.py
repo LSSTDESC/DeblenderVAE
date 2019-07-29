@@ -134,55 +134,60 @@ max_stamp_size = np.max((lsst_stamp_size,nir_stamp_size,vis_stamp_size))
 
 # Generation function
 def Gal_generator_noisy_pix_same(cosmos_cat):
-    ############## SHAPE OF THE GALAXY ##################
-    ud = galsim.UniformDeviate()
-    gal = cosmos_cat.makeGalaxy(random.randint(0,cosmos_cat.nobjects-1), gal_type='parametric', chromatic=True, noise_pad_size = 0)
+    count = 0
+    try:
+        ############## SHAPE OF THE GALAXY ##################
+        ud = galsim.UniformDeviate()
+        gal = cosmos_cat.makeGalaxy(random.randint(0,cosmos_cat.nobjects-1), gal_type='parametric', chromatic=True, noise_pad_size = 0)
 
-    gal = gal.rotate(ud() * 360. * galsim.degrees)
-    redshift = gal.SED.redshift
-    
-    ############ LUMINOSITY ############# 
-    # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             
-    bdgal_lsst =  (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_lsst
-    bdgal_euclid_nir =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_euclid
-    bdgal_euclid_vis =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_euclid         
-    
-    galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
-    galaxy_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
+        gal = gal.rotate(ud() * 360. * galsim.degrees)
+        redshift = gal.SED.redshift
+        
+        ############ LUMINOSITY ############# 
+        # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             
+        bdgal_lsst =  (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_lsst
+        bdgal_euclid_nir =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_euclid
+        bdgal_euclid_vis =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * gal * N_exposures_euclid         
+        
+        galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
+        galaxy_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
 
-    # i = 0
-    # for filter_name, filter_ in filters.items():
-    for i, filter_name in enumerate(filter_names_all):
-        if (i < 3):
-            poissonian_noise_nir = galsim.PoissonNoise(rng, sky_level=sky_level_pixel_nir[i])
-            img = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_euclid_nir)  
-            bdfinal = galsim.Convolve([bdgal_euclid_nir, PSF_euclid_nir])
-            bdfinal.drawImage(filters[filter_name], image=img)
-            # Noiseless galaxy
-            galaxy_noiseless[i] = img.array.data
-            # Noisy galaxy
-            img.addNoise(poissonian_noise_nir)
-            galaxy_noisy[i] = img.array.data
-        else:
-            if (i==3):
-                poissonian_noise_vis = galsim.PoissonNoise(rng, sky_level=sky_level_pixel_vis)
-                img = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_euclid_vis)  
-                bdfinal = galsim.Convolve([bdgal_euclid_vis, PSF_euclid_vis])
+        # i = 0
+        # for filter_name, filter_ in filters.items():
+        for i, filter_name in enumerate(filter_names_all):
+            if (i < 3):
+                poissonian_noise_nir = galsim.PoissonNoise(rng, sky_level=sky_level_pixel_nir[i])
+                img = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_euclid_nir)  
+                bdfinal = galsim.Convolve([bdgal_euclid_nir, PSF_euclid_nir])
                 bdfinal.drawImage(filters[filter_name], image=img)
                 # Noiseless galaxy
                 galaxy_noiseless[i] = img.array.data
                 # Noisy galaxy
-                img.addNoise(poissonian_noise_vis)
+                img.addNoise(poissonian_noise_nir)
                 galaxy_noisy[i] = img.array.data
             else:
-                poissonian_noise_lsst = galsim.PoissonNoise(rng, sky_level_pixel_lsst[i-4])
-                img = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_lsst)  
-                bdfinal = galsim.Convolve([bdgal_lsst, PSF_lsst])
-                bdfinal.drawImage(filters[filter_name], image=img)
-                # Noiseless galaxy
-                galaxy_noiseless[i] = img.array.data
-                # Noisy galaxy
-                img.addNoise(poissonian_noise_lsst)
-                galaxy_noisy[i]= img.array.data
-    
-    return galaxy_noiseless, galaxy_noisy, redshift
+                if (i==3):
+                    poissonian_noise_vis = galsim.PoissonNoise(rng, sky_level=sky_level_pixel_vis)
+                    img = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_euclid_vis)  
+                    bdfinal = galsim.Convolve([bdgal_euclid_vis, PSF_euclid_vis])
+                    bdfinal.drawImage(filters[filter_name], image=img)
+                    # Noiseless galaxy
+                    galaxy_noiseless[i] = img.array.data
+                    # Noisy galaxy
+                    img.addNoise(poissonian_noise_vis)
+                    galaxy_noisy[i] = img.array.data
+                else:
+                    poissonian_noise_lsst = galsim.PoissonNoise(rng, sky_level_pixel_lsst[i-4])
+                    img = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_lsst)  
+                    bdfinal = galsim.Convolve([bdgal_lsst, PSF_lsst])
+                    bdfinal.drawImage(filters[filter_name], image=img)
+                    # Noiseless galaxy
+                    galaxy_noiseless[i] = img.array.data
+                    # Noisy galaxy
+                    img.addNoise(poissonian_noise_lsst)
+                    galaxy_noisy[i]= img.array.data
+        
+        return galaxy_noiseless, galaxy_noisy, redshift
+    except RuntimeError: 
+            count +=1
+    print("nb of error : "+(count))
