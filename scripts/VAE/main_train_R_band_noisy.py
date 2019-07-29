@@ -31,11 +31,11 @@ from tools_for_VAE.callbacks import changeAlpha
 ######## Set some parameters
 batch_size = 100
 latent_dim = 32
-epochs = 1000
+epochs = 5
 bands = [6]
 
 ######## Import data for callback (Only if VAEHistory is used)
-x = np.load('/sps/lsst/users/barcelin/data/single/galaxies_COSMOS_5_v5_test.npy', mmap_mode = 'c')
+x = np.load('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_5_v3.npy', mmap_mode = 'c')
 x_val = utils.norm(np.expand_dims(x[:500,1,6], axis = 1), bands).transpose([0,2,3,1])
 
 ######## Load encoder, decoder
@@ -56,7 +56,8 @@ def vae_loss(x, x_decoded_mean):
 
 ############## Comment or not depending on what's necessary
 # Load weights
-vae = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/test_KL/v11/', 1, folder = True)
+#vae,  encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v10/', 1, folder = True)#, output_encoder
+#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v11/'))
 
 ######## Compile the VAE
 vae.compile('adam', loss=vae_loss, metrics=['mse'])
@@ -66,11 +67,11 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/test_KL/v11/'#/v10
-path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/test_kl/v11/'#/v10
+path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v12/'#/v10
+path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v12/'#/v10
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
-alphaChanger = callbacks.changeAlpha(alpha, vae, vae_loss)
+alphaChanger = callbacks.changeAlpha(alpha, vae, vae_loss, path_weights)
 # Callback to display evolution of training
 vae_hist = vae_functions.VAEHistory(x_val, vae_utils, latent_dim, alpha, plot_bands=0, figname=path_plots+'test_')#noisy_
 # Keras Callbacks
@@ -83,17 +84,17 @@ checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath='/sps/lsst/users
 callbacks = [vae_hist, checkpointer_mse, alphaChanger]#,checkpointer_loss, tbCallBack]#, alphaChanger earlystop,vae_hist, checkpointer,  
  
 ######## List of data samples
-list_of_samples=['/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_1_v3.npy',
-                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_2_v3.npy',
-                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_3_v3.npy',
-                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_4_v3.npy',
-                 '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_5_v3.npy',
+list_of_samples=['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_1_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_2_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_3_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_4_v3.npy',
+                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_5_v3.npy',
                 ]
-list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_5_v3_val.npy']
+list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_5_v3_val.npy']
 
 ######## Define the generators
 training_generator = BatchGenerator(bands, list_of_samples,total_sample_size=180000, batch_size= batch_size, size_of_lists = 40000, training_or_validation = 'training', noisy = True)#180000
-validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_size=20000, batch_size= batch_size, size_of_lists = 40000, training_or_validation = 'validation', noisy = True)#20000
+validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_size=20000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'validation', noisy = True)#20000
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
@@ -102,5 +103,5 @@ hist = vae.fit_generator(generator=training_generator, epochs=epochs,
                   shuffle = True,
                   validation_data=validation_generator,
                   validation_steps=200,#200
-                  callbacks=callbacks,
+                  #callbacks=callbacks,
                   workers = 0)

@@ -33,7 +33,7 @@ epochs = 1000
 bands = [4,5,6,7,8,9]
 
 ######## Import data for callback (Only if VAEHistory is used)
-x = np.load('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_1_v4.npy', mmap_mode = 'c')
+x = np.load('/sps/lsst/users/barcelin/data/blended/COSMOS/uni11/galaxies_COSMOS_test_1_uni11_v5.npy', mmap_mode = 'c')
 x_val = utils.norm(x[:500,1,bands], bands).transpose([0,2,3,1])
 
 # Load decoder of VAE
@@ -56,7 +56,7 @@ def deblender_loss(x, x_decoded_mean):
 
 ########### Comment or not depending on what's necessary
 # Load weights
-deblender, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v8/mse/', 6, folder = True)
+deblender, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4+uni11/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v8/mse/', 6, folder = True)
 K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/'))
 ######## Compile the VAE
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
@@ -66,7 +66,7 @@ K.set_value(deblender.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4+uni11/'
 path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/'
 path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst/'
 
@@ -80,18 +80,25 @@ alphaChanger = callbacks.changeAlpha(alpha, deblender, deblender_loss, path_weig
 callbacks = [checkpointer_mse, alphaChanger]#vae_hist, , checkpointer_loss
  
 ######## List of data samples
-list_of_samples=['/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_1_v4.npy',
-                '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_2_v4.npy',
-                '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_3_v4.npy',
-                '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_4_v4.npy',
-                '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_5_v4.npy',
-                '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_6_v4.npy',
-                '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_7_v4.npy',
-                '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_8_v4.npy',
-                '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_9_v4.npy']
+# list_of_samples=['/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_1_v4.npy',
+#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_2_v4.npy',
+#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_3_v4.npy',
+#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_4_v4.npy',
+#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_5_v4.npy',
+#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_6_v4.npy',
+#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_7_v4.npy',
+#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_8_v4.npy',
+#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_9_v4.npy']
+
+list_of_samples=['/sps/lsst/users/barcelin/data/blended/COSMOS/uni11/galaxies_COSMOS_test_1_uni11_v5.npy',
+                '/sps/lsst/users/barcelin/data/blended/COSMOS/uni11/galaxies_COSMOS_test_3_uni11_v5.npy',
+                '/sps/lsst/users/barcelin/data/blended/COSMOS/uni11/galaxies_COSMOS_test_5_uni11_v5.npy',
+                '/sps/lsst/users/barcelin/data/blended/COSMOS/uni11/galaxies_COSMOS_test_6_uni11_v5.npy',
+                '/sps/lsst/users/barcelin/data/blended/COSMOS/uni11/galaxies_COSMOS_test_8_uni11_v5.npy',
+                '/sps/lsst/users/barcelin/data/blended/COSMOS/uni11/galaxies_COSMOS_test_9_uni11_v5.npy']
 
 
-list_of_samples_val=['/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_10_v4.npy']
+list_of_samples_val=['/sps/lsst/users/barcelin/data/blended/COSMOS/uni11/galaxies_COSMOS_test_10_uni11_v5.npy']
 
 
 ######## Define the generators
