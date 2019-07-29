@@ -105,7 +105,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             self.blend = self.blendedness[self.r]
 
             self.delta_r, self.delta_mag, self.blend_max = utils.compute_deltas_for_most_blended(self.s,self.mag,self.blend)#(self.s, self.mag)
-            return self.x, self.y, self.mag, self.s, self.delta_r, self.delta_mag, self.blend_max
+            return self.x, self.y, self.mag, self.s, self.delta_r, self.delta_mag, self.blend_max, self.blend
 
 
 
