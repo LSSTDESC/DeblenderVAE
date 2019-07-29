@@ -17,14 +17,14 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, size_of_lists, training_or_validation, noisy):
+    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, size_of_lists, traival_or_test, noisy):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
         batch_size: size of the batches to provide
         list_of_samples: list of the numpy arrays which correspond to the whole training (or validation) sample
 #        path: path to the first numpy array taken in which the batch will be taken
-        training_or_validation: choice between training of validation generator
+        trainval_or_test : choice between training/validation generator or test generator
         x: input of the neural network
         y: target of the neural network
         r: random value to sample into the validation sample
@@ -34,7 +34,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.total_sample_size = total_sample_size
         self.batch_size = batch_size
         self.list_of_samples = list_of_samples
-        self.training_or_validation = training_or_validation 
+        self.trainval_or_test = trainval_or_test 
         
         self.r = 0
         
@@ -44,6 +44,9 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.epoch = 0
 
         self.size_of_lists = size_of_lists
+
+        self.magnitude = magnitude
+        self.shift = shift
 
         # Weights computed from the lengths of lists
         self.p = []
@@ -73,15 +76,8 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.liste = np.load(np.random.choice(self.list_of_samples, p = self.p), mmap_mode = 'c')
         self.r = np.random.choice(len(self.liste), size = self.batch_size, replace=False)
 
-        #print(self.bands, self.r,)
-        #print(self.liste[self.r, 1][:,[6]].shape)
-        #print(self.liste[self.r,1,self.bands].shape, self.liste[self.r,1,self.bands])
         self.x = self.liste[self.r,1][:,self.bands]
         self.y = self.liste[self.r,0][:,self.bands]
-        
-        #if len(self.bands) == 1:
-        #    self.x = np.expand_dims(self.x, axis = 1)
-        #    self.y = np.expand_dims(self.y, axis = 1)
 
         # Preprocessing of the data to be easier for the network to learn
         self.x = utils.norm(self.x, self.bands)
@@ -102,7 +98,39 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.x = np.transpose(self.x, axes = (0,2,3,1))
         self.y = np.transpose(self.y, axes = (0,2,3,1))
         
-        return self.x, self.y
+        if trainval_or_test == 'trainval':
+            return self.x, self.y
+        elif trainval_or_test == 'test':
+            self.mag = self.magnitude[self.r]
+            self.s = self.shift[self.r]
+
+            self.delta_r, self.delta_mag = utils.delta_min(self.s, self.mag)
+
+            return self.x, self.y, self.mag, self.s, self.delta_r, self.delta_mag
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -113,7 +141,7 @@ class BatchGenerator_test(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, magnitude, shift, training_or_validation, noisy):
+    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, magnitude, shift, noisy):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
