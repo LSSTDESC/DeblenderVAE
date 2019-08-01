@@ -18,11 +18,12 @@ def plot_rgb_lsst_euclid(ugrizy_img, stamp_size, ax=None):
     RGB_img = np.zeros((stamp_size,stamp_size,3))
     if ax is None:
         _, ax = plt.subplots(1,1)
-    max_img = np.max(ugrizy_img[4:])
-    ugrizy_img = ugrizy_img[:,:,:].reshape(10,stamp_size,stamp_size)
-    RGB_img[:,:,0] = ugrizy_img[5][:,:]
-    RGB_img[:,:,1] = ugrizy_img[6][:,:]
-    RGB_img[:,:,2] = ugrizy_img[8][:,:]
+    max_img = np.max(ugrizy_img[:,:,4:])
+    
+    ugrizy_img = ugrizy_img[:,:,:]
+    RGB_img[:,:,0] = ugrizy_img[:,:,5]
+    RGB_img[:,:,1] = ugrizy_img[:,:,6]
+    RGB_img[:,:,2] = ugrizy_img[:,:,8]
     ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img)
 
 
