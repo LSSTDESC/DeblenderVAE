@@ -31,7 +31,7 @@ from tools_for_VAE.callbacks import changeAlpha
 ######## Set some parameters
 batch_size = 100
 latent_dim = 32
-epochs = 5
+epochs = 2
 bands = [6]
 
 ######## Import data for callback (Only if VAEHistory is used)
@@ -56,8 +56,8 @@ def vae_loss(x, x_decoded_mean):
 
 ############## Comment or not depending on what's necessary
 # Load weights
-#vae,  encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v10/', 1, folder = True)#, output_encoder
-#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v11/'))
+vae,  encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v12/', 1, folder = True)#, output_encoder
+K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v12/'))
 
 ######## Compile the VAE
 vae.compile('adam', loss=vae_loss, metrics=['mse'])
@@ -67,8 +67,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v12/'#/v10
-path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v12/'#/v10
+path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v12/bis/'#/v10
+path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v12/bis/'#/v10
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = callbacks.changeAlpha(alpha, vae, vae_loss, path_weights)
@@ -90,6 +90,7 @@ list_of_samples=['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxie
                  '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_4_v3.npy',
                  '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_5_v3.npy',
                 ]
+
 list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_5_v3_val.npy']
 
 ######## Define the generators
@@ -103,5 +104,5 @@ hist = vae.fit_generator(generator=training_generator, epochs=epochs,
                   shuffle = True,
                   validation_data=validation_generator,
                   validation_steps=200,#200
-                  #callbacks=callbacks,
+                  callbacks=callbacks,
                   workers = 0)
