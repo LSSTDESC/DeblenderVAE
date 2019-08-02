@@ -79,7 +79,7 @@ def map(func, iter, verbose=True, timesleep=15.0, timeout=None):
     return res.get(timeout)
 
 count = 0
-N_cosmo = 40000
+N_cosmo = 2000
 N_per_gal = 1
 
 counter = 0
@@ -93,7 +93,7 @@ debut = time.time()
 
 print( 'test')
 def func(ind):
-    gal_noiseless, gal_noisy, redshift=Gal_generator_noisy_pix_same(cosmos_cat)
+    gal_noiseless, gal_noisy, redshift, scale_radius=Gal_generator_noisy_pix_same(cosmos_cat)
     if (SNR(gal_noiseless,gal_noisy) == True):
         return np.array((gal_noiseless,gal_noisy))
     else:
@@ -103,22 +103,28 @@ def func(ind):
 
 img_cube_list = map(func, itr,timesleep = 10.0)# 
 
-fin = time.time()
-print('time : '+ str(fin-debut))
-# for j in range (5):
-#     i = 0
-#     img_cube_list = []
-#     while (i < N_cosmo):
-#         print(i)
-#         gal_noiseless, gal_noisy, redshift=Gal_generator_noisy_pix_same(cosmos_cat)
-#         if (SNR(gal_noiseless,gal_noisy) == True):
-#             img_cube_list.append((gal_noiseless,gal_noisy, redshift))
-#             i+=1
+# fin = time.time()
+# print('time : '+ str(fin-debut))
+# i=0
 
-#     fin = time.time()
-#     print('time : '+ str(fin-debut))
+# galaxies = []
+# scale_radius_list = []
+# SNR_list = []
 
-#     name = '/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_'+str(j)+'.npy'
-#     np.save(name, img_cube_list)
+# while (i < N_cosmo):
+#     print(i)
+#     gal_noiseless, gal_noisy, redshift, scale_radius=Gal_generator_noisy_pix_same(cosmos_cat)
+#     if (SNR(gal_noiseless,gal_noisy) == True):
+#         galaxies.append((gal_noiseless,gal_noisy))
+#         scale_radius_list.append((scale_radius))
+#         SNR_list.append(SNR(gal_noiseless,gal_noisy))
+#         i+=1
 
-np.save('/sps/lsst/users/barcelin/data/single/v7/galaxies_COSMOS_5_v4.npy', img_cube_list)
+# fin = time.time()
+# print('time : '+ str(fin-debut))
+
+# np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_test_v5', galaxies)
+# np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/scale_radius_test_v5', scale_radius_list)
+# np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/SNR_test_v5', SNR_list)
+
+np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_val_v5_test.npy', img_cube_list)

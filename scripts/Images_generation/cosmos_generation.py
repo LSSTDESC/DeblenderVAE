@@ -18,8 +18,6 @@ datapath = galsim.meta_data.share_dir
 datapath2 = os.path.abspath(os.path.join(path,'/sps/lsst/users/barcelin/EUCLID_Filters/'))
 #print('passed here')
 # initialize (pseudo-)random number generator
-random_seed = 1234567
-rng = galsim.BaseDeviate(random_seed+1)
 
         # read in the Euclid NIR filters
 filter_names_euclid_nir = 'HJY'
@@ -51,6 +49,9 @@ pixel_scale_lsst = 0.2 # arcseconds # LSST Science book
 pixel_scale_euclid_nir = 0.3 # arcseconds # Euclid Science book
 pixel_scale_euclid_vis = 0.1 # arcseconds # Euclid Science book
 
+
+#random_seed = 1234567
+rng = galsim.BaseDeviate(None)
 
 #################### NOISE ###################
 # Poissonian noise according to sky_level
@@ -107,8 +108,8 @@ sky_level_pixel_vis = int((sky_level_vis * 1800 * pixel_scale_euclid_vis**2))# i
 #         return p(x)
 def lsst_PSF():
     #Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
-    mu = -0.43058681997903414
-    sigma = 0.3404334041976153
+    mu = -0.43058681997903414 # np.log(0.65)
+    sigma = 0.3404334041976153  # Fixed to have corresponding percentils as in paper
     p_unnormed = lambda x : (np.exp(-(np.log(x) - mu)**2 / (2 * sigma**2))
                     / (x * sigma * np.sqrt(2 * np.pi)))#((1/(2*z0))*((z/z0)**2)*np.exp(-z/z0))
     p_normalization = scipy.integrate.quad(p_unnormed, 0., np.inf)[0]
@@ -124,7 +125,7 @@ def lsst_PSF():
             return p(x)
 
     pdf = PSF_distribution()
-    return pdf.rvs()
+    return 0.65#pdf.rvs()
 
 #fwhm_lsst = 0.65 # pdf.rvs() ## Fixed at median value : Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
 
@@ -135,6 +136,19 @@ beta = 2.5
 PSF_euclid_nir = galsim.Moffat(fwhm=fwhm_euclid_nir, beta=beta)
 PSF_euclid_vis = galsim.Moffat(fwhm=fwhm_euclid_vis, beta=beta)
 
+
+def get_scale_radius(gal):
+    """
+    Return the scale radius of the created galaxy
+    
+    Parameter:
+    ---------
+    gal: galaxy from which the scale radius is needed
+    """
+    try:
+        return gal.obj_list[1].original.scale_radius
+    except:
+        return gal.original.scale_radius
 
 ############# SIZE OF STAMPS ################
 # The stamp size of NIR instrument is taken equal to the one of LSST to have a nb of pixels which is 
@@ -154,11 +168,12 @@ def Gal_generator_noisy_pix_same(cosmos_cat):
     count = 0
     try:
         ############## SHAPE OF THE GALAXY ##################
-        ud = galsim.UniformDeviate()
-        gal = cosmos_cat.makeGalaxy(random.randint(0,cosmos_cat.nobjects-1), gal_type='parametric', chromatic=True, noise_pad_size = 0)
+        ud = galsim.UniformDeviate()#cosmos_cat.nobjects -10000-1
+        gal = cosmos_cat.makeGalaxy(random.randint(cosmos_cat.nobjects-10000 -1, cosmos_cat.nobjects - 5000 -1), gal_type='parametric', chromatic=True, noise_pad_size = 0)
 
         gal = gal.rotate(ud() * 360. * galsim.degrees)
         redshift = gal.SED.redshift
+        scale_radius = get_scale_radius(gal)
         
         ############ LUMINOSITY ############# 
         # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             
@@ -168,7 +183,6 @@ def Gal_generator_noisy_pix_same(cosmos_cat):
         
         galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
         galaxy_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
-
 
         # LSST PSF
         fwhm_lsst = lsst_PSF()
@@ -199,7 +213,7 @@ def Gal_generator_noisy_pix_same(cosmos_cat):
                     img.addNoise(poissonian_noise_vis)
                     galaxy_noisy[i] = img.array.data
                 else:
-                    poissonian_noise_lsst = galsim.PoissonNoise(rng, sky_level_pixel_lsst[i-4])
+                    poissonian_noise_lsst = galsim.PoissonNoise(rng, sky_level=sky_level_pixel_lsst[i-4])
                     img = galsim.ImageF(max_stamp_size,max_stamp_size, scale=pixel_scale_lsst)  
                     bdfinal = galsim.Convolve([bdgal_lsst, PSF_lsst])
                     bdfinal.drawImage(filters[filter_name], image=img)
@@ -209,7 +223,8 @@ def Gal_generator_noisy_pix_same(cosmos_cat):
                     img.addNoise(poissonian_noise_lsst)
                     galaxy_noisy[i]= img.array.data
         
-        return galaxy_noiseless, galaxy_noisy, redshift
+        return galaxy_noiseless, galaxy_noisy, redshift, scale_radius
     except RuntimeError: 
             count +=1
-    print("nb of error : "+(count))
+            print("nb of error : "+str(count))
+            return Gal_generator_noisy_pix_same(cosmos_cat)

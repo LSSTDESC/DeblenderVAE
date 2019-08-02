@@ -29,8 +29,8 @@ datapath = galsim.meta_data.share_dir
 datapath2 = os.path.abspath(os.path.join(path,'/sps/lsst/users/barcelin/EUCLID_Filters/'))
 
 # initialize (pseudo-)random number generator
-random_seed = 1234567
-rng = galsim.BaseDeviate(random_seed+1)
+#random_seed = 1234567
+rng = galsim.BaseDeviate(None)
 
         # read in the Euclid NIR filters
 filter_names_euclid_nir = 'HJY'
@@ -101,8 +101,8 @@ sky_level = sky_level_pixel_nir + [sky_level_pixel_vis] + sky_level_pixel_lsst
 ########### PSF #####################
 def lsst_PSF():
     #Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
-    mu = -0.43058681997903414
-    sigma = 0.3404334041976153
+    mu = -0.43058681997903414 # np.log(0.65)
+    sigma = 0.3404334041976153 # Fixed to have corresponding percentils as in paper
     p_unnormed = lambda x : (np.exp(-(np.log(x) - mu)**2 / (2 * sigma**2))
                     / (x * sigma * np.sqrt(2 * np.pi)))#((1/(2*z0))*((z/z0)**2)*np.exp(-z/z0))
     p_normalization = scipy.integrate.quad(p_unnormed, 0., np.inf)[0]
@@ -350,6 +350,7 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     if training_or_test == 'training':
         return galaxy_noiseless, galaxy_noisy, blend_noisy
     if training_or_test == 'test':
+        print(Blendedness_lsst[6].shape)
         return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6], scale_radius
 
 
