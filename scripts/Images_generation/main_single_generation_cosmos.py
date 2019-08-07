@@ -79,7 +79,7 @@ def map(func, iter, verbose=True, timesleep=15.0, timeout=None):
     return res.get(timeout)
 
 count = 0
-N_cosmo = 2000
+N_cosmo = 40000
 N_per_gal = 1
 
 counter = 0
@@ -127,4 +127,4 @@ img_cube_list = map(func, itr,timesleep = 10.0)#
 # np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/scale_radius_test_v5', scale_radius_list)
 # np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/SNR_test_v5', SNR_list)
 
-np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_val_v5_test.npy', img_cube_list)
+np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_46_v5_test.npy', img_cube_list)

@@ -102,8 +102,8 @@ list_of_samples_val=['/sps/lsst/users/barcelin/data/blended/COSMOS/uni11/galaxie
 
 
 ######## Define the generators
-training_generator = BatchGenerator(bands,list_of_samples,total_sample_size=180000, batch_size= batch_size, size_of_lists = 20000, training_or_test = 'training', noisy = True)#190000
-validation_generator = BatchGenerator(bands,list_of_samples_val,total_sample_size=20000, batch_size= batch_size, size_of_lists = 10000, training_or_test = 'validation', noisy = True)#10000
+training_generator = BatchGenerator(bands,list_of_samples,total_sample_size=180000, batch_size= batch_size, size_of_lists = 20000, trainval_or_test = 'trainval', noisy = True)#190000
+validation_generator = BatchGenerator(bands,list_of_samples_val,total_sample_size=20000, batch_size= batch_size, size_of_lists = 10000, trainval_or_test = 'trainval', noisy = True)#10000
 
 ######## Train the network
 hist = deblender.fit_generator(training_generator,

@@ -102,4 +102,5 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             return self.x, self.y
         elif self.trainval_or_test == 'test':
             self.radius = self.scale_radius[self.r]
-            return self.x, self.y, self.radius, self.SNR
+            self.SNR_out = self.SNR[self.r]
+            return self.x, self.y, self.radius, self.SNR_out

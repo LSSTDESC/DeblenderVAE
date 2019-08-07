@@ -76,7 +76,7 @@ def map(func, iter, verbose=True, timesleep=15.0, timeout=None):
     return res.get(timeout)
 
 count = 0
-N_cosmo = 20000
+N_cosmo = 40000
 N_per_gal = 5
 
 ud = galsim.UniformDeviate()
@@ -110,7 +110,7 @@ img_cube_list = map(func, itr,timesleep = 10.0)#
 # fin = time.time()
 # print('time : '+ str(fin-debut))
 
-np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_8_uni11_v5.npy', img_cube_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_blended_24_v5.npy', img_cube_list)
 
 
 

@@ -28,7 +28,7 @@ class changeAlpha(Callback):
     def on_epoch_end(self, alpha, vae):
         stable = 10
         new_alpha = 0.0001
-        if self.epoch > stable and K.get_value(self.alpha)>2e-8 :
+        if self.epoch > stable and K.get_value(self.alpha)>1e-6 :
             #coef = self.epoch - (self.epochs + stable)/2
             #print(coef)
             new_alpha = K.get_value(self.alpha)/2#1/(1+np.exp(-(coef)))*0.01
