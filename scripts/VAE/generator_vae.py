@@ -18,7 +18,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, size_of_lists, scale_radius, trainval_or_test, noisy):
+    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, size_of_lists, scale_radius,SNR, trainval_or_test, noisy):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -46,6 +46,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
 
         self.size_of_lists = size_of_lists
         self.scale_radius = scale_radius
+        self.SNR = SNR
 
         # Weights computed from the lengths of lists
         self.p = []
@@ -75,16 +76,9 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.liste = np.load(np.random.choice(self.list_of_samples, p = self.p), mmap_mode = 'c')
         self.r = np.random.choice(len(self.liste), size = self.batch_size, replace=False)
 
-        #print(self.bands, self.r,)
-        #print(self.liste[self.r, 1][:,[6]].shape)
-        #print(self.liste[self.r,1,self.bands].shape, self.liste[self.r,1,self.bands])
         self.x = self.liste[self.r,1][:,self.bands]
         self.y = self.liste[self.r,0][:,self.bands]
         
-        #if len(self.bands) == 1:
-        #    self.x = np.expand_dims(self.x, axis = 1)
-        #    self.y = np.expand_dims(self.y, axis = 1)
-
         # Preprocessing of the data to be easier for the network to learn
         self.x = utils.norm(self.x, self.bands)
         self.y = utils.norm(self.y, self.bands)
@@ -104,10 +98,8 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.x = np.transpose(self.x, axes = (0,2,3,1))
         self.y = np.transpose(self.y, axes = (0,2,3,1))
         
-        if trainval_or_test == 'training' or trainval_or_test == 'validation':
+        if self.trainval_or_test == 'training' or self.trainval_or_test == 'validation':
             return self.x, self.y
-        elif trainval_or_test == 'test':
+        elif self.trainval_or_test == 'test':
             self.radius = self.scale_radius[self.r]
-            return self.x, self.y, self.radius
-
-
+            return self.x, self.y, self.radius, self.SNR

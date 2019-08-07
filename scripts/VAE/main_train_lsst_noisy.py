@@ -22,7 +22,7 @@ from tensorflow.keras.callbacks import Callback, ReduceLROnPlateau, TerminateOnN
 import tensorflow as tf
 import tensorflow_probability as tfp
 
-from generator_vae import BatchGenerator_lsst, BatchGenerator
+from generator_vae import  BatchGenerator
 
 sys.path.insert(0,'../tools_for_VAE/')
 from tools_for_VAE import model, vae_functions, utils
@@ -35,7 +35,7 @@ epochs = 1000
 bands = [4,5,6,7,8,9]
 
 ######## Import data for callback (Only if VAEHistory is used)
-x = np.load('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_5_v3.npy', mmap_mode = 'c')
+x = np.load('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_5_v5.npy', mmap_mode = 'c')
 x_val = utils.norm(x[:500,1,bands], bands).transpose([0,2,3,1])
 
 
@@ -47,7 +47,7 @@ vae, vae_utils, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov
 
 print(vae.summary())
 ######## Define the loss function
-alpha = K.variable(1e-4)
+alpha = K.variable(1e-2)
 
 def vae_loss(x, x_decoded_mean):
     xent_loss = K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
@@ -56,8 +56,8 @@ def vae_loss(x, x_decoded_mean):
 
 ############## Comment or not depending on what's necessary
 # Load weights
-vae, encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/', 6, folder = True) 
-K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/'))
+#vae, encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/', 6, folder = True) 
+#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/'))
 
 ######## Compile the VAE
 vae.compile('adam', loss=vae_loss, metrics=['mse'])
@@ -67,8 +67,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/bis/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/v10/bis/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v11/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/v11/'
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = changeAlpha(alpha, vae, vae_loss, path_weights)
@@ -83,17 +83,18 @@ checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'lo
 callbacks = [checkpointer_mse, vae_hist, alphaChanger]# earlystop, checkpointer_loss,vae_hist,
  
 ######## List of data samples
-list_of_samples=['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_1_v3.npy',
-                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_2_v3.npy',
-                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_3_v3.npy',
-                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_4_v3.npy',
-                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_5_v3.npy',
+list_of_samples=['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_1_v5.npy',
+                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_2_v5.npy',
+                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_3_v5.npy',
+                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_4_v5.npy',
+                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_5_v5.npy',
                 ]
-list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/galaxies_COSMOS_5_v3_val.npy']
+
+list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_val_v5.npy']
 
 ######## Define the generators
-training_generator = BatchGenerator(bands, list_of_samples,total_sample_size=180000, batch_size= batch_size, size_of_lists = 40000, training_or_validation = 'training', noisy = True)#180000
-validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_size=20000, batch_size= batch_size, size_of_lists = 20000, training_or_validation = 'validation', noisy = True)#20000
+training_generator = BatchGenerator(bands, list_of_samples,total_sample_size=180000, batch_size= batch_size, size_of_lists = 40000,  scale_radius = None,SNR = None,trainval_or_test = 'training', noisy = True)#180000
+validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_size=20000, batch_size= batch_size, size_of_lists = 20000, scale_radius = None, SNR = None,trainval_or_test = 'validation', noisy = True)#20000
 
 
 ######## Train the network
