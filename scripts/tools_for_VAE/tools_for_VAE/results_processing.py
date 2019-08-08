@@ -141,60 +141,63 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
     deltas_m = []
     max_blendedness = []
 
-    lum_in_simple = np.empty([N,N,],dtype='float32')
-    lum_out_simple= np.empty([N,N,], dtype='float32')
+    flux_in = np.empty([N,N,],dtype='float32')
+    flux_out= np.empty([N,N,], dtype='float32')
     for j in range(N):
         input_vae = generator.__getitem__(2)
         output_vae = deblender.predict(input_vae[0], batch_size = batch_size)
         output_vae = utils.denorm(output_vae, bands, channel_last = True)
         input_noiseless = utils.denorm(input_vae[1], bands, channel_last = True)
 
-    for i in range (len(input_vae[0])):#a[0] test
-        try: 
-            gal_image = galsim.Image(input_noiseless[i][:,:,2])
-            gal_image.scale = pix_scale
+        for i in range (len(input_vae[0])):#a[0] test
+                try: 
+                    gal_image = galsim.Image(input_noiseless[i][:,:,2])
+                    gal_image.scale = pix_scale
 
-            res = galsim.hsm.EstimateShear(gal_image, psf_image)
-            e_in = [res.corrected_e1, res.corrected_e2]
+                    res = galsim.hsm.EstimateShear(gal_image, psf_image)
+                    e_in = [res.corrected_e1, res.corrected_e2]
 
-            gal_image = galsim.Image(output_vae[i][:,:,r_band])
-            gal_image.scale = pix_scale
+                    gal_image = galsim.Image(output_vae[i][:,:,r_band])
+                    gal_image.scale = pix_scale
 
-            res = galsim.hsm.EstimateShear(gal_image, psf_image)
-            e_out = [res.corrected_e1, res.corrected_e2]
+                    res = galsim.hsm.EstimateShear(gal_image, psf_image)
+                    e_out = [res.corrected_e1, res.corrected_e2]
 
-            ellipticities.append([e_in, e_out])
+                    ellipticities.append([e_in, e_out])
 
-            magnitudes.append(input_vae[2])
+                    magnitudes.append(input_vae[2])
                         
-            # Measurement of fluxes
-            mask = createCircularMask(im_size,im_size,None,5)
-            masked_img_in_simple = input_noiseless[i][:,:,r_band].copy()
-            masked_img_in_simple[~mask] = 0  
+                    # Measurement of fluxes
+                    mask = plot.createCircularMask(im_size,im_size,None,5)
+                    masked_img_in_simple = input_noiseless[i][:,:,r_band].copy()
+                    masked_img_in_simple[~mask] = 0  
 
-            masked_img_out_simple = output_vae[i][:,:,r_band].copy()
-            masked_img_out_simple[~mask] = 0
+                    masked_img_out_simple = output_vae[i][:,:,r_band].copy()
+                    masked_img_out_simple[~mask] = 0
 
-            # Calculate the luminosity by substracting the noise
-            lum_in_simple[j,i] = np.sum(masked_img_in_simple)
-            lum_out_simple[j,i] = np.sum(masked_img_out_simple)
+                    # Calculate the luminosity by substracting the noise
+                    flux_in[j,i] = np.sum(masked_img_in_simple)
+                    flux_out[j,i] = np.sum(masked_img_out_simple)
 
-        except :
-            print('error for galaxy '+str(j*100+i))
-            pass
-        continue
+                except :
+                    print('error for galaxy '+str(j*100+i))
+                    pass
+                continue
+                
+        delta_r = input_vae[4] 
+        delta_mag = input_vae[5]
+        max_blend = input_vae[6]
+        deltas_r.append(delta_r)
+        deltas_m.append(delta_mag)
+        max_blendedness.append(max_blend)
         
-    delta_r = input_vae[4] 
-    delta_mag = input_vae[5]
-    max_blend = input_vae[6]
-    deltas_r.append(delta_r)
-    deltas_m.append(delta_mag)
-    max_blendedness.append(max_blend)
-    
     ellipticities = np.array(ellipticities)
     magnitudes = np.array(magnitudes)
     delta_r_arr = np.array(deltas_r)
     delta_mag_arr = np.array(deltas_m)
     max_blendedness_arr = np.array(max_blendedness)
 
-    return ellipticities, magnitudes, delta_r_arr, delta_mag_arr, max_blendedness_arr
+    flux_in = np.concatenate(flux_in)
+    flux_out = np.concatenate(flux_out)
+
+    return ellipticities, flux_in, flux_out, magnitudes, delta_r_arr, delta_mag_arr, max_blendedness_arr
