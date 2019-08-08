@@ -56,7 +56,7 @@ def vae_loss(x, x_decoded_mean):
 
 ############## Comment or not depending on what's necessary
 # Load weights
-#vae, encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/', 6, folder = True) 
+#vae, encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v11/', 6, folder = True) 
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/'))
 
 ######## Compile the VAE
@@ -80,7 +80,7 @@ checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'wei
 checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 
 ######## Define all used callbacks
-callbacks = [checkpointer_mse, vae_hist, alphaChanger]# earlystop, checkpointer_loss,vae_hist,
+callbacks = [checkpointer_mse, vae_hist]# earlystop, checkpointer_loss,vae_hist,, alphaChanger
  
 ######## List of data samples
 list_of_samples=['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_1_v5.npy',

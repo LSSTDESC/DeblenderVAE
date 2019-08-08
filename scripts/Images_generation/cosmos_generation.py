@@ -169,7 +169,7 @@ def Gal_generator_noisy_pix_same(cosmos_cat):
     try:
         ############## SHAPE OF THE GALAXY ##################
         ud = galsim.UniformDeviate()#cosmos_cat.nobjects -10000-1
-        gal = cosmos_cat.makeGalaxy(random.randint(0,cosmos_cat.nobjects-10000 -1), gal_type='parametric', chromatic=True, noise_pad_size = 0)
+        gal = cosmos_cat.makeGalaxy(random.randint(cosmos_cat.nobjects-5000-1,cosmos_cat.nobjects -1), gal_type='parametric', chromatic=True, noise_pad_size = 0)
 
         gal = gal.rotate(ud() * 360. * galsim.degrees)
         redshift = gal.SED.redshift

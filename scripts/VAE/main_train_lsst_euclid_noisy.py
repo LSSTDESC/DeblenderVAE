@@ -54,7 +54,7 @@ def vae_loss(x, x_decoded_mean):
 
 ############## Comment or not depending on what's necessary
 # Load weights
-#vae,  encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v7/', 10, folder = True)
+vae,  encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v8/mse/', 10, folder = True)
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v7/'))
 
 ######## Compile the VAE
@@ -65,8 +65,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v8/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v8/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v8/bis/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v8/bis/'
 #path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = changeAlpha(alpha, vae, vae_loss, path_weights)

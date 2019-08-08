@@ -32,9 +32,8 @@ def SNR(gal_noiseless,gal_noisy):
     noise = np.std(gal_noisy[6]-gal_noiseless[6])
     max_img_noiseless = np.max(gal_noiseless[6])
     
-    snr = abs(max_img_noiseless/noise)
-    
-    return (snr>2)
+    snr = np.abs(max_img_noiseless/noise)
+    return (snr>2), snr
 
 
 import multiprocessing
@@ -79,7 +78,7 @@ def map(func, iter, verbose=True, timesleep=15.0, timeout=None):
     return res.get(timeout)
 
 count = 0
-N_cosmo = 40000
+N_cosmo = 10000
 N_per_gal = 1
 
 counter = 0
@@ -94,37 +93,37 @@ debut = time.time()
 print( 'test')
 def func(ind):
     gal_noiseless, gal_noisy, redshift, scale_radius=Gal_generator_noisy_pix_same(cosmos_cat)
-    if (SNR(gal_noiseless,gal_noisy) == True):
+    if (SNR(gal_noiseless,gal_noisy)[0] == True):
         return np.array((gal_noiseless,gal_noisy))
     else:
         return func(ind+1) 
 
 
 
-img_cube_list = map(func, itr,timesleep = 10.0)# 
+#img_cube_list = map(func, itr,timesleep = 10.0)# 
 
-# fin = time.time()
-# print('time : '+ str(fin-debut))
-# i=0
+fin = time.time()
+print('time : '+ str(fin-debut))
+i=0
 
-# galaxies = []
-# scale_radius_list = []
-# SNR_list = []
+galaxies = []
+scale_radius_list = []
+SNR_list = []
 
-# while (i < N_cosmo):
-#     print(i)
-#     gal_noiseless, gal_noisy, redshift, scale_radius=Gal_generator_noisy_pix_same(cosmos_cat)
-#     if (SNR(gal_noiseless,gal_noisy) == True):
-#         galaxies.append((gal_noiseless,gal_noisy))
-#         scale_radius_list.append((scale_radius))
-#         SNR_list.append(SNR(gal_noiseless,gal_noisy))
-#         i+=1
+while (i < N_cosmo):
+    print(i)
+    gal_noiseless, gal_noisy, redshift, scale_radius=Gal_generator_noisy_pix_same(cosmos_cat)
+    if (SNR(gal_noiseless,gal_noisy)[0] == True):
+        galaxies.append((gal_noiseless,gal_noisy))
+        scale_radius_list.append((scale_radius))
+        SNR_list.append(SNR(gal_noiseless,gal_noisy)[1])
+        i+=1
 
-# fin = time.time()
-# print('time : '+ str(fin-debut))
+fin = time.time()
+print('time : '+ str(fin-debut))
 
-# np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_test_v5', galaxies)
-# np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/scale_radius_test_v5', scale_radius_list)
-# np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/SNR_test_v5', SNR_list)
+np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_test_v5', galaxies)
+np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/scale_radius_test_v5', scale_radius_list)
+np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/SNR_test_v5', SNR_list)
 
-np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_46_v5_test.npy', img_cube_list)
+#np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_46_v5_test.npy', img_cube_list)

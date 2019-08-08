@@ -350,7 +350,6 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     if training_or_test == 'training':
         return galaxy_noiseless, galaxy_noisy, blend_noisy
     if training_or_test == 'test':
-        print(Blendedness_lsst[6].shape)
         return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6], scale_radius
 
 

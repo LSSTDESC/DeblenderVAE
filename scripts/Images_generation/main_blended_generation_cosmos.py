@@ -76,7 +76,7 @@ def map(func, iter, verbose=True, timesleep=15.0, timeout=None):
     return res.get(timeout)
 
 count = 0
-N_cosmo = 40000
+N_cosmo = 10000
 N_per_gal = 5
 
 ud = galsim.UniformDeviate()
@@ -104,44 +104,44 @@ def func(ind):
 
 # debut = time.time()
 
-img_cube_list = map(func, itr,timesleep = 10.0)# 
+#img_cube_list = map(func, itr,timesleep = 10.0)# 
 # print(len(img_cube_list, len(img_cube_list[0])))
 
 # fin = time.time()
 # print('time : '+ str(fin-debut))
 
-np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_blended_24_v5.npy', img_cube_list)
+#np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_blended_45_v5.npy', img_cube_list)
 
 
 
 ######## TEST SAMPLE 
-# i = 0
-# galaxies = []
-# shift_list = []
-# redshift_list  = []
-# magnitude_list = []
-# blendedness_lsst_list = []
-# blendedness_euclid_list = []
-# scale_radius_list = []
+i = 0
+galaxies = []
+shift_list = []
+redshift_list  = []
+magnitude_list = []
+blendedness_lsst_list = []
+blendedness_euclid_list = []
+scale_radius_list = []
 
-# while (i < N_cosmo):
-#     print(i)
-#     nb_blended_gal = np.random.randint(1,N_per_gal)
-#     galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid, Blendedness_lsst, scale_radius = blend_generator(cosmos_cat, nb_blended_gal, 'test')
-#     if (SNR(galaxy_noiseless, blend_noisy) == True):
-#         galaxies.append((galaxy_noiseless, blend_noisy))
-#         shift_list.append((shift))
-#         redshift_list.append((redshift))
-#         magnitude_list.append((mag))
-#         blendedness_lsst_list.append((Blendedness_lsst))
-#         blendedness_euclid_list.append((Blendedness_euclid))
-#         scale_radius_list.append((scale_radius))
-#         i+=1
+while (i < N_cosmo):
+    print(i)
+    nb_blended_gal = np.random.randint(1,N_per_gal)
+    galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid, Blendedness_lsst, scale_radius = blend_generator(cosmos_cat, nb_blended_gal, 'test')
+    if (SNR(galaxy_noiseless, blend_noisy) == True):
+        galaxies.append((galaxy_noiseless, blend_noisy))
+        shift_list.append((shift))
+        redshift_list.append((redshift))
+        magnitude_list.append((mag))
+        blendedness_lsst_list.append((Blendedness_lsst))
+        blendedness_euclid_list.append((Blendedness_euclid))
+        scale_radius_list.append(scale_radius)
+        i+=1
 
-# np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_v5.npy', galaxies)
-# np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_shift_v5.npy', shift_list)
-# np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_redshift_v5.npy', redshift_list)
-# np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_magnitude_v5.npy', magnitude_list)
-# np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_blendedness_lsst_v5.npy', blendedness_lsst_list)
-# np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_blendedness_euclid_v5.npy', blendedness_euclid_list)
-# np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/galaxies_COSMOS_test_scale_radius_v5.npy', scale_radius_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_COSMOS_test_v5.npy', galaxies)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_COSMOS_test_shift_v5.npy', shift_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_COSMOS_test_redshift_v5.npy', redshift_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_COSMOS_test_magnitude_v5.npy', magnitude_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_COSMOS_test_blendedness_lsst_v5.npy', blendedness_lsst_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_COSMOS_test_blendedness_euclid_v5.npy', blendedness_euclid_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/independant/uni11/galaxies_COSMOS_test_scale_radius_v5.npy', scale_radius_list)
