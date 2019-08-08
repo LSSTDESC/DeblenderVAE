@@ -46,7 +46,9 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.magnitude = magnitude
         self.shift = shift
         self.blendedness = blendedness
+        print(self.blendedness.shape)
         self.scale_radius = scale_radius
+        print(self.scale_radius.shape)
 
         # Weights computed from the lengths of lists
         self.p = []
@@ -106,5 +108,5 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             self.blend = self.blendedness[self.r]
             self.radius = self.scale_radius[self.r]
 
-            self.delta_r, self.delta_mag, self.blend_max = utils.compute_deltas_for_most_blended(self.s,self.mag,self.blend)#(self.s, self.mag)
+            self.delta_r, self.delta_mag, self.blend_max = utils.compute_deltas_for_most_blended(self.s,self.mag,self.blend)
             return self.x, self.y, self.mag, self.s, self.delta_r, self.delta_mag, self.blend_max, self.blend, self.radius
