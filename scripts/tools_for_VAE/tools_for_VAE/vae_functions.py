@@ -27,6 +27,20 @@ def build_vanilla_vae(encoder, decoder, coeff_KL,full_cov=False):
     return vae, vae_utils, Dkl
 
 
+def build_resnet_vae(encoder, decoder, coeff_KL,full_cov=False):
+    """
+    Returns the model to train and parameters to plot relevant information during training using the VAEHistory callback
+    """
+    input_vae = Input(shape=encoder.input.shape[1:])
+    mu, sigma, shortcut = encoder(input_vae)
+
+    z, Dkl = layers.SampleMultivariateGaussian(full_cov=full_cov, add_KL=False, return_KL=True, coeff_KL=coeff_KL)([mu,sigma])
+    
+    vae = Model(input_vae, decoder([z,shortcut]))
+    vae_utils = Model(input_vae, [*encoder(input_vae), z, Dkl, decoder([z,shortcut])])
+
+    return vae, vae_utils, Dkl
+
 
 class VAEHistory(Callback):
     def __init__(self, xval_sub, vae_utils, latent_dim, alpha, plot_bands=0, figname=None):
