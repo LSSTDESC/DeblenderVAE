@@ -175,15 +175,7 @@ def load_vae_conv(path,nb_of_bands,folder = False):
     """
     Return the loaded VAE located at the path given when the function is called
     """        
-    batch_size = 100 
-    epsilon_std = 1.0
-    
-    input_shape = (64,64,nb_of_bands)
     latent_dim = 32
-    hidden_dim = 256
-    filters = [32,64, 128, 256]
-    kernels = [3,3,3,3]
-
     
     # Build the encoder and decoder
     encoder, decoder = model.vae_model(latent_dim, nb_of_bands)
@@ -204,36 +196,13 @@ def load_vae_decoder(path,nb_of_bands,folder = False):
     """
     Return the decoder of the VAE located at the path given when the function is called
     """
-    batch_size = 100 
-    epsilon_std = 1.0
-    
-    input_shape = (64,64,nb_of_bands)
     latent_dim = 32
-    hidden_dim = 256
-    filters = [32,64, 128, 256]
-    kernels = [3,3,3,3]
-
-    # Build the encoder
-    encoder = model.build_encoder(latent_dim, hidden_dim, filters, kernels, nb_of_bands)
-    # Build the decoder
-    decoder = model.build_decoder(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None)
-
-    #### Create an input for the lambda function to compute the latent variable z
-    input_vae = Input(shape=(64,64, nb_of_bands))
-    output_encoder = encoder(input_vae)
-
-    # Lambda function to compute latent variable z
-    def sampling(args):
-        z_mean, z_log_var = args
-        epsilon = K.random_normal(shape=(batch_size, latent_dim), mean=0.,
-                                  stddev=epsilon_std)
-        return z_mean + K.exp(z_log_var / 2) * epsilon
-
-    # Build the latent variable z
-    z = Lambda(sampling, output_shape=(latent_dim,))(output_encoder)
+    
+    # Build the encoder and decoder
+    encoder, decoder = model.vae_model(latent_dim, nb_of_bands)
 
     #### Build the model
-    vae_loaded = Model(input_vae, decoder(z)) 
+    vae_loaded, vae_utils,  Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
 
     if folder == False: 
         vae_loaded.load_weights(path)
