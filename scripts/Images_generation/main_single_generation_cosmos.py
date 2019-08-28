@@ -24,18 +24,16 @@ stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis)
 # Loading the COSMOS catalog
 cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lsst/users/barcelin/COSMOS_25.2_training_sample')
 
- 
-# function to check if S/N > 2
 # Here we do the detection in R band of LSST
-def SNR_peak(gal_noiseless,gal_noisy):
-    noise = np.std(gal_noisy[6]-gal_noiseless[6])
-    max_img_noiseless = np.max(gal_noiseless[6])
+def SNR_peak(gal_noiseless,gal_noisy, band=6, snr_min=2):
+    noise = np.std(gal_noisy[band]-gal_noiseless[band])
+    max_img_noiseless = np.max(gal_noiseless[band])
     snr = np.abs(max_img_noiseless/noise)
-    return (snr>2), snr
+    return (snr>snr_min), snr
 
-def SNR(gal_noiseless,gal_noisy):
-    snr = np.sum(gal_noiseless[6]) / np.sum(gal_noisy[6]-gal_noiseless[6])
-    return (snr>2), snr
+def SNR(gal_noiseless,gal_noisy, band=6, snr_min=5):
+    snr = np.sum(gal_noiseless[band]) / (np.std(gal_noisy[band]-gal_noiseless[band]) * np.prod(gal_noisy[band].shape))
+    return (snr>snr_min), snr
 
 import multiprocessing
 import time
