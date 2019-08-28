@@ -34,7 +34,6 @@ def SNR_peak(gal_noiseless,gal_noisy):
     return (snr>2), snr
 
 def SNR(gal_noiseless,gal_noisy):
-    noise = np.sum(gal_noisy[6]-gal_noiseless[6])   
     snr = np.sum(gal_noiseless[6]) / np.sum(gal_noisy[6]-gal_noiseless[6])
     return (snr>2), snr
 
