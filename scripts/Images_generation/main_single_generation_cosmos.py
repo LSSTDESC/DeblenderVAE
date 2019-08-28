@@ -27,14 +27,16 @@ cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lss
  
 # function to check if S/N > 2
 # Here we do the detection in R band of LSST
-def SNR(gal_noiseless,gal_noisy):
-    condition = False
+def SNR_peak(gal_noiseless,gal_noisy):
     noise = np.std(gal_noisy[6]-gal_noiseless[6])
     max_img_noiseless = np.max(gal_noiseless[6])
-    
     snr = np.abs(max_img_noiseless/noise)
     return (snr>2), snr
 
+def SNR(gal_noiseless,gal_noisy):
+    noise = np.sum(gal_noisy[6]-gal_noiseless[6])   
+    snr = np.sum(gal_noiseless[6]) / np.sum(gal_noisy[6]-gal_noiseless[6])
+    return (snr>2), snr
 
 import multiprocessing
 import time
