@@ -54,26 +54,26 @@ def VAE_processing(vae, generator,bands,r_band,im_size, N, batch_size):
     for j in range(N):
         input_vae = generator.__getitem__(2)
         output_vae = vae.predict(input_vae[0], batch_size = batch_size)
-        
-        input_noisy = utils.denorm(input_vae[0], bands, channel_last = True)
+        #input_noiseless = input_vae[1]
         input_noiseless = utils.denorm(input_vae[1], bands, channel_last = True)
         output_vae = utils.denorm (output_vae, bands, channel_last = True)
+
         for i in range (len(input_vae[0])):
             try: 
                 gal_image = galsim.Image(input_noiseless[i][:,:,r_band])
                 gal_image.scale = pix_scale
+
+                gal_image_out = galsim.Image(output_vae[i][:,:,r_band])
+                gal_image_out.scale = pix_scale
 
                 # Measurements of shapes
                 res = galsim.hsm.EstimateShear(gal_image, psf_image)
                 e_in = [res.corrected_e1, res.corrected_e2]
                 e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
 
-                gal_image = galsim.Image(output_vae[i][:,:,r_band])
-                gal_image.scale = pix_scale
-
-                res = galsim.hsm.EstimateShear(gal_image, psf_image)
-                e_out = [res.corrected_e1, res.corrected_e2]
-                e_beta_out = [res.observed_shape.e, res.observed_shape.beta.rad]
+                res_out = galsim.hsm.EstimateShear(gal_image_out, psf_image)
+                e_out = [res_out.corrected_e1, res_out.corrected_e2]
+                e_beta_out = [res_out.observed_shape.e, res_out.observed_shape.beta.rad]
 
                 ellipticities.append([e_in, e_out])
                 e.append([e_beta_in, e_beta_out])
@@ -136,6 +136,7 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
     psf_image = psf.drawImage(nx=im_size, ny=im_size, scale=pix_scale)
 
     ellipticities = []
+    e = []
     magnitudes = []
     deltas_r = []
     deltas_m = []
@@ -149,21 +150,24 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
         output_vae = utils.denorm(output_vae, bands, channel_last = True)
         input_noiseless = utils.denorm(input_vae[1], bands, channel_last = True)
 
-        for i in range (len(input_vae[0])):#a[0] test
+        for i in range (len(input_vae[0])):
                 try: 
-                    gal_image = galsim.Image(input_noiseless[i][:,:,2])
+                    gal_image = galsim.Image(input_noiseless[i][:,:,r_band])
                     gal_image.scale = pix_scale
 
                     res = galsim.hsm.EstimateShear(gal_image, psf_image)
                     e_in = [res.corrected_e1, res.corrected_e2]
+                    e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
 
-                    gal_image = galsim.Image(output_vae[i][:,:,r_band])
-                    gal_image.scale = pix_scale
+                    gal_image_out = galsim.Image(output_vae[i][:,:,r_band])
+                    gal_image_out.scale = pix_scale
 
-                    res = galsim.hsm.EstimateShear(gal_image, psf_image)
+                    res = galsim.hsm.EstimateShear(gal_image_out, psf_image)
                     e_out = [res.corrected_e1, res.corrected_e2]
+                    e_beta_out = [res.observed_shape.e, res.observed_shape.beta.rad]
 
                     ellipticities.append([e_in, e_out])
+                    e.append([e_beta_in, e_beta_out])
 
                     magnitudes.append(input_vae[2])
                         
@@ -192,6 +196,7 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
         max_blendedness.append(max_blend)
         
     ellipticities = np.array(ellipticities)
+    e_beta = np.array(e)
     magnitudes = np.array(magnitudes)
     delta_r_arr = np.array(deltas_r)
     delta_mag_arr = np.array(deltas_m)
@@ -200,4 +205,4 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
     flux_in = np.concatenate(flux_in)
     flux_out = np.concatenate(flux_out)
 
-    return ellipticities, flux_in, flux_out, magnitudes, delta_r_arr, delta_mag_arr, max_blendedness_arr
+    return ellipticities,e_beta, flux_in, flux_out, magnitudes, delta_r_arr, delta_mag_arr, max_blendedness_arr
