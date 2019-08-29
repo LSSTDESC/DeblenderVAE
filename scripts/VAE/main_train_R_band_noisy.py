@@ -43,6 +43,13 @@ encoder, decoder = model.vae_model(latent_dim, 1)
 
 ######## Build the VAE
 vae, vae_utils,  Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
+
+############## Comment or not depending on what's necessary
+# Load weights
+vae, vae_utils, encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v22/mse/', 1, folder = True)#, output_encoder
+#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v_test3/'))
+
+
 print(vae.summary())
 
 ######## Define the loss function
@@ -53,11 +60,6 @@ def vae_loss(x, x_decoded_mean):
      xent_loss = K.get_value(beta) * K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
      kl_loss =  K.get_value(alpha) * Dkl
      return xent_loss + K.mean(kl_loss)
-
-############## Comment or not depending on what's necessary
-# Load weights
-vae,  encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v22/mse/', 1, folder = True)#, output_encoder
-#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v_test3/'))
 
 ######## Compile the VAE
 vae.compile('adam', loss=vae_loss, metrics=['mse'])

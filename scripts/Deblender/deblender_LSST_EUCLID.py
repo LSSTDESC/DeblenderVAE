@@ -47,7 +47,7 @@ deblender, deblender_utils, Dkl = vae_functions.build_vanilla_vae(deb_encoder, d
 
 ########### Comment or not depending on what's necessary
 # Load weights
-#deblender,deblender_utils, encoder_d, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v3/mse/', '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis/mse/', 10, folder = True)
+deblender,deblender_utils, encoder_d, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v3/mse/', '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis/mse/', 10, folder = True)
 
 print(deblender.summary())
 

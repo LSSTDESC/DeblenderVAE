@@ -99,9 +99,7 @@ class VAEHistory(Callback):
                 self.val_loss.append(logs.get('val_loss'))
                         
                 mu, sigma, z, dkl, out = self.vae_utils.predict(self.xval_sub)
-                print(mu)
-                print(sigma)
-                print(z)
+
                 self.D_KL.append(np.mean(dkl))
 
                 clear_output(wait=True)

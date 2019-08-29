@@ -189,7 +189,7 @@ def load_vae_conv(path,nb_of_bands,folder = False):
         latest = tf.train.latest_checkpoint(path)
         vae_loaded.load_weights(latest)
 
-    return vae_loaded , encoder, Dkl
+    return vae_loaded ,vae_utils, encoder, Dkl
 
 
 def load_vae_decoder(path,nb_of_bands,folder = False):

@@ -45,12 +45,12 @@ encoder, decoder = model.vae_model(latent_dim, 6)
 ######## Build the VAE
 vae, vae_utils, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
 
-print(vae.summary())
-
 ############## Comment or not depending on what's necessary
 # Load weights
-vae, encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True) 
+vae, vae_utils, encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True) 
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/'))
+
+print(vae.summary())
 
 ######## Define the loss function
 alpha = K.variable(1e-2)

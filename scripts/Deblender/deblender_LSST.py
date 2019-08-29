@@ -46,6 +46,11 @@ deb_encoder, deb_decoder = model.vae_model(latent_dim, 6)
 # Use the encoder of the trained VAE
 deblender, deblender_utils, Dkl = vae_functions.build_vanilla_vae(deb_encoder, decoder, full_cov=False, coeff_KL = 0)
 
+########### Comment or not depending on what's necessary
+# Load weights
+deblender,deblender_utils, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
+#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/'))
+
 # Define the loss function
 alpha = K.variable(1e-2)
 
@@ -54,10 +59,6 @@ def deblender_loss(x, x_decoded_mean):
     kl_loss = K.get_value(alpha) * Dkl
     return xent_loss + K.mean(kl_loss)
 
-########### Comment or not depending on what's necessary
-# Load weights
-deblender, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
-#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/'))
 ######## Compile the VAE
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
 print(deblender.summary())
