@@ -50,6 +50,26 @@ def denorm(x, bands, channel_last=False):
                 x[i,ib] = np.sinh(np.arctanh(x[i,ib]))*(I[b]/beta)
     return x
 
+# Here we do the detection in R band of LSST
+def SNR_peak(gal_noiseless, sky_background_pixel, band=6, snr_min=2):
+    # Make sure images have shape [nband, nx, ny] and sky_background_pixel has length nband
+    assert len(sky_background_pixel) = gal_noiseless.shape[0]
+    assert gal_noiseless.shape[1] == gal_noiseless.shape[2]
+    
+    snr = np.max(gal_noiseless[band])/sky_background_pixel[band]
+    return (snr>snr_min), snr
+
+
+def SNR(gal_noiseless, sky_background_pixel, band=6, snr_min=5):
+    # Make sure images have shape [nband, nx, ny] and sky_background_pixel has length nband
+    assert len(sky_background_pixel) = gal_noiseless.shape[0]
+    assert gal_noiseless.shape[1] == gal_noiseless.shape[2]
+    
+    signal = gal_noiseless[band]
+    variance = signal+background[band] # for a Poisson process, variance=mean
+    snr = np.sqrt(np.sum(signal**2/variance))
+    return (snr>snr_min), snr
+
 
 ############# COMPUTE BLENDEDNESS #############
 def compute_blendedness(img, img_new):
