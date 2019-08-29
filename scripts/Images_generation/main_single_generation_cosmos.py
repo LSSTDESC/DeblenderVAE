@@ -24,14 +24,13 @@ stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis)
 # Loading the COSMOS catalog
 cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lsst/users/barcelin/COSMOS_25.2_training_sample')
 
- 
-# function to check if S/N > 2
 # Here we do the detection in R band of LSST
 def SNR_peak(gal_noiseless,gal_noisy, band=6, snr_min=2):
     noise = np.std(gal_noisy[band]-gal_noiseless[band])
     max_img_noiseless = np.max(gal_noiseless[band])
     snr = np.abs(max_img_noiseless/noise)
     return (snr>snr_min), snr
+
 
 def SNR(gal_noiseless,gal_noisy, band=6, snr_min=5):
     snr = np.sum(gal_noiseless[band]) / (np.std(gal_noisy[band]-gal_noiseless[band]) * np.prod(gal_noisy[band].shape))
@@ -95,7 +94,7 @@ debut = time.time()
 print( 'test')
 def func(ind):
     gal_noiseless, gal_noisy, redshift, scale_radius=Gal_generator_noisy_pix_same(cosmos_cat)
-    if (SNR(gal_noiseless,gal_noisy)[0] == True):
+    if (SNR_peak(gal_noiseless,gal_noisy)[0] == True):
         return np.array((gal_noiseless,gal_noisy))
     else:
         return func(ind+1) 
@@ -115,7 +114,7 @@ SNR_list = []
 while (i < N_cosmo):
     print(i)
     gal_noiseless, gal_noisy, redshift, scale_radius=Gal_generator_noisy_pix_same(cosmos_cat)
-    if (SNR(gal_noiseless,gal_noisy)[0] == True):
+    if (SNR_peak(gal_noiseless,gal_noisy)[0] == True):
         galaxies.append((gal_noiseless,gal_noisy))
         scale_radius_list.append((scale_radius))
         SNR_list.append(SNR(gal_noiseless,gal_noisy)[1])
@@ -127,5 +126,6 @@ print('time : '+ str(fin-debut))
 np.save('/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_test_v5', galaxies)
 np.save('/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/scale_radius_test_v5', scale_radius_list)
 np.save('/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/SNR_test_v5', SNR_list)
+
 
 #np.save('/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_val_SNR_7_test.npy', img_cube_list)
