@@ -17,7 +17,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, trainval_or_test, noisy, magnitude=None, shift=None, blendedness=None, scale_radius=None):
+    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, trainval_or_test, noisy, magnitude=None, shift=None, blendedness=None, scale_radius=None, SNR_peak = None, SNR = None):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -46,6 +46,8 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.shift = shift
         self.blendedness = blendedness
         self.scale_radius = scale_radius
+        self.SNR_peak = SNR_peak
+        self.SNR = SNR
 
         # Weights computed from the lengths of lists
         self.p = []
@@ -104,6 +106,8 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             self.s = self.shift[self.r]
             self.blend = self.blendedness[self.r]
             self.radius = self.scale_radius[self.r]
+            self.sig_noise = self.SNR[self.r]
+            self.sig_noise_peak = self.SNR_peak[self.r]
 
             self.delta_r, self.delta_mag, self.blend_max = utils.compute_deltas_for_most_blended(self.s,self.mag,self.blend)
-            return self.x, self.y, self.mag, self.s, self.delta_r, self.delta_mag, self.blend_max, self.blend, self.radius
+            return self.x, self.y, self.mag, self.s, self.delta_r, self.delta_mag, self.blend_max, self.blend, self.radius, self.sig_noise, self.sig_noise_peak

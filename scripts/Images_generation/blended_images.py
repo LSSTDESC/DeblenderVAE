@@ -178,8 +178,8 @@ def shift_gal(gal,gal_to_add, method='uniform'):
     """
     scale_radius = get_scale_radius(gal)
     if method == 'uniform':
-        shift_x = np.random.uniform(-2.5,2.5)#(-2.5,2.5)  #(-1,1)
-        shift_y = np.random.uniform(-2.5,2.5)#(-2.5,2.5)  #(-1,1)
+        shift_x = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
+        shift_y = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
     elif method == 'lognorm_rad':
         sample_x = np.random.lognormal(mean=0.2*scale_radius,sigma=1*scale_radius,size=None)
         shift_x = np.random.choice((sample_x, -sample_x), 1)[0]
@@ -289,7 +289,7 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
         scale_radius = []
         redshift = []
         for i in range (nb_blended_gal):
-            galaxies.append(cosmos_cat.makeGalaxy(random.randint(cosmos_cat.nobjects-10000-1,cosmos_cat.nobjects-5000-1), gal_type='parametric', chromatic=True, noise_pad_size = 0))
+            galaxies.append(cosmos_cat.makeGalaxy(random.randint(cosmos_cat.nobjects-5000-1,cosmos_cat.nobjects-1), gal_type='parametric', chromatic=True, noise_pad_size = 0))
             mag.append(galaxies[i].calculateMagnitude(filters['r'].withZeropoint(28.13)))
             scale_radius.append(get_scale_radius(galaxies[i]))
             redshift.append(galaxies[i].SED.redshift)
