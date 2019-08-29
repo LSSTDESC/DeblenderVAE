@@ -17,7 +17,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, magnitude, shift, blendedness, scale_radius, trainval_or_test, noisy):
+    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, trainval_or_test, noisy, magnitude=None, shift=None, blendedness=None, scale_radius=None):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -40,15 +40,12 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         
         self.noisy = noisy
         self.step = 0
-        self.size = 100
         self.epoch = 0
 
         self.magnitude = magnitude
         self.shift = shift
         self.blendedness = blendedness
-        print(self.blendedness.shape)
         self.scale_radius = scale_radius
-        print(self.scale_radius.shape)
 
         # Weights computed from the lengths of lists
         self.p = []
@@ -57,7 +54,6 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             self.p.append(float(len(temp)))
         self.p = np.array(self.p)
         self.p /= np.sum(self.p)
-
     def __len__(self):
         """
         Function to define the length of an epoch
@@ -75,7 +71,8 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         Function which returns the input and target batches for the network
         """
         # If the generator is a training generator, the whole sample is displayed
-        self.liste = np.load(np.random.choice(self.list_of_samples, p = self.p), mmap_mode = 'c')
+        liste_name = np.random.choice(self.list_of_samples, p = self.p)
+        self.liste = np.load(liste_name, mmap_mode = 'c')
         self.r = np.random.choice(len(self.liste), size = self.batch_size, replace=False)
 
         self.x = self.liste[self.r,1][:,self.bands]
@@ -100,7 +97,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.x = np.transpose(self.x, axes = (0,2,3,1))
         self.y = np.transpose(self.y, axes = (0,2,3,1))
         
-        if self.trainval_or_test == 'trainval':
+        if self.trainval_or_test == 'training' or self.trainval_or_test == 'validation':
             return self.x, self.y
         elif self.trainval_or_test == 'test':
             self.mag = self.magnitude[self.r]

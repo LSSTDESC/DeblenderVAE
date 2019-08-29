@@ -35,7 +35,7 @@ epochs = 1000
 bands = [6]
 
 ######## Import data for callback (Only if VAEHistory is used)
-x = np.load('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_5_v5.npy', mmap_mode = 'c')
+x = np.load('/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_5_v5_test.npy', mmap_mode = 'c')
 x_val = utils.norm(np.expand_dims(x[:500,1,6], axis = 1), bands).transpose([0,2,3,1])
 
 ######## Load encoder, decoder
@@ -46,7 +46,7 @@ vae, vae_utils,  Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_co
 print(vae.summary())
 
 ######## Define the loss function
-alpha = K.variable(1e-2)
+alpha = K.variable(10-2)
 beta = K.variable(1)
 
 def vae_loss(x, x_decoded_mean):
@@ -56,8 +56,8 @@ def vae_loss(x, x_decoded_mean):
 
 ############## Comment or not depending on what's necessary
 # Load weights
-#vae,  encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v16/mse/', 1, folder = True)#, output_encoder
-#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v14/'))
+vae,  encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v22/mse/', 1, folder = True)#, output_encoder
+#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v_test3/'))
 
 ######## Compile the VAE
 vae.compile('adam', loss=vae_loss, metrics=['mse'])
@@ -67,8 +67,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v19/'#/v10
-path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v19/'#/v10
+path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v22/bis'#/v10
+path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v22/bis/'#/v10
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = callbacks.changeAlpha(alpha, vae, vae_loss, path_weights)
@@ -84,63 +84,43 @@ checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'/l
 callbacks = [vae_hist, checkpointer_mse,checkpointer_loss]#,checkpointer_loss, tbCallBack]#, alphaChanger earlystop,vae_hist, checkpointer,  
  
 ######## List of data samples
-list_of_samples=['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_1_v5.npy',
-                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_2_v5.npy',
-                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_3_v5.npy',
-                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_4_v5.npy',
-                 '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_5_v5.npy'#,
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_6_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_7_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_8_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_9_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_10_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_11_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_12_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_13_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_14_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_15_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_16_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_17_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_18_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_19_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_20_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_21_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_22_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_23_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_25_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_26_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_27_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_28_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_29_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_30_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_31_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_32_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_33_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_34_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_35_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_36_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_37_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_38_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_39_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_40_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_41_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_44_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_45_v5_test.npy',
-               #   '/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_46_v5_test.npy',
+### SNR > 2
+list_of_samples=['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_1_v5_test.npy',
+                  '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_2_v5_test.npy',
+                  '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_3_v5_test.npy',
+                  '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_4_v5_test.npy',
+                  '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_5_v5_test.npy',
+                  '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_6_v5_test.npy',
+                  '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_7_v5_test.npy'#,
                 ]
 
-list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_val_v5.npy']
+list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_val_v5_test.npy']
+
+### SNR > 7
+# list_of_samples=['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_1_SNR_7_test.npy',
+#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_2_SNR_7_test.npy',
+#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_3_SNR_7_test.npy',
+#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_4_SNR_7_test.npy',
+#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_5_SNR_7_test.npy',
+#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_6_SNR_7_test.npy',
+#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_7_SNR_7_test.npy'#,
+#                 ]
+
+# list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_val_SNR_7_test.npy']
+
+
+
 
 ######## Define the generators
-training_generator = BatchGenerator(bands, list_of_samples,total_sample_size=180000, batch_size= batch_size, size_of_lists = 40000, scale_radius = None,SNR = None,trainval_or_test = 'training', noisy = True)#180000
-validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_size=20000, batch_size= batch_size, size_of_lists = 20000, scale_radius = None, SNR = None,trainval_or_test = 'validation', noisy = True)#20000
+training_generator = BatchGenerator(bands, list_of_samples,total_sample_size=280000, batch_size= batch_size, size_of_lists = 40000, scale_radius = None,SNR = None,trainval_or_test = 'training', noisy = True)#180000
+validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_size=40000, batch_size= batch_size, size_of_lists = 20000, scale_radius = None, SNR = None,trainval_or_test = 'validation', noisy = True)#20000
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=1800,#1800
+                  steps_per_epoch=1800,#2800
                   verbose=2,
                   shuffle = True,
                   validation_data=validation_generator,
-                  validation_steps=200,#200
+                  validation_steps=400,#400
                   callbacks=callbacks,
                   workers = 0)

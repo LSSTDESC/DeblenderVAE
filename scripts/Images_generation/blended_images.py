@@ -118,7 +118,7 @@ def lsst_PSF():
             return p(x)
 
     pdf = PSF_distribution()
-    return pdf.rvs()
+    return 0.65#pdf.rvs()  #Fixed at median value : Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
 
 
 #fwhm_lsst = 0.65 #pdf.rvs() #Fixed at median value : Fig 1 : https://arxiv.org/pdf/0805.2366.pdf
@@ -178,8 +178,8 @@ def shift_gal(gal,gal_to_add, method='uniform'):
     """
     scale_radius = get_scale_radius(gal)
     if method == 'uniform':
-        shift_x = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
-        shift_y = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
+        shift_x = np.random.uniform(-2.5,2.5)#(-2.5,2.5)  #(-1,1)
+        shift_y = np.random.uniform(-2.5,2.5)#(-2.5,2.5)  #(-1,1)
     elif method == 'lognorm_rad':
         sample_x = np.random.lognormal(mean=0.2*scale_radius,sigma=1*scale_radius,size=None)
         shift_x = np.random.choice((sample_x, -sample_x), 1)[0]
@@ -280,77 +280,81 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
     nb_blended_gal: number of galaxies to add to the centered one on the blended image
     training_or_test: choice for generating a training or testing dataset
     """
-    ############## GENERATION OF THE GALAXIES ##################
-    ud = galsim.UniformDeviate()
-    
-    galaxies = []
-    mag=[]
-    scale_radius = []
-    redshift = []
-    for i in range (nb_blended_gal):
-        galaxies.append(cosmos_cat.makeGalaxy(random.randint(0,cosmos_cat.nobjects-10000-1), gal_type='parametric', chromatic=True, noise_pad_size = 0))
-        mag.append(galaxies[i].calculateMagnitude(filters['r'].withZeropoint(28.13)))
-        scale_radius.append(get_scale_radius(galaxies[i]))
-        redshift.append(galaxies[i].SED.redshift)
-
-    gal = galaxies[np.where(mag == np.min(mag))[0][0]]
-    
-    galaxies.remove(gal)
-        
-    ############ LUMINOSITY ############# 
-    # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             
-    bdgal_lsst =  gal * coeff_hst_lsst
-    bdgal_euclid_nir =  coeff_hst_euclid * gal
-    bdgal_euclid_vis =  coeff_hst_euclid * gal
-
-    # Generate the blends
-    add_gal = []
-    shift=np.zeros((nb_blended_gal-1, 2))
-    for i in range (len(galaxies)):
-        gal_new = None
+    try:
+        ############## GENERATION OF THE GALAXIES ##################
         ud = galsim.UniformDeviate()
-        gal_new = galaxies[i].rotate(ud() * 360. * galsim.degrees)
+        
+        galaxies = []
+        mag=[]
+        scale_radius = []
+        redshift = []
+        for i in range (nb_blended_gal):
+            galaxies.append(cosmos_cat.makeGalaxy(random.randint(cosmos_cat.nobjects-10000-1,cosmos_cat.nobjects-5000-1), gal_type='parametric', chromatic=True, noise_pad_size = 0))
+            mag.append(galaxies[i].calculateMagnitude(filters['r'].withZeropoint(28.13)))
+            scale_radius.append(get_scale_radius(galaxies[i]))
+            redshift.append(galaxies[i].SED.redshift)
 
-        gal_new, shift[i]  = shift_gal(gal,gal_new, method=shift_method)
+        gal = galaxies[np.where(mag == np.min(mag))[0][0]]
+        
+        galaxies.remove(gal)
             
-        bdgal_new_lsst = None
-        bdgal_new_euclid_nir =None
-        bdgal_new_euclid_vis =None
-        bdgal_new_lsst =  coeff_hst_lsst * gal_new
-        bdgal_new_euclid_nir =  coeff_hst_euclid * gal_new
-        bdgal_new_euclid_vis =  coeff_hst_euclid * gal_new
-        add_gal.append([bdgal_new_euclid_nir,bdgal_new_euclid_vis, bdgal_new_lsst])
+        ############ LUMINOSITY ############# 
+        # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             
+        bdgal_lsst =  gal * coeff_hst_lsst
+        bdgal_euclid_nir =  coeff_hst_euclid * gal
+        bdgal_euclid_vis =  coeff_hst_euclid * gal
 
-    # Initialize some lists
-    galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
-    galaxy_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
+        # Generate the blends
+        add_gal = []
+        shift=np.zeros((nb_blended_gal-1, 2))
+        for i in range (len(galaxies)):
+            gal_new = None
+            ud = galsim.UniformDeviate()
+            gal_new = galaxies[i].rotate(ud() * 360. * galsim.degrees)
 
-    blend_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
-    blend_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
+            gal_new, shift[i]  = shift_gal(gal,gal_new, method=shift_method)
+                
+            bdgal_new_lsst = None
+            bdgal_new_euclid_nir =None
+            bdgal_new_euclid_vis =None
+            bdgal_new_lsst =  coeff_hst_lsst * gal_new
+            bdgal_new_euclid_nir =  coeff_hst_euclid * gal_new
+            bdgal_new_euclid_vis =  coeff_hst_euclid * gal_new
+            add_gal.append([bdgal_new_euclid_nir,bdgal_new_euclid_vis, bdgal_new_lsst])
 
-    Blendedness_lsst = np.zeros((10,nb_blended_gal-1))
-    Blendedness_euclid = np.zeros((10,nb_blended_gal-1))
+        # Initialize some lists
+        galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
+        galaxy_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
 
-    # Generate LSST PSF
-    fwhm_lsst = lsst_PSF()
-    PSF_lsst = galsim.Kolmogorov(fwhm=fwhm_lsst)
+        blend_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
+        blend_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
 
-    # Generate images
-    i = 0
-    for filter_name, filter_ in filters.items():
-        if (i < 3):
-            galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_nir[i], max_stamp_size, pixel_scale_euclid_nir, nb_blended_gal, PSF_euclid_nir, bdgal_euclid_nir, add_gal)
-        elif (i==3):
-            galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_vis, max_stamp_size, pixel_scale_euclid_vis, nb_blended_gal, PSF_euclid_vis, bdgal_euclid_vis, add_gal)
-        else:
-            galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_lsst[i-4], max_stamp_size, pixel_scale_lsst, nb_blended_gal, PSF_lsst, bdgal_lsst, add_gal)
-        i+=1
-    
-    # Return outputs depending on the kind of generated dataset
-    if training_or_test == 'training':
-        return galaxy_noiseless, galaxy_noisy, blend_noisy
-    if training_or_test == 'test':
-        return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6], scale_radius
+        Blendedness_lsst = np.zeros((10,nb_blended_gal-1))
+        Blendedness_euclid = np.zeros((10,nb_blended_gal-1))
+
+        # Generate LSST PSF
+        fwhm_lsst = lsst_PSF()
+        PSF_lsst = galsim.Kolmogorov(fwhm=fwhm_lsst)
+
+        # Generate images
+        i = 0
+        for filter_name, filter_ in filters.items():
+            if (i < 3):
+                galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_nir[i], max_stamp_size, pixel_scale_euclid_nir, nb_blended_gal, PSF_euclid_nir, bdgal_euclid_nir, add_gal)
+            elif (i==3):
+                galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_vis, max_stamp_size, pixel_scale_euclid_vis, nb_blended_gal, PSF_euclid_vis, bdgal_euclid_vis, add_gal)
+            else:
+                galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_lsst[i-4], max_stamp_size, pixel_scale_lsst, nb_blended_gal, PSF_lsst, bdgal_lsst, add_gal)
+            i+=1
+        
+        # Return outputs depending on the kind of generated dataset
+        if training_or_test == 'training':
+            return galaxy_noiseless, galaxy_noisy, blend_noisy
+        if training_or_test == 'test':
+            return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6], scale_radius
+    except RuntimeError: 
+            print("error")
+            return blend_generator(cosmos_cat, nb_blended_gal, training_or_test)
 
 
 

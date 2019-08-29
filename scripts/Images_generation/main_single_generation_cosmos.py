@@ -27,13 +27,15 @@ cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lss
  
 # function to check if S/N > 2
 # Here we do the detection in R band of LSST
-def SNR(gal_noiseless,gal_noisy):
-    condition = False
-    noise = np.std(gal_noisy[6]-gal_noiseless[6])
-    max_img_noiseless = np.max(gal_noiseless[6])
-    
+def SNR_peak(gal_noiseless,gal_noisy, band=6, snr_min=2):
+    noise = np.std(gal_noisy[band]-gal_noiseless[band])
+    max_img_noiseless = np.max(gal_noiseless[band])
     snr = np.abs(max_img_noiseless/noise)
-    return (snr>2), snr
+    return (snr>snr_min), snr
+
+def SNR(gal_noiseless,gal_noisy, band=6, snr_min=5):
+    snr = np.sum(gal_noiseless[band]) / (np.std(gal_noisy[band]-gal_noiseless[band]) * np.prod(gal_noisy[band].shape))
+    return (snr>snr_min), snr
 
 
 import multiprocessing
@@ -102,8 +104,8 @@ def func(ind):
 
 #img_cube_list = map(func, itr,timesleep = 10.0)# 
 
-fin = time.time()
-print('time : '+ str(fin-debut))
+# fin = time.time()
+# print('time : '+ str(fin-debut))
 i=0
 
 galaxies = []
@@ -122,8 +124,8 @@ while (i < N_cosmo):
 fin = time.time()
 print('time : '+ str(fin-debut))
 
-np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_test_v5', galaxies)
-np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/scale_radius_test_v5', scale_radius_list)
-np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/SNR_test_v5', SNR_list)
+np.save('/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_test_v5', galaxies)
+np.save('/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/scale_radius_test_v5', scale_radius_list)
+np.save('/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/SNR_test_v5', SNR_list)
 
-#np.save('/sps/lsst/users/barcelin/data/single/changing_lsst_PSF/independant/galaxies_COSMOS_46_v5_test.npy', img_cube_list)
+#np.save('/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_val_SNR_7_test.npy', img_cube_list)
