@@ -141,9 +141,11 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
     deltas_r = []
     deltas_m = []
     max_blendedness = []
+    SNR_list = []
+    SNR_peak_list = []
 
-    flux_in = np.empty([N,N,],dtype='float32')
-    flux_out= np.empty([N,N,], dtype='float32')
+    flux_in = np.empty([N,batch_size,],dtype='float32')
+    flux_out= np.empty([N,batch_size,], dtype='float32')
     for j in range(N):
         input_vae = generator.__getitem__(2)
         output_vae = deblender.predict(input_vae[0], batch_size = batch_size)
@@ -194,6 +196,8 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
         deltas_r.append(delta_r)
         deltas_m.append(delta_mag)
         max_blendedness.append(max_blend)
+        SNR_list.append(input_vae[9])
+        SNR_peak_list.append(input_vae[10])
         
     ellipticities = np.array(ellipticities)
     e_beta = np.array(e)
@@ -201,8 +205,10 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
     delta_r_arr = np.array(deltas_r)
     delta_mag_arr = np.array(deltas_m)
     max_blendedness_arr = np.array(max_blendedness)
+    SNR = np.array(SNR_list)
+    SNR_peak = np.array(SNR_peak_list)
 
     flux_in = np.concatenate(flux_in)
     flux_out = np.concatenate(flux_out)
 
-    return ellipticities,e_beta, flux_in, flux_out, magnitudes, delta_r_arr, delta_mag_arr, max_blendedness_arr
+    return ellipticities,e_beta, flux_in, flux_out, magnitudes, delta_r_arr, delta_mag_arr, max_blendedness_arr, SNR, SNR_peak

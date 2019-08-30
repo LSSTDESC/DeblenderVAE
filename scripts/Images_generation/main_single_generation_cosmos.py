@@ -15,6 +15,9 @@ from astropy.convolution import Gaussian1DKernel, Gaussian2DKernel, convolve
 from cosmos_generation import Gal_generator_noisy_pix_same
 from multiprocess import *
 
+sys.path.insert(0,'../tools_for_VAE/')
+from tools_for_VAE import utils
+
 # Parameters to fix
 phys_stamp_size = 6.4 # arcsec
 pixel_scale_euclid_vis = 0.1 # arcsec/pixel
@@ -25,16 +28,16 @@ stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis)
 cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lsst/users/barcelin/COSMOS_25.2_training_sample')
 
 # Here we do the detection in R band of LSST
-def SNR_peak(gal_noiseless,gal_noisy, band=6, snr_min=2):
+def SNR_peak_old(gal_noiseless,gal_noisy, band=6, snr_min=2):
     noise = np.std(gal_noisy[band]-gal_noiseless[band])
     max_img_noiseless = np.max(gal_noiseless[band])
     snr = np.abs(max_img_noiseless/noise)
     return (snr>snr_min), snr
 
 
-def SNR(gal_noiseless,gal_noisy, band=6, snr_min=5):
-    snr = np.sum(gal_noiseless[band]) / (np.std(gal_noisy[band]-gal_noiseless[band]) * np.prod(gal_noisy[band].shape))
-    return (snr>snr_min), snr
+#def SNR(gal_noiseless,gal_noisy, band=6, snr_min=5):
+#    snr = np.sum(gal_noiseless[band]) / (np.std(gal_noisy[band]-gal_noiseless[band]) * np.prod(gal_noisy[band].shape))
+#    return (snr>snr_min), snr
 
 
 import multiprocessing
@@ -94,7 +97,7 @@ debut = time.time()
 print( 'test')
 def func(ind):
     gal_noiseless, gal_noisy, redshift, scale_radius=Gal_generator_noisy_pix_same(cosmos_cat)
-    if (SNR_peak(gal_noiseless,gal_noisy)[0] == True):
+    if (SNR_peak_old(gal_noiseless,gal_noisy)[0] == True):
         return np.array((gal_noiseless,gal_noisy))
     else:
         return func(ind+1) 
@@ -114,10 +117,10 @@ SNR_list = []
 while (i < N_cosmo):
     print(i)
     gal_noiseless, gal_noisy, redshift, scale_radius=Gal_generator_noisy_pix_same(cosmos_cat)
-    if (SNR_peak(gal_noiseless,gal_noisy)[0] == True):
+    if (SNR_peak_old(gal_noiseless,gal_noisy)[0] == True):
         galaxies.append((gal_noiseless,gal_noisy))
         scale_radius_list.append((scale_radius))
-        SNR_list.append(SNR(gal_noiseless,gal_noisy)[1])
+        SNR_list.append(SNR_peak_old(gal_noiseless,gal_noisy)[1])
         i+=1
 
 fin = time.time()
