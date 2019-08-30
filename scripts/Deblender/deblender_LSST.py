@@ -67,8 +67,8 @@ K.set_value(deblender.optimizer.lr, 0.00001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v5/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v5/bis/'
 path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst/'
 
 tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)

@@ -86,7 +86,6 @@ def compute_blendedness(img, img_new):
     return blnd
 
 
-
 ############ DELTA_R and DELTA_MAG COMPUTATION FOR MOST BLENDED GALAXY WITH THE CENTERED ONE ##########
 def compute_deltas_for_most_blended(shift,mag,blendedness):#(shift_path, mag_path):
     #mag =np.load(mag_path)

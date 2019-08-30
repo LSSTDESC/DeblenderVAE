@@ -92,7 +92,7 @@ class VAEHistory(Callback):
         self.epoch += 1
         self.counter +=1
 
-        if self.counter == 2 :
+        if self.counter == 3 :
 
             try: 
                 self.loss.append(logs.get('loss'))

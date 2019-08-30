@@ -15,6 +15,9 @@ from astropy.convolution import Gaussian1DKernel, Gaussian2DKernel, convolve
 from blended_images import blend_generator
 from multiprocess import *
 
+sys.path.insert(0,'../tools_for_VAE/')
+from tools_for_VAE import utils
+
 # Parameters to fix
 phys_stamp_size = 6.4 # arcsec
 pixel_scale_euclid_vis = 0.1 # arcsec/pixel
@@ -23,6 +26,11 @@ stamp_size = int(phys_stamp_size/pixel_scale_euclid_vis)
 
 
 ### Definition of sky background
+pixel_scale_lsst = 0.2 # arcseconds # LSST Science book
+pixel_scale_euclid_nir = 0.3 # arcseconds # Euclid Science book
+pixel_scale_euclid_vis = 0.1 # arcseconds # Euclid Science book
+pixel_scale = [pixel_scale_euclid_nir]*3 + [pixel_scale_euclid_vis] + [pixel_scale_lsst]*6
+
 #################### NOISE ###################
 # Poissonian noise according to sky_level
 N_exposures_lsst = 100
@@ -66,16 +74,16 @@ cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lss
 
 # function to check if S/N > 2
 # Here we do the detection in R band of LSST
-def SNR_peak(gal_noiseless,gal_noisy, band=6, snr_min=2):
+def SNR_peak_old(gal_noiseless,gal_noisy, band=6, snr_min=2):
     noise = np.std(gal_noisy[band]-gal_noiseless[band])
     max_img_noiseless = np.max(gal_noiseless[band])
     snr = np.abs(max_img_noiseless/noise)
     return (snr>snr_min), snr
 
 
-def SNR(gal_noiseless,gal_noisy, band=6, snr_min=5):
-    snr = np.sum(gal_noiseless[band]) / (np.std(gal_noisy[band]-gal_noiseless[band]) * np.prod(gal_noisy[band].shape))
-    return (snr>snr_min), snr
+#def SNR(gal_noiseless,gal_noisy, band=6, snr_min=5):
+#    snr = np.sum(gal_noiseless[band]) / (np.std(gal_noisy[band]-gal_noiseless[band]) * np.prod(gal_noisy[band].shape))
+#    return (snr>snr_min), snr
 
 
 import multiprocessing
@@ -166,6 +174,8 @@ redshift_list  = []
 magnitude_list = []
 blendedness_lsst_list = []
 blendedness_euclid_list = []
+blendedness_total_euclid_list = []
+blendedness_total_lsst_list = []
 scale_radius_list = []
 SNR_peak_list = []
 SNR_peak_old_list = []
@@ -174,7 +184,7 @@ SNR_list = []
 while (i < N_cosmo):
     print(i)
     nb_blended_gal = np.random.randint(1,N_per_gal)
-    galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid, Blendedness_lsst, scale_radius = blend_generator(cosmos_cat, nb_blended_gal, 'test')
+    galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid, Blendedness_lsst,Blendedness_total_euclid, Blendedness_total_lsst, scale_radius = blend_generator(cosmos_cat, nb_blended_gal, 'test')
     if (SNR_peak_old(galaxy_noiseless, galaxy_noisy)[0] == True):
         galaxies.append((galaxy_noiseless, blend_noisy))
         shift_list.append((shift))
@@ -182,6 +192,8 @@ while (i < N_cosmo):
         magnitude_list.append((mag))
         blendedness_lsst_list.append((Blendedness_lsst))
         blendedness_euclid_list.append((Blendedness_euclid))
+        blendedness_total_lsst_list.append((Blendedness_total_lsst))
+        blendedness_total_euclid_list.append((Blendedness_total_euclid))
         scale_radius_list.append(scale_radius)
         SNR_peak_old_list.append(SNR_peak_old(galaxy_noiseless,galaxy_noisy)[1])
         SNR_peak_list.append(utils.SNR_peak(galaxy_noiseless,sky_level)[1])
@@ -194,6 +206,8 @@ np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxi
 np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_COSMOS_test_magnitude_v5.npy', magnitude_list)
 np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_COSMOS_test_blendedness_lsst_v5.npy', blendedness_lsst_list)
 np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_COSMOS_test_blendedness_euclid_v5.npy', blendedness_euclid_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_COSMOS_test_blendedness_total_lsst_v5.npy', blendedness_total_lsst_list)
+np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_COSMOS_test_blendedness_total_euclid_v5.npy', blendedness_total_euclid_list)
 np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_COSMOS_test_scale_radius_v5.npy', scale_radius_list)
 np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_COSMOS_test_SNR_peak_old_v5.npy', SNR_peak_old_list)
 np.save('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_COSMOS_test_SNR_peak_v5.npy', SNR_peak_list)

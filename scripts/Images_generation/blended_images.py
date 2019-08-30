@@ -214,6 +214,7 @@ def create_images(i,filter_, sky_level_pixel, stamp_size, pixel_scale, nb_blende
     # Create images to be filled with galaxies and noise
     img = galsim.ImageF(stamp_size,stamp_size, scale=pixel_scale)
     img_noisy = galsim.ImageF(stamp_size,stamp_size, scale=pixel_scale)
+    img_blend_neighbours = galsim.ImageF(stamp_size,stamp_size, scale=pixel_scale)
     img_blend_noiseless = galsim.ImageF(stamp_size,stamp_size, scale=pixel_scale)
     img_blend_noisy = galsim.ImageF(stamp_size,stamp_size, scale=pixel_scale)
 
@@ -229,6 +230,9 @@ def create_images(i,filter_, sky_level_pixel, stamp_size, pixel_scale, nb_blende
     # Initialize blendedness lists
     Blendedness_lsst = np.zeros((nb_blended_gal-1))
     Blendedness_euclid = np.zeros((nb_blended_gal-1))
+    Blendedness_total_euclid = 0
+    Blendedness_total_lsst = 0
+
 
     # Save noiseless galaxy
     galaxy_noiseless = img.array.data
@@ -250,14 +254,25 @@ def create_images(i,filter_, sky_level_pixel, stamp_size, pixel_scale, nb_blende
     for k in range (nb_blended_gal-1):
         img_new = galsim.ImageF(stamp_size, stamp_size, scale=pixel_scale)
         bdfinal_new = galsim.Convolve([add_gal[k][rank_img], PSF])
+        if k == 0:
+            bdfinal_new.drawImage(filter_, image=img_blend_neighbours)
         bdfinal_new.drawImage(filter_, image=img_new)
+
         img_blend_noiseless += img_new
+        if k !=0:
+            img_blend_neighbours += img_new
         img_blend_noisy += img_new
         if i == 3 :
             Blendedness_euclid[k]= utils.compute_blendedness(img,img_new)
         elif i ==6 :
             Blendedness_lsst[k]= utils.compute_blendedness(img,img_new)
     
+    if nb_blended_gal>1: 
+        if i == 3 :
+            Blendedness_total_euclid = utils.compute_blendedness(img,img_blend_neighbours)
+        elif i == 6:
+            Blendedness_total_lsst = utils.compute_blendedness(img,img_blend_neighbours)
+
     # Save noiseless blended image
     blend_noiseless = img_blend_noiseless.array.data
     
@@ -265,7 +280,7 @@ def create_images(i,filter_, sky_level_pixel, stamp_size, pixel_scale, nb_blende
     img_blend_noisy.addNoise(poissonian_noise)
     blend_noisy = img_blend_noisy.array.data
 
-    return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, Blendedness_lsst, Blendedness_euclid
+    return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, Blendedness_lsst, Blendedness_euclid, Blendedness_total_lsst , Blendedness_total_euclid
 
 
 
@@ -331,6 +346,8 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
 
         Blendedness_lsst = np.zeros((10,nb_blended_gal-1))
         Blendedness_euclid = np.zeros((10,nb_blended_gal-1))
+        Blendedness_total_lsst = np.zeros((10))
+        Blendedness_total_euclid = np.zeros((10))
 
         # Generate LSST PSF
         fwhm_lsst = lsst_PSF()
@@ -340,18 +357,18 @@ def blend_generator(cosmos_cat, nb_blended_gal, training_or_test):
         i = 0
         for filter_name, filter_ in filters.items():
             if (i < 3):
-                galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_nir[i], max_stamp_size, pixel_scale_euclid_nir, nb_blended_gal, PSF_euclid_nir, bdgal_euclid_nir, add_gal)
+                galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i], Blendedness_total_lsst[i], Blendedness_total_euclid[i] = create_images(i, filter_,sky_level_pixel_nir[i], max_stamp_size, pixel_scale_euclid_nir, nb_blended_gal, PSF_euclid_nir, bdgal_euclid_nir, add_gal)
             elif (i==3):
-                galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_vis, max_stamp_size, pixel_scale_euclid_vis, nb_blended_gal, PSF_euclid_vis, bdgal_euclid_vis, add_gal)
+                galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i], Blendedness_total_lsst[i], Blendedness_total_euclid[i] = create_images(i, filter_,sky_level_pixel_vis, max_stamp_size, pixel_scale_euclid_vis, nb_blended_gal, PSF_euclid_vis, bdgal_euclid_vis, add_gal)
             else:
-                galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i] = create_images(i, filter_,sky_level_pixel_lsst[i-4], max_stamp_size, pixel_scale_lsst, nb_blended_gal, PSF_lsst, bdgal_lsst, add_gal)
+                galaxy_noiseless[i], galaxy_noisy[i], blend_noiseless[i], blend_noisy[i], Blendedness_lsst[i], Blendedness_euclid[i], Blendedness_total_lsst[i], Blendedness_total_euclid[i] = create_images(i, filter_,sky_level_pixel_lsst[i-4], max_stamp_size, pixel_scale_lsst, nb_blended_gal, PSF_lsst, bdgal_lsst, add_gal)
             i+=1
-        
+
         # Return outputs depending on the kind of generated dataset
         if training_or_test == 'training':
             return galaxy_noiseless, galaxy_noisy, blend_noisy
         if training_or_test == 'test':
-            return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6], scale_radius
+            return galaxy_noiseless, galaxy_noisy, blend_noiseless, blend_noisy, redshift, shift, mag, Blendedness_euclid[3], Blendedness_lsst[6], Blendedness_total_euclid[3], Blendedness_total_lsst[6], scale_radius
     except RuntimeError: 
             print("error")
             return blend_generator(cosmos_cat, nb_blended_gal, training_or_test)
