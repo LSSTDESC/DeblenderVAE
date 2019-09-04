@@ -46,7 +46,7 @@ vae, vae_utils, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov
 
 ############## Comment or not depending on what's necessary
 # Load weights
-vae, vae_utils, encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/mse/', 10, folder = True)
+vae, vae_utils, encoder, Dkl = utils.load_vae_conv('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis2/mse/', 10, folder = True)
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v7/'))
 
 print(vae.summary())
@@ -67,8 +67,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v9/bis/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis3/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v9/bis3/'
 #path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = changeAlpha(alpha, vae, vae_loss, path_weights)
@@ -116,10 +116,10 @@ validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_si
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=1800,
+                  steps_per_epoch=18,
                   verbose=2,
                   shuffle = True,
                   validation_data=validation_generator,
-                  validation_steps=400,
+                  validation_steps=4,
                   callbacks=callbacks,
                   workers = 0)

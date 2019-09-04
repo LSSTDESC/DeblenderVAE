@@ -16,6 +16,7 @@ from cosmos_generation import Gal_generator_noisy_pix_same
 from multiprocess import *
 
 sys.path.insert(0,'../tools_for_VAE/')
+import tools_for_VAE
 from tools_for_VAE import utils
 
 # Parameters to fix

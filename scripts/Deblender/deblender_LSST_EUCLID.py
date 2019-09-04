@@ -47,7 +47,7 @@ deblender, deblender_utils, Dkl = vae_functions.build_vanilla_vae(deb_encoder, d
 
 ########### Comment or not depending on what's necessary
 # Load weights
-deblender,deblender_utils, encoder_d, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v3/mse/', '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis/mse/', 10, folder = True)
+deblender,deblender_utils, encoder_d, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v3/bis2/mse/', '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis/mse/', 10, folder = True)
 
 print(deblender.summary())
 
@@ -68,8 +68,8 @@ K.set_value(deblender.optimizer.lr, 1e-4)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v3/bis/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/deblender/v3/bis/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v3/bis3/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/deblender/v3/bis3/'
 #path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst_euclid/'
 
 #tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)

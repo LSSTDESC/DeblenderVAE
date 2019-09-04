@@ -48,7 +48,7 @@ deblender, deblender_utils, Dkl = vae_functions.build_vanilla_vae(deb_encoder, d
 
 ########### Comment or not depending on what's necessary
 # Load weights
-deblender,deblender_utils, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
+deblender,deblender_utils, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis2/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/'))
 
 # Define the loss function
@@ -63,12 +63,12 @@ def deblender_loss(x, x_decoded_mean):
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
 print(deblender.summary())
 ######## Fix the maximum learning rate in adam
-K.set_value(deblender.optimizer.lr, 0.00001)
+K.set_value(deblender.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v5/bis/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis3/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v5/bis3/'
 path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst/'
 
 tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
