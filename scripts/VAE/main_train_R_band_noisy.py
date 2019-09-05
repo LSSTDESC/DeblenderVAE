@@ -64,7 +64,7 @@ def vae_loss(x, x_decoded_mean):
 vae.compile('adam', loss=vae_loss, metrics=['mse'])
 
 ######## Fix the maximum learning rate in adam
-K.set_value(vae.optimizer.lr, 0.00001)
+K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
@@ -122,6 +122,6 @@ hist = vae.fit_generator(generator=training_generator, epochs=epochs,
                   verbose=2,
                   shuffle = True,
                   validation_data=validation_generator,
-                  validation_steps=4,#400
+                  validation_steps=2,#400
                   callbacks=callbacks,
                   workers = 0)
