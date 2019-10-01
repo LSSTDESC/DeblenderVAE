@@ -19,7 +19,7 @@ from . import utils, plot
 
 ######### VAE #########
 
-def VAE_processing(vae, generator,bands,r_band,im_size, N, batch_size):
+def VAE_processing(vae, generator, bands, r_band, im_size, N, batch_size, psf, pix_scale):
     """
     Returns 
 
@@ -35,11 +35,11 @@ def VAE_processing(vae, generator,bands,r_band,im_size, N, batch_size):
     """
 
     # see LSST Science Book
-    pix_scale = 0.2 #arcseconds
-    PSF_fwhm = 0.1
-    PSF_beta = 2.5
+    # pix_scale = 0.2 #arcseconds
+    # PSF_fwhm = 0.1
+    # PSF_beta = 2.5
 
-    psf = galsim.Moffat(fwhm=PSF_fwhm, beta=PSF_beta)
+    # psf = galsim.Moffat(fwhm=PSF_fwhm, beta=PSF_beta)
     psf_image = psf.drawImage(nx=im_size, ny=im_size, scale=pix_scale)
 
     ellipticities = []

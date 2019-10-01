@@ -101,9 +101,9 @@ def vae_model(latent_dim, nb_of_bands):
 
     batch_size = 100 
     
-    input_shape = (64,64,nb_of_bands)
+    input_shape = (64, 64, nb_of_bands)
     hidden_dim = 256
-    filters = [32,64, 128, 256]
+    filters = [32, 64, 128, 256]
     kernels = [3,3,3,3]
 
     # Build the encoder

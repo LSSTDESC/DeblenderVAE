@@ -18,7 +18,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, size_of_lists, scale_radius,SNR, trainval_or_test, noisy):
+    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, size_of_lists, scale_radius,SNR, trainval_or_test, noisy, do_norm):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -37,16 +37,17 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.list_of_samples = list_of_samples
         self.trainval_or_test = trainval_or_test
         
-        self.r = 0
+        # indices = 0
         
         self.noisy = noisy
-        self.step = 0
-        self.size = 100
+        # self.step = 0
+        # self.size = 100
         self.epoch = 0
+        self.do_norm = do_norm
 
-        self.size_of_lists = size_of_lists
-        self.scale_radius = scale_radius
-        self.SNR = SNR
+        # self.size_of_lists = size_of_lists
+        # self.scale_radius = scale_radius
+        # self.SNR = SNR
 
         # Weights computed from the lengths of lists
         self.p = []
@@ -54,7 +55,13 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             temp = np.load(sample, mmap_mode = 'c')
             self.p.append(float(len(temp)))
         self.p = np.array(self.p)
+        self.total_sample_size = int(np.sum(self.p))
+        print("[BatchGenerator] total_sample_size = ", self.total_sample_size)
+        print("[BatchGenerator] len(list_of_samples) = ", len(self.list_of_samples))
+
         self.p /= np.sum(self.p)
+
+        self.produced_samples = 0
 
     def __len__(self):
         """
@@ -66,22 +73,29 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         """
         Function executed at the end of each epoch
         """
-        self.r = 0
+        # indices = 0
+        print("Produced samples", self.produced_samples)
+        self.produced_samples = 0
         
     def __getitem__(self, idx):
         """
         Function which returns the input and target batches for the network
         """
         # If the generator is a training generator, the whole sample is displayed
-        self.liste = np.load(np.random.choice(self.list_of_samples, p = self.p), mmap_mode = 'c')
-        self.r = np.random.choice(len(self.liste), size = self.batch_size, replace=False)
+        sample_filename = np.random.choice(self.list_of_samples, p=self.p)
+        sample = np.load(sample_filename, mmap_mode = 'c')
 
-        self.x = self.liste[self.r,1][:,self.bands]
-        self.y = self.liste[self.r,0][:,self.bands]
+        indices = np.random.choice(len(sample), size=self.batch_size, replace=False)
+
+        self.produced_samples += len(indices)
+
+        self.x = sample[indices,1][:,self.bands]
+        self.y = sample[indices,0][:,self.bands]
         
         # Preprocessing of the data to be easier for the network to learn
-        self.x = utils.norm(self.x, self.bands)
-        self.y = utils.norm(self.y, self.bands)
+        if self.do_norm:
+            self.x = utils.norm(self.x, self.bands)
+            self.y = utils.norm(self.y, self.bands)
 
         #  flip : flipping the image array
         rand = np.random.randint(4)
@@ -100,7 +114,9 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         
         if self.trainval_or_test == 'training' or self.trainval_or_test == 'validation':
             return self.x, self.y
+
         elif self.trainval_or_test == 'test':
-            self.radius = self.scale_radius[self.r]
-            self.SNR_out = self.SNR[self.r]
-            return self.x, self.y, self.radius, self.SNR_out
+            # indicesadius = self.scale_radius[indices]
+            # self.SNR_out = self.SNR[indices]
+            data = df.read_csv(sample_filename.replace('images.npy','data.csv'))
+            return self.x, self.y, data.loc[indices] #, indicesadius, self.SNR_out

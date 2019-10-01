@@ -1,5 +1,41 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+def plot_rgb(gal, bands=[5,6,7], ax=None, band_first=True, zoom=1.5, shifts=None):
+    if ax is None:
+        ax = plt.subplot()
+    if band_first:
+        tr = [1,2,0]
+    else:
+        tr = [0,1,2]
+    imsize = float(gal.shape[1]) / 2.
+    ax.imshow(np.clip(gal[bands,:,:].transpose(tr), 0., 1.), extent=(-imsize,imsize,-imsize,imsize), origin='lower left')
+    if shifts is not None:
+        for (x,y) in shifts:
+            # ax.scatter(2*x/pixel_scale[bands[0]]/max_stamp_size, 2*y/pixel_scale[bands[0]]/max_stamp_size,  marker='+', c='r')
+            ax.scatter(x, y,  marker='+', c='r')
+    ax.scatter(0., 0., marker='+', c='b')
+    ax.set_xlim(-imsize/zoom,imsize/zoom)
+    ax.set_ylim(-imsize/zoom,imsize/zoom)
+    ax.axis('off')
+
+def plot_all_bands(gal, band_first=True, cmap=mpl.cm.gray, zoom=1.5):
+    filters = 'HJYVugrizy'
+    bax = 0 if band_first else -1
+    n = gal.shape[bax]
+    fig, axes = plt.subplots(1, n, figsize=(4*n,4))
+    imsize = float(gal.shape[1]) / 2.
+    for i in range(n):
+        ax = axes[i]
+        if band_first:
+            ax.imshow(np.clip(gal[i], 0., 1.), cmap=cmap, extent=(-imsize,imsize,-imsize,imsize))
+        else:
+            ax.imshow(np.clip(gal[:,:,i], 0., 1.), cmap=cmap, extent=(-imsize,imsize,-imsize,imsize))
+        ax.axis('off')
+        ax.set_xlim(-imsize/zoom,imsize/zoom)
+        ax.set_ylim(-imsize/zoom,imsize/zoom)
+        ax.set_title(filters[i])
 
 # plot function for RGB image with the 6 LSST bandpass filters
 def plot_rgb_lsst(ugrizy_img, stamp_size, ax=None):
