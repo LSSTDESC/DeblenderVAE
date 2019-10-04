@@ -1,1 +1,0 @@
-../../scripts/VAE/generator_vae.py

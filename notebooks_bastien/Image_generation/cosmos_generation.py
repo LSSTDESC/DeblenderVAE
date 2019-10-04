@@ -1,0 +1,1 @@
+../../scripts/Images_generation/cosmos_generation.py

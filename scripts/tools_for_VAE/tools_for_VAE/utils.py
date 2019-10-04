@@ -17,38 +17,49 @@ import tensorflow as tf
 
 from . import model, vae_functions
 
+def listdir_fullpath(d):
+    return [os.path.join(d, f) for f in os.listdir(d)]
+
 ############# Normalize data ############# 
-def norm(x, bands, channel_last=False):
+def norm(x, bands, channel_last=False, inplace=True):
     #I = [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
     #beta = 5.
     I = [5925.8097, 3883.7892, 1974.2465,  413.3895,  255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145]
     beta = 2.5
-    if channel_last:
-        assert x.shape[-1] == len(bands)
-        for i in range (len(x)):
-            for ib, b in enumerate(bands):
-                x[i,:,:,ib] = np.tanh(np.arcsinh(x[i,:,:,ib]/(I[b]/beta)))
+    if not inplace:
+        y = np.copy(x)
     else:
-        assert x.shape[1] == len(bands)
-        for i in range (len(x)):
+        y = x
+    if channel_last:
+        assert y.shape[-1] == len(bands)
+        for i in range (len(y)):
             for ib, b in enumerate(bands):
-                x[i,ib] = np.tanh(np.arcsinh(x[i,ib]/(I[b]/beta)))
-    return x
+                y[i,:,:,ib] = np.tanh(np.arcsinh(y[i,:,:,ib]/(I[b]/beta)))
+    else:
+        assert y.shape[1] == len(bands)
+        for i in range (len(y)):
+            for ib, b in enumerate(bands):
+                y[i,ib] = np.tanh(np.arcsinh(y[i,ib]/(I[b]/beta)))
+    return y
 
-def denorm(x, bands, channel_last=False):
+def denorm(x, bands, channel_last=False, inplace=True):
     I = [5925.8097, 3883.7892, 1974.2465,  413.3895,  255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145]
     beta = 2.5
-    if channel_last:
-        assert x.shape[-1] == len(bands)
-        for i in range (len(x)):
-            for ib, b in enumerate(bands):
-                x[i,:,:,ib] = np.sinh(np.arctanh(x[i,:,:,ib]))*(I[b]/beta)
+    if not inplace:
+        y = np.copy(x)
     else:
-        assert x.shape[1] == len(bands)
-        for i in range (len(x)):
+        y = x
+    if channel_last:
+        assert y.shape[-1] == len(bands)
+        for i in range (len(y)):
             for ib, b in enumerate(bands):
-                x[i,ib] = np.sinh(np.arctanh(x[i,ib]))*(I[b]/beta)
-    return x
+                y[i,:,:,ib] = np.sinh(np.arctanh(y[i,:,:,ib]))*(I[b]/beta)
+    else:
+        assert y.shape[1] == len(bands)
+        for i in range (len(y)):
+            for ib, b in enumerate(bands):
+                y[i,ib] = np.sinh(np.arctanh(x[i,ib]))*(I[b]/beta)
+    return y
 
 # Here we do the detection in R band of LSST
 def SNR_peak(gal_noiseless, sky_background_pixel, band=6, snr_min=2):
@@ -72,7 +83,7 @@ def SNR(gal_noiseless, sky_background_pixel, band=6, snr_min=5):
 
 
 ############# COMPUTE BLENDEDNESS #############
-def compute_blendedness(img, img_new):
+def compute_blendedness_single(image1, image2):
     """
     Return blendedness computed with two images of single galaxy created with GalSim
 
@@ -80,11 +91,25 @@ def compute_blendedness(img, img_new):
     ----------
     img, img_new : GalSim images convolved with its PSF and drawn in its filter
     """
-    image = np.array(img.array.data)
-    image_new = np.array(img_new.array.data)
-    blnd = np.sum(image*image_new)/np.sqrt(np.sum(image*image)*np.sum(image_new*image_new))
+    if isinstance(image1, galsim.image.Image):
+        im1 = np.array(image1.array.data)
+        im2 = np.array(image2.array.data)
+    else:
+        im1 = image1
+        im2 = image2
+    # print(image,image_new)
+    blnd = np.sum(im1*im2)/np.sqrt(np.sum(im1**2)*np.sum(im2**2))
     return blnd
 
+def compute_blendedness_total(img_central, img_others):
+    ic = np.array(img_central.array.data)
+    io = np.array(img_others.array.data)
+    itot = ic + io
+    # print(image,image_new)
+    # blnd = np.sum(ic*io)/np.sum(io**2)
+    # blnd = 1. - compute_blendedness_single(itot,io)
+    blnd = 1. - np.sum(ic*ic)/np.sum(itot*ic)
+    return blnd
 
 ############ DELTA_R and DELTA_MAG COMPUTATION FOR MOST BLENDED GALAXY WITH THE CENTERED ONE ##########
 def compute_deltas_for_most_blended(shift,mag,blendedness):#(shift_path, mag_path):
@@ -208,8 +233,28 @@ def load_vae_conv(path,nb_of_bands,folder = False):
         latest = tf.train.latest_checkpoint(path)
         vae_loaded.load_weights(latest)
 
-    return vae_loaded ,vae_utils, encoder, Dkl
+    return vae_loaded, vae_utils, encoder, Dkl
 
+
+def load_vae_full(path, nb_of_bands, folder=False):
+    """
+    Return the loaded VAE located at the path given when the function is called
+    """        
+    latent_dim = 32
+    
+    # Build the encoder and decoder
+    encoder, decoder = model.vae_model(latent_dim, nb_of_bands)
+
+    #### Build the model
+    vae_loaded, vae_utils,  Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
+
+    if folder == False: 
+        vae_loaded.load_weights(path)
+    else:
+        latest = tf.train.latest_checkpoint(path)
+        vae_loaded.load_weights(latest)
+
+    return vae_loaded, vae_utils, encoder, decoder, Dkl
 
 def load_vae_decoder(path,nb_of_bands,folder = False):
     """

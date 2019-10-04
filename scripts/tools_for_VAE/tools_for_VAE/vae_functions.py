@@ -29,14 +29,15 @@ def build_vanilla_vae(encoder, decoder, coeff_KL,full_cov=False):
 
 
 class VAEHistory(Callback):
-    def __init__(self, xval_sub, vae_utils, latent_dim, alpha, plot_bands=0, figname=None):
+    def __init__(self, xval_sub, vae_utils, latent_dim, alpha, plot_bands=0, figroot=None, period=1):
         self.xval_sub = xval_sub
         self.latent_dim = latent_dim
         self.plot_bands = plot_bands
         self.vae_utils = vae_utils
-        self.figname = figname
+        self.figroot = figroot
         
         self.counter = 0
+        self.period = period
         
         self.epoch = 0
         self.loss = []
@@ -92,88 +93,120 @@ class VAEHistory(Callback):
         self.epoch += 1
         self.counter +=1
 
-        if self.counter == 3 :
-
-            try: 
-                self.loss.append(logs.get('loss'))
-                self.val_loss.append(logs.get('val_loss'))
-                        
-                mu, sigma, z, dkl, out = self.vae_utils.predict(self.xval_sub)
-
-                self.D_KL.append(np.mean(dkl))
-
-                clear_output(wait=True)
-                
-                fig, axes = plt.subplots(1, 7, figsize=(7*4,4))
-                        
-                ax = axes[0]
-                ax.plot(self.loss, c='b', label='train')
-                ax.plot(self.val_loss, c='r', label='val')
-                ax.legend()
-                ax.set_xlabel('epoch')
-                ax.set_title('Training/validation losses')
-                ax.set_yscale('log')
-                
-                ax = axes[1]
-                ax.plot(self.D_KL)
-                ax.set_xlabel('epoch')
-                ax.set_title('D_KL')
-                ax.set_yscale('log')
-
-                for dim in range(self.latent_dim):
-                    c = self.colors[dim]
-                    _ = axes[2].hist(mu[:,dim], bins=50, histtype='step', color=c, label=str(dim), density=True)
-                    _ = axes[3].hist(sigma[:,dim], bins=50, log=False, histtype='step', color=c, label=str(dim), density=True)
-                    _ = axes[4].hist(z[:,dim], bins=50, histtype='step', color=c, label=str(dim), density=True)
-                
-                axes[4].plot(self.zz, self.gauss, c='k')
-                axes[4].set_xlim(-5,5)
-                
-                axes[2].set_title('mu_y(X)')
-                axes[3].set_title('sigma_y(X)')
-                axes[4].set_title('z~N(0,1)')
-                
-                idx = np.random.randint(0,len(self.xval_sub), size=1)
-            
-                ax = axes[5]
-                #if self.plot_bands == 0:
-                #    self.xval_sub = self.xval_sub.reshape((500,64,64,1))
-                #print(self.xval_sub.reshape((500,64,64,1))[idx][:,:][self.plot_bands].shape)
-                im = ax.imshow(self.xval_sub[idx,:,:,self.plot_bands].reshape((64,64)))
-                #ax.imshow(self.xval_sub[idx])
-                if isinstance(self.plot_bands, int):
-                    divider = make_axes_locatable(ax)
-                    cax = divider.append_axes("right", size="5%", pad=0.1)
-                    plt.colorbar(im, cax=cax)
-                
-                ax.set_title('input')
-                ax.axis('off')
-                
-                ax = axes[6]
-                #if self.plot_bands == 0:
-                #    out = out.reshape((500,64,64,1))
-                im = ax.imshow(out[idx,:,:,self.plot_bands].reshape((64,64)))
-                #ax.imshow(out[idx])
-                if isinstance(self.plot_bands, int):
-                    divider = make_axes_locatable(ax)
-                    cax = divider.append_axes("right", size="5%", pad=0.1)
-                    plt.colorbar(im, cax=cax)
-                ax.set_title('output')
-                ax.axis('off')
-                
-                plt.tight_layout()
-                
-                if self.figname is not None:
-                    fig.savefig(self.figname+"_"+str(self.epoch-1), dpi=300)
+        if self.counter % self.period == 0:
+            # try: 
+            self.loss.append(logs.get('loss'))
+            self.val_loss.append(logs.get('val_loss'))
                     
-                # if self.plot_bands == 0:
-                #     self.xval_sub = self.xval_sub.reshape((500,64,64))
+            mu, sigma, z, dkl, out = self.vae_utils.predict(self.xval_sub[:,1])
 
-                self.counter = 1
+            self.D_KL.append(np.mean(dkl))
 
-            except :
-                print('erreur')
-                pass
+            clear_output(wait=True)
+            
+            fig, axes = plt.subplots(2, 4, figsize=(4*4,2*4))
+            axes = axes.ravel()
+                    
+            ax = axes[0]
+            ax.plot(self.loss, c='b', label='train')
+            ax.plot(self.val_loss, c='r', label='val')
+            ax.legend()
+            ax.set_xlabel('epoch')
+            ax.set_title('Training/validation losses')
+            ax.set_yscale('log')
+            
+            ax = axes[1]
+            ax.plot(self.D_KL)
+            ax.set_xlabel('epoch')
+            ax.set_title('D_KL')
+            ax.set_yscale('log')
+
+            for dim in range(self.latent_dim):
+                c = self.colors[dim]
+                _ = axes[2].hist(mu[:,dim], bins=50, histtype='step', color=c, label=str(dim), density=True)
+                _ = axes[3].hist(sigma[:,dim], bins=50, log=False, histtype='step', color=c, label=str(dim), density=True)
+                _ = axes[4].hist(z[:,dim], bins=50, histtype='step', color=c, label=str(dim), density=True)
+            
+            axes[4].plot(self.zz, self.gauss, c='k')
+            axes[4].set_xlim(-5,5)
+            
+            axes[2].set_title('mu_y(X)')
+            axes[3].set_title('sigma_y(X)')
+            axes[4].set_title('z~N(0,1)')
+            
+            idx = np.random.randint(len(self.xval_sub))
+            # weird thing when indexing numpy arrays with list...
+            if isinstance(self.plot_bands, int):
+                img_in = self.xval_sub[idx,1,:,:,self.plot_bands]
+                img_target = self.xval_sub[idx,0,:,:,self.plot_bands]
+                img_out = out[idx,:,:,self.plot_bands]
+            else:
+                img_in = self.xval_sub[idx,1,:,:,self.plot_bands].transpose([1,2,0])
+                img_target = self.xval_sub[idx,0,:,:,self.plot_bands].transpose([1,2,0])
+                img_out = out[idx,:,:,self.plot_bands].transpose([1,2,0])
+        
+            ax = axes[5]
+            #if self.plot_bands == 0:
+            #    self.xval_sub = self.xval_sub.reshape((500,64,64,1))
+            #print(self.xval_sub.reshape((500,64,64,1))[idx][:,:][self.plot_bands].shape)
+            # print(self.xval_sub.shape)
+            # print(self.xval_sub[idx,:,:,self.plot_bands].shape)
+            # print(out.shape)
+            # print(out[idx,:,:,self.plot_bands].shape)
+            im = ax.imshow(np.clip(img_in, 0., 1.))#.reshape((64,64)))
+            #ax.imshow(self.xval_sub[idx])
+            if isinstance(self.plot_bands, int):
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad=0.1)
+                plt.colorbar(im, cax=cax)
+            
+            ax.set_title('input')
+            ax.axis('off')
+
+            ax = axes[6]
+            #if self.plot_bands == 0:
+            #    self.xval_sub = self.xval_sub.reshape((500,64,64,1))
+            #print(self.xval_sub.reshape((500,64,64,1))[idx][:,:][self.plot_bands].shape)
+            # print(self.xval_sub.shape)
+            # print(self.xval_sub[idx,:,:,self.plot_bands].shape)
+            # print(out.shape)
+            # print(out[idx,:,:,self.plot_bands].shape)
+            im = ax.imshow(np.clip(img_target, 0., 1.))#.reshape((64,64)))
+            #ax.imshow(self.xval_sub[idx])
+            if isinstance(self.plot_bands, int):
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad=0.1)
+                plt.colorbar(im, cax=cax)
+            
+            ax.set_title('target')
+            ax.axis('off')
+            
+            ax = axes[7]
+            #if self.plot_bands == 0:
+            #    out = out.reshape((500,64,64,1))
+
+            im = ax.imshow(np.clip(img_out, 0., 1.))#.reshape((64,64)))
+            #ax.imshow(out[idx])
+            if isinstance(self.plot_bands, int):
+                divider = make_axes_locatable(ax)
+                cax = divider.append_axes("right", size="5%", pad=0.1)
+                plt.colorbar(im, cax=cax)
+            ax.set_title('output')
+            ax.axis('off')
+            
+            plt.tight_layout()
+            
+            if self.figroot is not None:
+                fig.savefig(self.figroot+"_epoch"+str(self.epoch)+".png")#, dpi=300)
+                
+            # if self.plot_bands == 0:
+            #     self.xval_sub = self.xval_sub.reshape((500,64,64))
+
+            self.counter = 0
+
+            # except :
+            #     print('erreur')
+            #     pass
 
             #plt.show()
         
