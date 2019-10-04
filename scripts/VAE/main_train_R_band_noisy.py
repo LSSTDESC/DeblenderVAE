@@ -31,7 +31,7 @@ from tools_for_VAE.callbacks import changeAlpha
 ######## Set some parameters
 batch_size = 100
 latent_dim = 32
-epochs = 1000
+epochs = 2
 bands = [6]
 
 ######## Import data for callback (Only if VAEHistory is used)
@@ -68,8 +68,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v24'#2/bis2'#/v10
-path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v24/'#2/bis2/'#/v10
+path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v25'#2/bis2'#/v10
+path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v25/'#2/bis2/'#/v10
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = callbacks.changeAlpha(alpha, vae, vae_loss, path_weights)

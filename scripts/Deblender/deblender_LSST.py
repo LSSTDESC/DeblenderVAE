@@ -37,7 +37,7 @@ x = np.load('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/ga
 x_val = utils.norm(x[:500,1,bands], bands).transpose([0,2,3,1])
 
 # Load decoder of VAE
-decoder = utils.load_vae_decoder('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/',6,folder = True)
+decoder = utils.load_vae_decoder('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/bis4/',6,folder = True)
 decoder.trainable = False
 
 # Deblender model
@@ -48,8 +48,8 @@ deblender, deblender_utils, Dkl = vae_functions.build_vanilla_vae(deb_encoder, d
 
 ########### Comment or not depending on what's necessary
 # Load weights
-deblender,deblender_utils, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis2/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
-#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/'))
+deblender,deblender_utils, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v6/train_4/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/bis4/', 6, folder = True)
+#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/train_1/'))
 
 # Define the loss function
 alpha = K.variable(1e-2)
@@ -67,8 +67,8 @@ K.set_value(deblender.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis3/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v5/bis3/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v6/train_5/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v6/train_5/'
 path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst/'
 
 tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
