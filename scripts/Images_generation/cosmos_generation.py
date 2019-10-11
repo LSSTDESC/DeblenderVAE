@@ -37,7 +37,7 @@ for filter_name in filter_names_euclid_nir:
     filters[filter_name] = galsim.Bandpass(filter_filename, wave_type='Angstrom')
     filters[filter_name] = filters[filter_name].thin(rel_err=1e-4)
 
-filter_filename = os.path.join(euclid_filters_dir, 'Euclid_VIS.dat'.format(filter_name))
+filter_filename = os.path.join(euclid_filters_dir, 'Euclid_VIS.dat')
 filters['V'] = galsim.Bandpass(filter_filename, wave_type='Angstrom')
 filters['V'] = filters[filter_name].thin(rel_err=1e-4)
 
@@ -164,9 +164,13 @@ coeff_exp = [coeff_exp_euclid]*4 + [coeff_exp_lsst]*6
 rng = galsim.BaseDeviate(None)
 
 def get_data(gal, gal_image, psf_image):
-    res = galsim.hsm.EstimateShear(gal_image, psf_image, strict=True)
+    shear_est = 'REGAUSS' #'REGAUSS' for e (default) or 'KSB' for g
+    res = galsim.hsm.EstimateShear(gal_image, psf_image, shear_est=shear_est, strict=True)
     if res.error_message == "":
-        return [gal.SED.redshift, res.moments_sigma, res.corrected_e1, res.corrected_e2] #, res.observed_shape.e1, res.observed_shape.e2]
+        if shear_est != 'KSB':
+            return [gal.SED.redshift, res.moments_sigma, res.corrected_e1, res.corrected_e2] #, res.observed_shape.e1, res.observed_shape.e2]
+        else:
+            return [gal.SED.redshift, res.moments_sigma, res.corrected_g1, res.corrected_g2] #, res.observed_shape.e1, res.observed_shape.e2]
     else:
         return [gal.SED.redshift, np.nan, np.nan, np.nan]
     # return [gal.SED.redshift, res.moments_sigma, res.observed_shape.e1, res.observed_shape.e2] #this is wrong!
@@ -216,6 +220,10 @@ def Gal_generator_noisy_pix_same(cosmos_cat, training_or_test, used_idx=None, ma
 
         except RuntimeError as e:
             print(e)
+            counter += 1
+    
+    if counter == max_try:
+        raise RuntimeError
     
     # For training/validation, return normalized images only
     if training_or_test in ['training', 'validation']:
