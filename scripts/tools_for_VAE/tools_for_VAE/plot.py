@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib
 
 def plot_rgb(gal, bands=[5,6,7], ax=None, band_first=True, zoom=1.5, shifts=None):
     if ax is None:
@@ -9,12 +10,12 @@ def plot_rgb(gal, bands=[5,6,7], ax=None, band_first=True, zoom=1.5, shifts=None
         tr = [1,2,0]
     else:
         tr = [0,1,2]
+    
     imsize = float(gal.shape[1]) / 2.
-    ax.imshow(np.clip(gal[bands,:,:].transpose(tr), 0., 1.), extent=(-imsize,imsize,-imsize,imsize), origin='lower left')
+    ax.imshow(np.clip(gal[:,:,bands].transpose(tr), a_min=0.0, a_max=None)/np.max(gal[:,:,:]), extent=(-imsize,imsize,-imsize,imsize), origin='lower left')#0., 1. 
     if shifts is not None:
         for (x,y) in shifts:
-            # ax.scatter(2*x/pixel_scale[bands[0]]/max_stamp_size, 2*y/pixel_scale[bands[0]]/max_stamp_size,  marker='+', c='r')
-            ax.scatter(x, y,  marker='+', c='r')
+            ax.scatter(-x, -y,  marker='+', c='r')
     ax.scatter(0., 0., marker='+', c='b')
     ax.set_xlim(-imsize/zoom,imsize/zoom)
     ax.set_ylim(-imsize/zoom,imsize/zoom)
@@ -43,11 +44,14 @@ def plot_rgb_lsst(ugrizy_img, stamp_size, ax=None):
     if ax is None:
         _, ax = plt.subplots(1,1)
     max_img = np.max(ugrizy_img)
-    ugrizy_img = ugrizy_img[:,:,:]#.reshape((6,stamp_size,stamp_size))
-    RGB_img[:,:,0] = ugrizy_img[:,:,1]#[1]
-    RGB_img[:,:,1] = ugrizy_img[:,:,2]#[2]
-    RGB_img[:,:,2] = ugrizy_img[:,:,4]#[4]
-    ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img)
+
+    coeff = int(len(ugrizy_img[0])/stamp_size) - 1
+
+    ugrizy_img = ugrizy_img[:,:,:]
+    RGB_img[:,:,0] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,1]
+    RGB_img[:,:,1] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,2]
+    RGB_img[:,:,2] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,4]
+    ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img, origin='lower left')
 
 # plot function for RGB image with the 10 LSST+Euclid bandpass filters
 def plot_rgb_lsst_euclid(ugrizy_img, stamp_size, ax=None):
@@ -60,7 +64,7 @@ def plot_rgb_lsst_euclid(ugrizy_img, stamp_size, ax=None):
     RGB_img[:,:,0] = ugrizy_img[:,:,5]
     RGB_img[:,:,1] = ugrizy_img[:,:,6]
     RGB_img[:,:,2] = ugrizy_img[:,:,8]
-    ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img)
+    ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img, origin='lower left')
 
 
 # Plot galaxies on single band and scatter number on each galaxies
@@ -74,12 +78,15 @@ def scatter_galaxies(image, shift, pixel_scale, stamp_size, scatter = 'numbers',
     stamp_size: size of the stamp
     """
     ax.imshow(image)
+
     if scatter == 'numbers':
         for k in range (len(shift)):
-            ax.scatter((stamp_size/2) + shift[k][0]/pixel_scale, (stamp_size/2) + shift[k][1]/pixel_scale, s = 50 ,c='red', marker="${}$".format(k))
+            ax.scatter((stamp_size) + shift[k][0]/pixel_scale, (stamp_size) + shift[k][1]/pixel_scale, s = 50 ,c='red', marker="${}$".format(k))
     elif scatter == 'blendedness':
         for k in range (len(blendedness)):
-            ax.scatter((stamp_size/2) + shift[k][0]/pixel_scale, (stamp_size/2) + shift[k][1]/pixel_scale, s = 500 ,c='red', marker="${0:.2f}$".format(blendedness[k]))
+            ax.scatter((stamp_size) + shift[k][0]/pixel_scale, (stamp_size) + shift[k][1]/pixel_scale, s = 500 ,c='red', marker="${0:.2f}$".format(blendedness[k]))
+    #elif scatter == 'None':
+            #ax.scatter((stamp_size) + shift[k][0]/pixel_scale, (stamp_size) + shift[k][1]/pixel_scale, s = 500 ,c='red', '.')
 
 
 # Function to compute mean and variance in each bins of histograms
@@ -109,6 +116,48 @@ def createCircularMask(h, w, center=None, radius=None):
     mask = dist_from_center <= radius
     return mask
 
+
+# Plot error on variable as function of a specific parameter
+def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = False):
+    """
+    Plot the variable(s) v as function of the parameter p.
+
+    Parameters:
+    ----------
+    v: variable(s) to plot. Insert it as a list of numpy array.
+    p: parameter to use. Insert it as a list of numpy array.
+    v_labels: label for each variable
+    x_label: label for the parameter used
+    y_label: label for the variable used
+    """
+    
+    font = {'family' : 'normal',
+        'weight' : 'normal',
+        'size'   : 22}
+    matplotlib.rc('font', **font)
+    fig, axes = plt.subplots(1, figsize=(10,8))
+
+    mean = []
+    var = []
+    for i in range (len(v)):
+        mean.append(mean_var(p[i],v[i], bins = bins)[0])
+        var.append(mean_var(p[i],v[i], bins = bins)[1])
+
+    x = np.linspace(np.min(p[0]), np.max(p[0]), bins)
+    mid = (x[0:]+x[:])*0.5
+
+    for i in range (len(v)):
+        axes.plot(mid,mean[i], label = v_labels[i])
+        if variance == True:
+            axes.fill_between(mid, mean[i] - 10*var[i]**0.5, mean[i] + 10*var[i]**0.5, alpha=0.5)
+            print('Warning: variance is augmented 10 times')
+        
+    axes.plot(np.arange(0,1000), np.zeros(1000))
+    axes.set_xlim(np.min(p[0]), np.max(p[0]))
+    axes.set_ylim(np.min(v[0]), np.max(v[0]))
+    axes.set_xlabel(x_label)
+    axes.set_ylabel(y_label)
+    axes.legend(loc = "upper right")
 
 # To plot corner plot of latente space
 def plot_corner_latent(z, lim=3, nbins=25, show_title=True):

@@ -138,10 +138,12 @@ class VAEHistory(Callback):
             # weird thing when indexing numpy arrays with list...
             if isinstance(self.plot_bands, int):
                 img_in = self.xval_sub[idx,1,:,:,self.plot_bands]
+                print('first'+str(img_in.shape))
                 img_target = self.xval_sub[idx,0,:,:,self.plot_bands]
                 img_out = out[idx,:,:,self.plot_bands]
             else:
                 img_in = self.xval_sub[idx,1,:,:,self.plot_bands].transpose([1,2,0])
+                print('second'+str(img_in.shape))
                 img_target = self.xval_sub[idx,0,:,:,self.plot_bands].transpose([1,2,0])
                 img_out = out[idx,:,:,self.plot_bands].transpose([1,2,0])
         
@@ -153,7 +155,7 @@ class VAEHistory(Callback):
             # print(self.xval_sub[idx,:,:,self.plot_bands].shape)
             # print(out.shape)
             # print(out[idx,:,:,self.plot_bands].shape)
-            im = ax.imshow(np.clip(img_in, 0., 1.))#.reshape((64,64)))
+            im = ax.imshow(np.clip(img_in[:,:,0], 0., 1.))#.reshape((64,64)))
             #ax.imshow(self.xval_sub[idx])
             if isinstance(self.plot_bands, int):
                 divider = make_axes_locatable(ax)
@@ -171,7 +173,7 @@ class VAEHistory(Callback):
             # print(self.xval_sub[idx,:,:,self.plot_bands].shape)
             # print(out.shape)
             # print(out[idx,:,:,self.plot_bands].shape)
-            im = ax.imshow(np.clip(img_target, 0., 1.))#.reshape((64,64)))
+            im = ax.imshow(np.clip(img_target[:,:,0], 0., 1.))#.reshape((64,64)))
             #ax.imshow(self.xval_sub[idx])
             if isinstance(self.plot_bands, int):
                 divider = make_axes_locatable(ax)
@@ -185,7 +187,7 @@ class VAEHistory(Callback):
             #if self.plot_bands == 0:
             #    out = out.reshape((500,64,64,1))
 
-            im = ax.imshow(np.clip(img_out, 0., 1.))#.reshape((64,64)))
+            im = ax.imshow(np.clip(img_out[:,:,0], 0., 1.))#.reshape((64,64)))
             #ax.imshow(out[idx])
             if isinstance(self.plot_bands, int):
                 divider = make_axes_locatable(ax)

@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from multiprocess import *
 import pandas as pd
 from tqdm.auto import tqdm, trange
-import castor as ca
 
 from cosmos_generation import Gal_generator_noisy_pix_same
 
@@ -20,13 +19,13 @@ from tools_for_VAE import utils
 # The script is used as, eg,
 # # python main_single_generation_cosmos.py training 10 1000
 # to produce 10 files in the training sample with 1000 images each.
-training_or_test = str(sys.argv[1])
-N_files = int(sys.argv[2])
-N_per_file = int(sys.argv[3])
+training_or_test = 'training' #str(sys.argv[1])
+N_files = 10 #int(sys.argv[2])
+N_per_file = 10000#int(sys.argv[3])
 assert training_or_test in ['training', 'validation', 'test']
 
 # where to save images and data
-save_dir = '../../images/single/' + training_or_test
+save_dir = '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/' + training_or_test
 # what to call those files
 root = 'galaxies_isolated_20190927_'
 
@@ -45,7 +44,7 @@ for icat in trange(N_files):
     galaxies = []
     df = pd.DataFrame(index=np.arange(N_per_file), columns=['redshift', 'moment_sigma', 'e1', 'e2', 'SNR', 'SNR_peak']) #'e1_obs', 'e2_obs',
 
-    res = ca.parallel.apply_ntimes(Gal_generator_noisy_pix_same, N_per_file, (cosmos_cat, training_or_test, used_idx, 100))
+    res = utils.apply_ntimes(Gal_generator_noisy_pix_same, N_per_file, (cosmos_cat, training_or_test, used_idx, 100))
 
     for i in trange(N_per_file):
         if training_or_test == 'test':

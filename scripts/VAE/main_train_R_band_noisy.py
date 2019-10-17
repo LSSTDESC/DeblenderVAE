@@ -24,7 +24,7 @@ import tensorflow_probability as tfp
 from generator_vae import BatchGenerator
 
 sys.path.insert(0,'../tools_for_VAE/')
-from tools_for_VAE import vae_functions, model, utils, callbacks
+from tools_for_VAE import vae_functions, model, utils, callbacks, generator
 from tools_for_VAE.callbacks import changeAlpha
 
 
@@ -113,8 +113,8 @@ list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/indep
 
 
 ######## Define the generators
-training_generator = BatchGenerator(bands, list_of_samples,total_sample_size=280000, batch_size= batch_size, size_of_lists = 40000, scale_radius = None,SNR = None,trainval_or_test = 'training', noisy = True)#180000
-validation_generator = BatchGenerator(bands, list_of_samples_val,total_sample_size=40000, batch_size= batch_size, size_of_lists = 20000, scale_radius = None, SNR = None,trainval_or_test = 'validation', noisy = True)#20000
+training_generator = generator.BatchGenerator(bands, list_of_samples,total_sample_size=280000, batch_size= batch_size, size_of_lists = 40000, scale_radius = None,SNR = None,trainval_or_test = 'training', noisy = True)#180000
+validation_generator = generator.BatchGenerator(bands, list_of_samples_val,total_sample_size=40000, batch_size= batch_size, size_of_lists = 20000, scale_radius = None, SNR = None,trainval_or_test = 'validation', noisy = True)#20000
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,

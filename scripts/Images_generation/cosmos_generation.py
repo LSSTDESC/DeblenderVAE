@@ -164,7 +164,7 @@ coeff_exp = [coeff_exp_euclid]*4 + [coeff_exp_lsst]*6
 rng = galsim.BaseDeviate(None)
 
 def get_data(gal, gal_image, psf_image):
-    shear_est = 'REGAUSS' #'REGAUSS' for e (default) or 'KSB' for g
+    shear_est = 'KSB' #'REGAUSS' for e (default) or 'KSB' for g
     res = galsim.hsm.EstimateShear(gal_image, psf_image, shear_est=shear_est, strict=True)
     if res.error_message == "":
         if shear_est != 'KSB':

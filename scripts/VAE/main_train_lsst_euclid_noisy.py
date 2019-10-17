@@ -25,11 +25,11 @@ import tensorflow_probability as tfp
 from generator_vae import BatchGenerator
 
 sys.path.insert(0,'../tools_for_VAE/')
-from tools_for_VAE import model, vae_functions, utils
+from tools_for_VAE import model, vae_functions, utils, generator
 from tools_for_VAE.callbacks import changeAlpha
 
 ######## Set some parameters
-batch_size = 128
+batch_size = 100
 latent_dim = 32
 epochs = 10000
 bands = [0,1,2,3,4,5,6,7,8,9]
@@ -104,13 +104,13 @@ list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/indep
 
 
 
-training_generator = BatchGenerator(bands, list_of_samples, total_sample_size=None,
+training_generator = generator.BatchGenerator(bands, list_of_samples, total_sample_size=None,
                                     batch_size=batch_size, size_of_lists=None,
                                     scale_radius=None, SNR=None,
                                     trainval_or_test='training',
                                     noisy=True, do_norm=False)#180000
 
-validation_generator = BatchGenerator(bands, list_of_samples_val, total_sample_size=None,
+validation_generator = generator.BatchGenerator(bands, list_of_samples_val, total_sample_size=None,
                                     batch_size=batch_size, size_of_lists=None,
                                     scale_radius=None, SNR=None,
                                     trainval_or_test='validation',
@@ -118,10 +118,10 @@ validation_generator = BatchGenerator(bands, list_of_samples_val, total_sample_s
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=256,
+                  steps_per_epoch=18,
                   verbose=1,
                   shuffle=True,
                   validation_data=validation_generator,
-                  validation_steps=16,
+                  validation_steps=2,
                   callbacks=callbacks,
                   workers=0)

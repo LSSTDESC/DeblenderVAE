@@ -15,6 +15,7 @@ import scipy
 from scipy.stats import norm
 from astropy.io import fits
 
+# Import all functions AND VARIABLES from cosmos_generation.py
 from cosmos_generation import *
 
 # Coefficients to take the exposure time and the telescope size into account
@@ -37,9 +38,9 @@ def get_scale_radius(gal):
         return gal.original.scale_radius
 
 
-# shift_method='uniform'
+shift_method='uniform'
 #shift_method='lognorm_rad'
-shift_method='annulus'
+#shift_method='annulus'
 
 def shift_gal(gal, gal_to_add, method='uniform'):
     """
@@ -97,6 +98,7 @@ def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, m
             # Pick galaxies in catalog
             galaxies = []
             mag=[]
+            mag_ir=[]
             for j in range (nb_blended_gal):
                 if used_idx is not None:
                     idx = np.random.choice(used_idx)
@@ -106,12 +108,14 @@ def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, m
                 gal = gal.rotate(ud() * 360. * galsim.degrees)
                 galaxies.append(gal)
                 mag.append(gal.calculateMagnitude(filters['r'].withZeropoint(28.13)))
+                mag_ir.append(gal.calculateMagnitude(filters['H'].withZeropoint(24.92-22.35*coeff_noise_h)))
 
             # Optionally, find the brightest and put it first in the list
             if center_brightest:
                 _idx = np.argmin(mag)
                 galaxies.insert(0, galaxies.pop(_idx))
-                mag.insert(0,mag.pop(_idx))
+                mag.insert(0, mag.pop(_idx))
+                mag_ir.insert(0, mag_ir.pop(_idx))
 
             # Draw shifts for other galaxies (shift has the same shape to make it simpler to save as numpy array)
             shift = np.zeros((nmax_blend,2))
@@ -151,6 +155,7 @@ def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, m
                     psf_image = PSF[i].drawImage(nx=max_stamp_size, ny=max_stamp_size, scale=pixel_scale[i])
                     data['redshift'], data['moment_sigma'], data['e1'], data['e2'] = get_data(galaxies[0], images[0], psf_image)
                     data['closest_redshift'], data['closest_moment_sigma'], data['closest_e1'], data['closest_e2'] = get_data(galaxies[idx_closest], images[idx_closest], psf_image)
+                    #data['ellipticity_weights'] = 
                     
                     if nb_blended_gal > 1:
                         data['blendedness_total_lsst'] = utils.compute_blendedness_total(images[0], blend_img)
@@ -190,7 +195,9 @@ def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, m
     elif training_or_test == 'test':
         data['nb_blended_gal'] = nb_blended_gal
         data['mag'] = mag[0]
+        data['mag_ir'] = mag_ir[0]
         data['closest_mag'] = mag[idx_closest]
+        data['closest_mag_ir'] = mag_ir[idx_closest]
         data['closest_x'] = shift[idx_closest][0]
         data['closest_y'] = shift[idx_closest][1]
         data['SNR'] = utils.SNR(galaxy_noiseless, sky_level_pixel, band=6)[1]
