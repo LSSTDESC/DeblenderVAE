@@ -118,9 +118,28 @@ def createCircularMask(h, w, center=None, radius=None):
     return mask
 
 
+
+
 # Plot error on variable as function of a specific parameter
+def add_images_to_plot(p, df, axes, images,nb_of_images = 3):
+    """
+    Permit to add blended images on top of the plot wanted
+    """
+    idx = []
+    idx.append(np.random.choice(np.where( (df[p]>0.45) & (df[p]<0.55) )[0], size = 1, replace = False)[0])
+    idx.append(np.random.choice(np.where(df[p]<0.25)[0], size = 1, replace = False)[0])
+    idx.append(np.random.choice(np.where( (df[p]>0.8) & (df[p]<0.85) )[0], size = 1, replace = False)[0])
+    
+    y_lim = -0.3
+    for i in range (nb_of_images):
+        image = images[idx[i]]
+        imagebox = OffsetImage(image[1][6], zoom=2)
+        ab = AnnotationBbox(imagebox, (df[p][idx[i]], y_lim))
+        axes.add_artist(ab)
+        axes.text(df[p][idx[i]]-0.07, y_lim - 0.2, 'blend rate = '+str(np.round(df[p][idx[i]], 2)), fontsize =14, color='r')
+
 def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = False, xlim= None, 
-                       ylim = None, add_images = False):
+                       ylim = None, add_images = False, images= None, df = None):
     """
     Plot the variable(s) v as function of the parameter p.
 
@@ -142,6 +161,9 @@ def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = F
     x = np.linspace(np.min(p[0]), np.max(p[0]), bins)
     mid = (x[0:]+x[:])*0.5
        
+    if add_images:
+        add_images_to_plot('blendedness_closest_lsst', df, axes, images)
+
     mean = []
     var = []
     for i in range (len(p)):
