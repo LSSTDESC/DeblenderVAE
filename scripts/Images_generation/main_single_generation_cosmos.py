@@ -54,6 +54,8 @@ for icat in trange(N_files):
             gal_noiseless, gal_noisy = res[i]
         galaxies.append((gal_noiseless,gal_noisy))
 
+    # Save noisy blended images and denoised single central galaxy images
     np.save(os.path.join(save_dir, root_i+'_images.npy'), galaxies)
+    # If the created sample is a test sample, also save the shifts and differents data
     if training_or_test == 'test':
         df.to_csv(os.path.join(save_dir, root_i+'_data.csv'), index=False)
