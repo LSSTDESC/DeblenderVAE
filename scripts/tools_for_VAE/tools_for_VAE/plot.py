@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib
+from matplotlib.offsetbox import TextArea, DrawingArea, OffsetImage, AnnotationBbox
 
 def plot_rgb(gal, bands=[5,6,7], ax=None, band_first=True, zoom=1.5, shifts=None):
     if ax is None:
@@ -12,7 +13,7 @@ def plot_rgb(gal, bands=[5,6,7], ax=None, band_first=True, zoom=1.5, shifts=None
         tr = [0,1,2]
     
     imsize = float(gal.shape[1]) / 2.
-    ax.imshow(np.clip(gal[:,:,bands].transpose(tr), a_min=0.0, a_max=None)/np.max(gal[:,:,:]), extent=(-imsize,imsize,-imsize,imsize), origin='lower left')#0., 1. 
+    ax.imshow(np.clip(gal[:,:,:].transpose(tr)[:,:,bands], a_min=0.0, a_max=None)/np.max(gal[:,:,:]), extent=(-imsize,imsize,-imsize,imsize), origin='lower left')#0., 1. 
     if shifts is not None:
         for (x,y) in shifts:
             ax.scatter(-x, -y,  marker='+', c='r')
@@ -118,7 +119,8 @@ def createCircularMask(h, w, center=None, radius=None):
 
 
 # Plot error on variable as function of a specific parameter
-def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = False):
+def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = False, xlim= None, 
+                       ylim = None, add_images = False):
     """
     Plot the variable(s) v as function of the parameter p.
 
@@ -135,29 +137,39 @@ def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = F
         'weight' : 'normal',
         'size'   : 22}
     matplotlib.rc('font', **font)
-    fig, axes = plt.subplots(1, figsize=(10,8))
-
+    fig, axes = plt.subplots(1, figsize=(16,8))
+    
+    x = np.linspace(np.min(p[0]), np.max(p[0]), bins)
+    mid = (x[0:]+x[:])*0.5
+       
     mean = []
     var = []
-    for i in range (len(v)):
+    for i in range (len(p)):
+        p_is_nan = np.where(np.isnan(p[i]))[0]
+        v[i] = np.delete(v[i], p_is_nan)
+        p[i] = np.delete(np.array(p[i]), p_is_nan)
+
         mean.append(mean_var(p[i],v[i], bins = bins)[0])
         var.append(mean_var(p[i],v[i], bins = bins)[1])
 
-    x = np.linspace(np.min(p[0]), np.max(p[0]), bins)
-    mid = (x[0:]+x[:])*0.5
-
-    for i in range (len(v)):
         axes.plot(mid,mean[i], label = v_labels[i])
         if variance == True:
             axes.fill_between(mid, mean[i] - 10*var[i]**0.5, mean[i] + 10*var[i]**0.5, alpha=0.5)
             print('Warning: variance is augmented 10 times')
         
     axes.plot(np.arange(0,1000), np.zeros(1000))
-    axes.set_xlim(np.min(p[0]), np.max(p[0]))
-    axes.set_ylim(np.min(v[0]), np.max(v[0]))
+    if xlim != None:
+        axes.set_xlim(xlim)
+    else: 
+        axes.set_xlim(np.min(p[0]), np.max(p[0]))
+    if ylim != None:
+        axes.set_ylim(ylim)
+    else:
+        axes.set_ylim(np.min(v[0]), np.max(v[0]))
     axes.set_xlabel(x_label)
     axes.set_ylabel(y_label)
     axes.legend(loc = "upper right")
+    return axes
 
 # To plot corner plot of latente space
 def plot_corner_latent(z, lim=3, nbins=25, show_title=True):
