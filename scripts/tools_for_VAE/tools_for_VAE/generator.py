@@ -127,4 +127,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             # indicesadius = self.scale_radius[indices]
             # self.SNR_out = self.SNR[indices]
             data = pd.read_csv(sample_filename.replace('images.npy','data.csv'))
-            return self.x, self.y, data.loc[indices], self.shifts[indices], indices
+            if self.shifts !=None:
+                return self.x, self.y, data.loc[indices], self.shifts[indices], indices
+            else:
+                return self.x, self.y, data.loc[indices], indices

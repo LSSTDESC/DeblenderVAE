@@ -20,9 +20,10 @@ from tools_for_VAE import utils
 # # python main_single_generation_cosmos.py training 10 1000
 # to produce 10 files in the training sample with 1000 images each.
 training_or_test = 'training' #str(sys.argv[1])
-N_files = 10 #int(sys.argv[2])
+N_files = 1 #int(sys.argv[2])
 N_per_file = 10000#int(sys.argv[3])
-assert training_or_test in ['training', 'validation', 'test']
+#assert training_or_test in ['training', 'validation', 'test']
+training_or_test = 'test'
 
 # where to save images and data
 save_dir = '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/' + training_or_test
@@ -30,7 +31,7 @@ save_dir = '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/' + t
 root = 'galaxies_isolated_20190927_'
 
 # Loading the COSMOS catalog
-cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir=os.path.join(galsim.meta_data.share_dir,'COSMOS_25.2_training_sample'))#, dir='/sps/lsst/users/barcelin/COSMOS_25.2_training_sample')
+cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lsst/users/barcelin/COSMOS_25.2_training_sample')
 # Select galaxies to keep for the test sample
 if training_or_test == 'test':
     used_idx = np.arange(5000)
@@ -42,7 +43,7 @@ for icat in trange(N_files):
     root_i = root+str(icat)
 
     galaxies = []
-    df = pd.DataFrame(index=np.arange(N_per_file), columns=['redshift', 'moment_sigma', 'e1', 'e2', 'SNR', 'SNR_peak']) #'e1_obs', 'e2_obs',
+    df = pd.DataFrame(index=np.arange(N_per_file), columns=['redshift', 'moment_sigma', 'e1', 'e2', 'SNR', 'SNR_peak'])
 
     res = utils.apply_ntimes(Gal_generator_noisy_pix_same, N_per_file, (cosmos_cat, training_or_test, used_idx, 100))
 

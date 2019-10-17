@@ -61,10 +61,12 @@ def plot_rgb_lsst_euclid(ugrizy_img, stamp_size, ax=None):
         _, ax = plt.subplots(1,1)
     max_img = np.max(ugrizy_img[:,:,4:])
     
+    coeff = int(len(ugrizy_img[0])/stamp_size) - 1
+
     ugrizy_img = ugrizy_img[:,:,:]
-    RGB_img[:,:,0] = ugrizy_img[:,:,5]
-    RGB_img[:,:,1] = ugrizy_img[:,:,6]
-    RGB_img[:,:,2] = ugrizy_img[:,:,8]
+    RGB_img[:,:,0] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,5]
+    RGB_img[:,:,1] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,6]
+    RGB_img[:,:,2] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,8]
     ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img, origin='lower left')
 
 
@@ -121,25 +123,25 @@ def createCircularMask(h, w, center=None, radius=None):
 
 
 # Plot error on variable as function of a specific parameter
-def add_images_to_plot(p, df, axes, images,nb_of_images = 3):
+def add_images_to_plot(p, df, axes, images, y_height, nb_of_images = 3):
     """
     Permit to add blended images on top of the plot wanted
     """
     idx = []
-    idx.append(np.random.choice(np.where( (df[p]>0.45) & (df[p]<0.55) )[0], size = 1, replace = False)[0])
-    idx.append(np.random.choice(np.where(df[p]<0.25)[0], size = 1, replace = False)[0])
-    idx.append(np.random.choice(np.where( (df[p]>0.8) & (df[p]<0.85) )[0], size = 1, replace = False)[0])
+    idx.append(np.random.choice(np.where( (df[p]>0.45*np.max(df[p])) & (df[p]<0.55*np.max(df[p])) )[0], size = 1, replace = False)[0])
+    idx.append(np.random.choice(np.where(df[p]<0.25*np.max(df[p]))[0], size = 1, replace = False)[0])
+    idx.append(np.random.choice(np.where( (df[p]>0.8*np.max(df[p])) & (df[p]<0.85*np.max(df[p])) )[0], size = 1, replace = False)[0])
     
-    y_lim = -0.3
+    y_lim = y_height
     for i in range (nb_of_images):
         image = images[idx[i]]
         imagebox = OffsetImage(image[1][6], zoom=2)
         ab = AnnotationBbox(imagebox, (df[p][idx[i]], y_lim))
         axes.add_artist(ab)
-        axes.text(df[p][idx[i]]-0.07, y_lim - 0.2, 'blend rate = '+str(np.round(df[p][idx[i]], 2)), fontsize =14, color='r')
+        axes.text(df[p][idx[i]]-0.07, y_lim - np.abs(y_height/1.5), 'blend rate = '+str(np.round(df[p][idx[i]], 2)), fontsize =14, color='r')
 
 def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = False, xlim= None, 
-                       ylim = None, add_images = False, images= None, df = None):
+                       ylim = None, add_images = False, y_height = None, parameter = None, images= None, df = None):
     """
     Plot the variable(s) v as function of the parameter p.
 
@@ -162,7 +164,7 @@ def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = F
     mid = (x[0:]+x[:])*0.5
        
     if add_images:
-        add_images_to_plot('blendedness_closest_lsst', df, axes, images)
+        add_images_to_plot(parameter, df, axes, images, y_height)
 
     mean = []
     var = []
