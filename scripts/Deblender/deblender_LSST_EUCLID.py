@@ -44,28 +44,14 @@ path_output_vae = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis
 
 
 ######## Import data for callback (Only if VAEHistory is used)
-#x = np.load('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_4_v5.npy', mmap_mode = 'c')
 x_val = np.load(os.path.join(images_dir, 'galaxies_blended_1_v5.npy'))[:500,:,bands].transpose([0,1,3,4,2])
-#x_val = utils.norm(x[:500,1,bands], bands).transpose([0,2,3,1])
 
-# Load decoder of VAE
-# decoder = utils.load_vae_decoder('/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis3/mse/',10,folder = True)
-# decoder.trainable = False
 
-# # Deblender model
-# deb_encoder, deb_decoder = model.vae_model(latent_dim, 10)
-
-# # Use the encoder of the trained VAE
-# deblender, deblender_utils, Dkl = vae_functions.build_vanilla_vae(deb_encoder, decoder, full_cov=False, coeff_KL = 0)
-
-# ########### Comment or not depending on what's necessary
-# # Load weights
-# deblender,deblender_utils, encoder_d, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v5/train_5/mse/', '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v9/bis3/mse/', 10, folder = True)
-
+# ####### Load deblender
 if load_from_vae_or_deblender == 'vae':
-    deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(os.path.join(path_output_vae, 'weights'), 10, folder=True) #utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis2/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
+    deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(os.path.join(path_output_vae, 'weights'), 10, folder=True) 
 elif load_from_vae_or_deblender == 'deblender':
-    deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(path_output, 10, folder=True) #os.path.join(path_output, 'train_5') #utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis2/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
+    deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(path_output, 10, folder=True) 
 else:
     raise NotImplementedError
 decoder.trainable = False

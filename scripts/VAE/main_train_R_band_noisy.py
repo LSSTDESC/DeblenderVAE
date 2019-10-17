@@ -68,13 +68,13 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v25'#2/bis2'#/v10
-path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v25/'#2/bis2/'#/v10
+path_weights = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v25'
+path_plots = '/sps/lsst/users/barcelin/callbacks/R_band/VAE/noisy/v25/'
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = callbacks.changeAlpha(alpha, vae, vae_loss, path_weights)
 # Callback to display evolution of training
-vae_hist = vae_functions.VAEHistory(x_val, vae_utils, latent_dim, alpha, plot_bands=0, figname=path_plots+'test_')#noisy_
+vae_hist = vae_functions.VAEHistory(x_val, vae_utils, latent_dim, alpha, plot_bands=0, figname=path_plots+'test_')
 # Keras Callbacks
 #earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
 checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'/mse/weights.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
@@ -85,7 +85,6 @@ checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'/l
 callbacks = [vae_hist, checkpointer_mse,checkpointer_loss]#,checkpointer_loss, tbCallBack]#, alphaChanger earlystop,vae_hist, checkpointer,  
  
 ######## List of data samples
-### SNR > 2
 list_of_samples=['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_1_v5_test.npy',
                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_2_v5_test.npy',
                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_3_v5_test.npy',
@@ -96,19 +95,6 @@ list_of_samples=['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant
                 ]
 
 list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_val_v5_test.npy']
-
-### SNR > 7
-# list_of_samples=['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_1_SNR_7_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_2_SNR_7_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_3_SNR_7_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_4_SNR_7_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_5_SNR_7_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_6_SNR_7_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_7_SNR_7_test.npy'#,
-#                 ]
-
-# list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/SNR_7/galaxies_COSMOS_val_SNR_7_test.npy']
-
 
 
 

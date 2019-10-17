@@ -49,32 +49,14 @@ path_output = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v6/train_6/
 path_output_vae = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/bis4/'
 
 ######## Import data for callback (Only if VAEHistory is used)
-# x = np.load('/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_1_v5.npy', mmap_mode = 'c')
-# x_val = utils.norm(x[:500,1,bands], bands).transpose([0,2,3,1])
 x_val = np.load(os.path.join(images_dir, 'galaxies_blended_1_v5.npy'))[:500,:,bands].transpose([0,1,3,4,2])
 
-# Load decoder of VAE
-#decoder = utils.load_vae_decoder(os.path.join(path_output_vae, 'weights'),6,folder = True)
-#decoder.trainable = False
 
-
-# # Deblender model
-# deb_encoder, deb_decoder = model.vae_model(latent_dim, 6)
-
-# # Use the encoder of the trained VAE
-# deblender, deblender_utils, Dkl = vae_functions.build_vanilla_vae(deb_encoder, decoder, full_cov=False, coeff_KL = 0)
-
-########### Comment or not depending on what's necessary
-# Load weights
-
-#deblender,deblender_utils, encoder, Dkl = utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v6/train_4/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/bis4/', 6, folder = True)
-#deblender, deblender_utils, encoder, Dkl = utils.load_vae_conv(os.path.join(path_output, 'weights'),os.path.join(path_output_vae, 'weights'), 6, folder=True) #utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis2/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
-#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v4/'))
-
+######## Load deblender
 if load_from_vae_or_deblender == 'vae':
-    deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(os.path.join(path_output_vae, 'weights'), 6, folder=True) #utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis2/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
+    deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(os.path.join(path_output_vae, 'weights'), 6, folder=True) 
 elif load_from_vae_or_deblender == 'deblender':
-    deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(path_output, 6, folder=True) #os.path.join(path_output, 'train_5') #utils.load_deblender('/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v5/bis2/', '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v12/', 6, folder = True)
+    deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(path_output, 6, folder=True) 
 else:
     raise NotImplementedError
 decoder.trainable = False
@@ -150,15 +132,6 @@ validation_generator = generator.BatchGenerator(bands, list_of_samples_val, tota
                                     noisy=True, do_norm=True)#180000
 
 ######## Train the network
-# hist = deblender.fit_generator(training_generator,
-#         epochs=epochs,
-#         steps_per_epoch=18,#1900,
-#         verbose=2,
-#         shuffle = True,
-#         validation_steps =2,#100,
-#         validation_data=validation_generator,
-#         callbacks=callbacks,
-#         workers = 0)
 hist = deblender.fit_generator(generator=training_generator, epochs=epochs,
                   steps_per_epoch=steps_per_epoch,
                   verbose=2,
