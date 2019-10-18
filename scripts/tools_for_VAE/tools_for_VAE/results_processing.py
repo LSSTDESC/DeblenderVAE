@@ -48,8 +48,8 @@ def VAE_processing(vae, generator, bands, r_band, im_size, N, batch_size, psf, p
     SNR = []
     scale_radius = []
 
-    flux_in = np.empty([N,N,],dtype='float32')
-    flux_out= np.empty([N,N,], dtype='float32')
+    flux_in = np.empty([N,batch_size,],dtype='float32')
+    flux_out= np.empty([N,batch_size,], dtype='float32')
 
     for j in range(N):
         input_vae = generator.__getitem__(2)
@@ -67,13 +67,22 @@ def VAE_processing(vae, generator, bands, r_band, im_size, N, batch_size, psf, p
                 gal_image_out.scale = pix_scale
 
                 # Measurements of shapes
-                shear_est = 'KSB'
-                res = galsim.hsm.EstimateShear(gal_image, psf_image, shear_est=shear_est, strict=True)
-                e_in = [res.corrected_e1, res.corrected_e2]
+                shear_est = 'REGAUSS'#'KSB'
+                
+                res = galsim.hsm.EstimateShear(gal_image, psf_image)#, shear_est=shear_est, strict=True)
+                if shear_est != 'KSB':
+                    e_in = [res.corrected_e1, res.corrected_e2] 
+                else:
+                    e_in = [res.corrected_g1, res.corrected_g2]
+                #e_in = [res.corrected_e1, res.corrected_e2]
                 e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
 
-                res_out = galsim.hsm.EstimateShear(gal_image_out, psf_image, shear_est=shear_est, strict=True)
-                e_out = [res_out.corrected_e1, res_out.corrected_e2]
+                res_out = galsim.hsm.EstimateShear(gal_image_out, psf_image)#, shear_est=shear_est, strict=True)
+                if shear_est != 'KSB':
+                    e_out = [res_out.corrected_e1, res_out.corrected_e2] 
+                else:
+                    e_out = [res_out.corrected_g1, res_out.corrected_g2]
+                #e_out = [res_out.corrected_e1, res_out.corrected_e2]
                 e_beta_out = [res_out.observed_shape.e, res_out.observed_shape.beta.rad]
 
                 ellipticities.append([e_in, e_out])
@@ -90,11 +99,11 @@ def VAE_processing(vae, generator, bands, r_band, im_size, N, batch_size, psf, p
                 # Calculate the luminosity by substracting the noise
                 flux_in[j,i] = np.sum(masked_img_in_simple)
                 flux_out[j,i] = np.sum(masked_img_out_simple)
-                
-                # Save scale radius and SNR
-                scale_radius.append(input_vae[2][i])
-                SNR.append(input_vae[3][i])
-        
+            
+            # Save scale radius and SNR
+            #scale_radius.append(input_vae[2][i])
+            #SNR.append(input_vae[3][i])
+    
             except :
                 print('erreur')
                 pass
@@ -153,16 +162,24 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
                     gal_image = galsim.Image(input_noiseless[i][:,:,r_band])
                     gal_image.scale = pix_scale
 
-                    #shear_est = 'KSB'
+                    shear_est = 'KSB'
                     res = galsim.hsm.EstimateShear(gal_image, psf_image)#, shear_est=shear_est, strict=True)
-                    e_in = [res.corrected_e1, res.corrected_e2]
+                    if shear_est != 'KSB':
+                        e_in = [res.corrected_e1, res.corrected_e2] 
+                    else:
+                        e_in = [res.corrected_g1, res.corrected_g2]
+                    #e_in = [res.corrected_e1, res.corrected_e2]
                     e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
 
                     gal_image_out = galsim.Image(output_vae[i][:,:,r_band])
                     gal_image_out.scale = pix_scale
 
                     res = galsim.hsm.EstimateShear(gal_image_out, psf_image)#, shear_est=shear_est, strict=True)
-                    e_out = [res.corrected_e1, res.corrected_e2]
+                    if shear_est != 'KSB':
+                        e_out = [res.corrected_e1, res.corrected_e2] 
+                    else:
+                        e_out = [res.corrected_g1, res.corrected_g2]
+                    #e_out = [res.corrected_e1, res.corrected_e2]
                     e_beta_out = [res.observed_shape.e, res.observed_shape.beta.rad]
 
                     ellipticities.append([e_in, e_out])
