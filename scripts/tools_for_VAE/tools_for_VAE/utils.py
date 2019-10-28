@@ -15,7 +15,7 @@ from tensorflow.keras.models import Model, Sequential
 from scipy.stats import norm
 import tensorflow as tf
 
-from . import model, vae_functions
+from . import model, vae_functions, plot
 
 def listdir_fullpath(d):
     return [os.path.join(d, f) for f in os.listdir(d)]
@@ -110,6 +110,15 @@ def compute_blendedness_total(img_central, img_others):
     # blnd = 1. - compute_blendedness_single(itot,io)
     blnd = 1. - np.sum(ic*ic)/np.sum(itot*ic)
     return blnd
+
+def compute_blendedness_aperture(img_central, img_others, radius):
+    ic = np.array(img_central.array.data)
+    io = np.array(img_others.array.data)
+    h, w = ic.shape
+    mask = plot.createCircularMask(h, w, center=None, radius=radius)
+    flux_central = np.sum(ic*mask.astype(float))
+    flux_others = np.sum(io*mask.astype(float))
+    return flux_central / (flux_central+flux_others)
 
 ############ DELTA_R and DELTA_MAG COMPUTATION FOR MOST BLENDED GALAXY WITH THE CENTERED ONE ##########
 def compute_deltas_for_most_blended(shift,mag,blendedness):#(shift_path, mag_path):
@@ -380,7 +389,7 @@ def apply_ntimes(func, n, args, verbose=True, timeout=None):
 
     pool.close()
 
-    return [res.get(timeout) for res in tqdm(multiple_results, desc='# castor.parallel.apply_ntimes')]
+    return [res.get(timeout) for res in tqdm(multiple_results, desc='# castor.parallel.apply_ntimes', disable = True)]
 
 
 

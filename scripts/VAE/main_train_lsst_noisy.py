@@ -117,13 +117,13 @@ training_generator = generator.BatchGenerator(bands, list_of_samples, total_samp
                                     batch_size=batch_size, size_of_lists=None,
                                     scale_radius=None, SNR=None,
                                     trainval_or_test='training',
-                                    noisy=True, do_norm=True, list_of_weights_e=list_of_weights_e_training)#180000
+                                    noisy=True, do_norm=False, list_of_weights_e=list_of_weights_e_training)#180000
 
 validation_generator = generator.BatchGenerator(bands, list_of_samples_val, total_sample_size=None,
                                     batch_size=batch_size, size_of_lists=None,
                                     scale_radius=None, SNR=None,
                                     trainval_or_test='validation',
-                                    noisy=True, do_norm=True, list_of_weights_e= list_of_weights_e_val)#180000
+                                    noisy=True, do_norm=False, list_of_weights_e= list_of_weights_e_val)#180000
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,

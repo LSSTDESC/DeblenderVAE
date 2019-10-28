@@ -141,7 +141,6 @@ PSF_lsst = galsim.Kolmogorov(fwhm=fwhm_lsst)
 fwhm_euclid_nir = 0.22 # EUCLID PSF is supposed invariant (no atmosphere) despite the optical and wavelengths variations
 fwhm_euclid_vis = 0.18 # EUCLID PSF is supposed invariant (no atmosphere) despite the optical and wavelengths variations
 beta = 2.5
-#PSF_lsst = galsim.Kolmogorov(fwhm=fwhm_lsst)#galsim.Moffat(fwhm=fwhm_lsst, beta=beta)
 PSF_euclid_nir = galsim.Moffat(fwhm=fwhm_euclid_nir, beta=beta)
 PSF_euclid_vis = galsim.Moffat(fwhm=fwhm_euclid_vis, beta=beta)
 
@@ -159,20 +158,22 @@ rng = galsim.BaseDeviate(None)
 def get_data(gal, gal_image, psf_image):
     shear_est = 'KSB' #'REGAUSS' for e (default) or 'KSB' for g
     res = galsim.hsm.EstimateShear(gal_image, psf_image, shear_est=shear_est, strict=True)
+    mag = gal.calculateMagnitude(filters['r'].withZeropoint(28.13))
     if res.error_message == "":
         if shear_est != 'KSB':
-            return [gal.SED.redshift, res.moments_sigma, res.corrected_e1, res.corrected_e2] #, res.observed_shape.e1, res.observed_shape.e2]
+            return [gal.SED.redshift, res.moments_sigma, res.corrected_e1, res.corrected_e2, mag] #, res.observed_shape.e1, res.observed_shape.e2]
         else:
-            return [gal.SED.redshift, res.moments_sigma, res.corrected_g1, res.corrected_g2] #, res.observed_shape.e1, res.observed_shape.e2]
+            return [gal.SED.redshift, res.moments_sigma, res.corrected_g1, res.corrected_g2, mag] #, res.observed_shape.e1, res.observed_shape.e2]
     else:
-        return [gal.SED.redshift, np.nan, np.nan, np.nan]
+        return [gal.SED.redshift, np.nan, np.nan, np.nan, mag]
     # return [gal.SED.redshift, res.moments_sigma, res.observed_shape.e1, res.observed_shape.e2] #this is wrong!
 
 
 # Generation function
-def Gal_generator_noisy_pix_same(cosmos_cat, training_or_test, used_idx=None, max_try=3):
+def cosmos_galaxy_generator(cosmos_cat_filename, training_or_test, used_idx=None, max_try=3):
     counter = 0
     np.random.seed() # important for multiprocessing !
+    cosmos_cat = galsim.COSMOSCatalog(file_name=cosmos_cat_filename)
 
     while counter < max_try:
         try:

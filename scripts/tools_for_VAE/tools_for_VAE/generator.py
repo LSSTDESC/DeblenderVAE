@@ -19,7 +19,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, trainval_or_test, do_norm, list_of_weights_e, shifts):
+    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, trainval_or_test, do_norm, list_of_weights_e):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -63,7 +63,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
 
         self.produced_samples = 0
         self.list_of_weights_e = list_of_weights_e
-        self.shifts = shifts
+        #self.shifts = shifts
 
     def __len__(self):
         """
@@ -121,13 +121,13 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.y = np.transpose(self.y, axes = (0,2,3,1))
         
         if self.trainval_or_test == 'training' or self.trainval_or_test == 'validation':
-            return self.x, self.y
+            return self.x, self.y , indices
 
         elif self.trainval_or_test == 'test':
             # indicesadius = self.scale_radius[indices]
             # self.SNR_out = self.SNR[indices]
             data = pd.read_csv(sample_filename.replace('images.npy','data.csv'))
-            if self.shifts !=None:
-                return self.x, self.y, data.loc[indices], self.shifts[indices], indices
-            else:
-                return self.x, self.y, data.loc[indices], indices
+            #if self.shifts != None:
+            #   return self.x, self.y, data.loc[indices], self.shifts[indices], indices
+            #else:
+            return self.x, self.y, data.loc[indices], indices

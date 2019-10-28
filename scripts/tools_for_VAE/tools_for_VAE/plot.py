@@ -13,10 +13,10 @@ def plot_rgb(gal, bands=[5,6,7], ax=None, band_first=True, zoom=1.5, shifts=None
         tr = [0,1,2]
     
     imsize = float(gal.shape[1]) / 2.
-    ax.imshow(np.clip(gal[:,:,:].transpose(tr)[:,:,bands], a_min=0.0, a_max=None)/np.max(gal[:,:,:]), extent=(-imsize,imsize,-imsize,imsize), origin='lower left')#0., 1. 
+    ax.imshow(np.clip(gal[:,:,:].transpose(tr)[:,:,bands], a_min=0.0, a_max=1.), extent=(-imsize,imsize,-imsize,imsize), origin='lower left')#0., 1. 
     if shifts is not None:
         for (x,y) in shifts:
-            ax.scatter(-x, -y,  marker='+', c='r')
+            ax.scatter(x, y,  marker='+', c='r')
     ax.scatter(0., 0., marker='+', c='b')
     ax.set_xlim(-imsize/zoom,imsize/zoom)
     ax.set_ylim(-imsize/zoom,imsize/zoom)
@@ -51,8 +51,8 @@ def plot_rgb_lsst(ugrizy_img, stamp_size, ax=None):
     ugrizy_img = ugrizy_img[:,:,:]
     RGB_img[:,:,0] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,1]
     RGB_img[:,:,1] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,2]
-    RGB_img[:,:,2] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,4]
-    ax.imshow(np.clip(RGB_img[:,:,[2,1,0]], a_min=0.0, a_max=None) / max_img, origin='lower left')
+    RGB_img[:,:,2] = ugrizy_img[0+16*coeff:64-16*coeff,0+16*coeff:64-16*coeff,3]
+    ax.imshow(np.clip(RGB_img[:,:,[0,1,2]], a_min=0.0, a_max=None) / max_img, origin='lower left')
 
 # plot function for RGB image with the 10 LSST+Euclid bandpass filters
 def plot_rgb_lsst_euclid(ugrizy_img, stamp_size, ax=None):
@@ -60,7 +60,7 @@ def plot_rgb_lsst_euclid(ugrizy_img, stamp_size, ax=None):
     if ax is None:
         _, ax = plt.subplots(1,1)
     max_img = np.max(ugrizy_img[:,:,4:])
-    
+
     coeff = int(len(ugrizy_img[0])/stamp_size) - 1
 
     ugrizy_img = ugrizy_img[:,:,:]
@@ -140,7 +140,7 @@ def add_images_to_plot(p, df, axes, images, y_height, nb_of_images = 3):
         axes.add_artist(ab)
         axes.text(df[p][idx[i]]-0.07, y_lim - np.abs(y_height/1.5), 'blend rate = '+str(np.round(df[p][idx[i]], 2)), fontsize =14, color='r')
 
-def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = False, xlim= None, 
+def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, x_log_scale = False, y_log_scale = False, variance = False, xlim= None, 
                        ylim = None, add_images = False, y_height = None, parameter = None, images= None, df = None):
     """
     Plot the variable(s) v as function of the parameter p.
@@ -158,11 +158,80 @@ def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = F
         'weight' : 'normal',
         'size'   : 22}
     matplotlib.rc('font', **font)
-    fig, axes = plt.subplots(1, figsize=(16,8))
+    fig, axes = plt.subplots(2, figsize=(16,14), sharex = True)
+    fig.subplots_adjust(right=1, left=0,hspace=0,wspace=0.1)
+    
+    x = np.linspace(np.min(p[0]), np.max(p[0]), len(bins)-1)
+    mid = (bins[1:]+bins[:-1])*0.5
+       
+    axes[0].hist(p[0], bins = bins, alpha = 0.4)
+    axes[0].set_title('Distribution of '+x_label)
+    axes[0].set_yticklabels([])
+    axes[0].set_xticklabels([])
+    
+    if add_images:
+        add_images_to_plot(parameter, df, axes, images, y_height)
+
+    mean = []
+    var = []
+    for i in range (len(p)):
+        p_is_nan = np.where(np.isnan(p[i]))[0]
+        v[i] = np.delete(v[i], p_is_nan)
+        p[i] = np.delete(np.array(p[i]), p_is_nan)
+
+        mean.append(mean_var(p[i],v[i], bins = np.log10(bins))[0])
+        var.append(mean_var(p[i],v[i], bins = np.log10(bins))[1])
+
+        axes[1].plot(mid,mean[i], label = v_labels[i])
+        if variance == True:
+            axes[1].fill_between(mid, mean[i] - 1*var[i]**0.5, mean[i] + 1*var[i]**0.5, alpha=0.5)
+            #print('Warning: variance is augmented 10 times')
+        
+    axes[1].plot(np.arange(0,1000), np.zeros(1000))
+    if xlim != None:
+        axes[1].set_xlim(xlim)
+    else: 
+        axes[1].set_xlim(np.min(p[0]), np.max(p[0]))
+    if ylim != None:
+        axes[1].set_ylim(ylim)
+    else:
+        axes[1].set_ylim(np.min(v[0]), np.max(v[0]))
+    if x_log_scale:
+        axes[0].set_xscale('log')
+        axes[1].set_xscale('log')
+    if y_log_scale:
+        axes[1].set_yscale('log')
+    axes[1].set_xlabel(x_label)
+    axes[1].set_ylabel(y_label)
+    axes[1].legend(loc = "upper right")
+
+    return axes
+
+
+def v_as_function_of_p_2(v, p, v_labels, x_label, y_label, bins = 50, x_log_scale = False, y_log_scale = False, variance = False, xlim= None, 
+                       ylim = None, add_images = False, y_height = None, parameter = None, images= None, df = None):
+    """
+    Plot the variable(s) v as function of the parameter p.
+
+    Parameters:
+    ----------
+    v: variable(s) to plot. Insert it as a list of numpy array.
+    p: parameter to use. Insert it as a list of numpy array.
+    v_labels: label for each variable
+    x_label: label for the parameter used
+    y_label: label for the variable used
+    """
+    
+    font = {'family' : 'normal',
+        'weight' : 'normal',
+        'size'   : 22}
+    matplotlib.rc('font', **font)
+    fig, axes = plt.subplots(1, figsize=(16,8), sharex = True)
+    fig.subplots_adjust(right=1, left=0,hspace=0,wspace=0.1)
     
     x = np.linspace(np.min(p[0]), np.max(p[0]), bins)
     mid = (x[0:]+x[:])*0.5
-       
+           
     if add_images:
         add_images_to_plot(parameter, df, axes, images, y_height)
 
@@ -178,8 +247,8 @@ def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = F
 
         axes.plot(mid,mean[i], label = v_labels[i])
         if variance == True:
-            axes.fill_between(mid, mean[i] - 10*var[i]**0.5, mean[i] + 10*var[i]**0.5, alpha=0.5)
-            print('Warning: variance is augmented 10 times')
+            axes.fill_between(mid, mean[i] - 1*var[i]**0.5, mean[i] + 1*var[i]**0.5, alpha=0.5)
+            #print('Warning: variance is augmented 10 times')
         
     axes.plot(np.arange(0,1000), np.zeros(1000))
     if xlim != None:
@@ -190,9 +259,14 @@ def v_as_function_of_p(v, p, v_labels, x_label, y_label, bins = 50, variance = F
         axes.set_ylim(ylim)
     else:
         axes.set_ylim(np.min(v[0]), np.max(v[0]))
+    if x_log_scale:
+        axes.set_xscale('log')
+    if y_log_scale:
+        axes.set_yscale('log')
     axes.set_xlabel(x_label)
     axes.set_ylabel(y_label)
     axes.legend(loc = "upper right")
+
     return axes
 
 # To plot corner plot of latente space

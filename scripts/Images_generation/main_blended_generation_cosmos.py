@@ -27,9 +27,9 @@ N_per_file = 10000 #int(sys.argv[3])
 assert training_or_test in ['training', 'validation', 'test']
 
 # where to save images and data
-save_dir = '/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/test/' #+ training_or_test
+save_dir = '/sps/lsst/users/barcelin/data/blended_images/' + training_or_test
 # what to call those files
-root = 'galaxies_blended_20191004_test_01'
+root = 'galaxies_blended_20191022_'
 
 # Loading the COSMOS catalog
 cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lsst/users/barcelin/COSMOS_25.2_training_sample') #dir=os.path.join(galsim.meta_data.share_dir,'COSMOS_25.2_training_sample'))#
@@ -42,7 +42,7 @@ else:
 nmax_blend = 4 # total number of galaxies per image
 
 # keys for data objects
-keys = ['nb_blended_gal', 'SNR', 'SNR_peak', 'redshift', 'moment_sigma', 'e1', 'e2', 'mag', 'mag_ir', 'closest_x', 'closest_y', 'closest_redshift', 'closest_moment_sigma', 'closest_e1', 'closest_e2', 'closest_mag','closest_mag_ir', 'blendedness_total_lsst', 'blendedness_total_euclid', 'blendedness_closest_lsst', 'blendedness_closest_euclid']
+keys = ['nb_blended_gal', 'SNR', 'SNR_peak', 'redshift', 'moment_sigma', 'e1', 'e2', 'mag', 'mag_ir', 'closest_x', 'closest_y', 'closest_redshift', 'closest_moment_sigma', 'closest_e1', 'closest_e2', 'closest_mag','closest_mag_ir', 'blendedness_total_lsst', 'blendedness_aperture_lsst', 'blendedness_total_euclid', 'blendedness_closest_lsst', 'blendedness_closest_euclid']
 
 for icat in trange(N_files):
     # Run params
@@ -70,4 +70,4 @@ for icat in trange(N_files):
     # If the created sample is a test sample, also save the shifts and differents data
     if training_or_test == 'test':
         df.to_csv(os.path.join(save_dir, root_i+'_data.csv'), index=False)
-        np.save(os.path.join(save_dir, root_i+'_shifts.npy'), shifts)
+        np.save(os.path.join(save_dir, root_i+'_shifts.npy'), np.array(shifts))

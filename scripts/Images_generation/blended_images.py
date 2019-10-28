@@ -48,8 +48,8 @@ def shift_gal(gal, gal_to_add, method='uniform'):
     """
     scale_radius = get_scale_radius(gal)
     if method == 'uniform':
-        shift_x = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
-        shift_y = np.random.uniform(-1,1)#(-2.5,2.5)  #(-1,1)
+        shift_x = np.random.uniform(-1,1)
+        shift_y = np.random.uniform(-1,1)
     elif method == 'lognorm_rad':
         sample_x = np.random.lognormal(mean=0.2*scale_radius,sigma=1*scale_radius,size=None)
         shift_x = np.random.choice((sample_x, -sample_x), 1)[0]
@@ -148,24 +148,28 @@ def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, m
                 if training_or_test == 'test' and filter_name == 'r':
                     # need psf to compute ellipticities
                     psf_image = PSF[i].drawImage(nx=max_stamp_size, ny=max_stamp_size, scale=pixel_scale[i])
-                    data['redshift'], data['moment_sigma'], data['e1'], data['e2'] = get_data(galaxies[0], images[0], psf_image)
-                    data['closest_redshift'], data['closest_moment_sigma'], data['closest_e1'], data['closest_e2'] = get_data(galaxies[idx_closest], images[idx_closest], psf_image)
+                    data['redshift'], data['moment_sigma'], data['e1'], data['e2'], data['mag']= get_data(galaxies[0], images[0], psf_image)
+                    data['closest_redshift'], data['closest_moment_sigma'], data['closest_e1'], data['closest_e2'], data['closest_mag'] = get_data(galaxies[idx_closest], images[idx_closest], psf_image)
                     #data['ellipticity_weights'] = 
                     
                     if nb_blended_gal > 1:
                         data['blendedness_total_lsst'] = utils.compute_blendedness_total(images[0], blend_img)
                         data['blendedness_closest_lsst'] = utils.compute_blendedness_single(images[0], images[idx_closest])
+                        data['blendedness_aperture_lsst'] = utils.compute_blendedness_aperture(images[0], blend_img, data['moment_sigma'])
                     else:
                         data['blendedness_total_lsst'] = np.nan
                         data['blendedness_closest_lsst'] = np.nan
+                        data['blendedness_aperture_lsst'] = np.nan
                 # get data for the test sample (Euclid stuff)
                 if training_or_test == 'test' and filter_name == 'V':
                     if nb_blended_gal > 1:
                         data['blendedness_total_euclid'] = utils.compute_blendedness_total(images[0], blend_img)
                         data['blendedness_closest_euclid'] = utils.compute_blendedness_single(images[0], images[idx_closest])
+                        #data['blendedness_aperture_euclid'] = utils.compute_blendedness_aperture(images[0], blend_img, data['moment_sigma'],4)
                     else:
                         data['blendedness_total_euclid'] = np.nan
                         data['blendedness_closest_euclid'] = np.nan
+                        #data['blendedness_aperture_euclid'] = np.nan
                 
                 # now add the central galaxy to the full scene
                 blend_img += images[0]
