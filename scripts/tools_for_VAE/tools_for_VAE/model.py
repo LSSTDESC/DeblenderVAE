@@ -18,7 +18,7 @@ from tensorflow.keras.layers import Conv2D, Input, Dense, Dropout, MaxPool2D, Fl
 
 
 #### Create encooder
-def build_encoder(latent_dim, hidden_dim, filters, kernels,nb_of_bands, conv_activation='softplus', dense_activation='softplus'):
+def build_encoder(latent_dim, hidden_dim, filters, kernels,nb_of_bands, conv_activation='softplus', dense_activation='softplus'):#'sofplus'
     """
     Return encoder as model
     latent_dim : dimension of the latent variable

@@ -156,62 +156,64 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
     flux_in = []#np.empty([N,batch_size,],dtype='float32')
     flux_out= []#np.empty([N,batch_size,], dtype='float32')
     for j in range(N):
+        #print(j)
         input_vae = generator.__getitem__(2)
         output_vae = deblender.predict(input_vae[0], batch_size = batch_size)
         output_vae = utils.denorm(output_vae, bands, channel_last = True)
         input_noiseless = utils.denorm(input_vae[1], bands, channel_last = True)
 
         for i in range (len(input_vae[0])):
-                try: 
-                    gal_image = galsim.Image(input_noiseless[i][:,:,r_band])
-                    gal_image.scale = pix_scale
+            #print(i)
+            try: 
+                gal_image = galsim.Image(input_noiseless[i][:,:,r_band])
+                gal_image.scale = pix_scale
 
-                    shear_est = 'KSB'
-                    res = galsim.hsm.EstimateShear(gal_image, psf_image, shear_est=shear_est, strict=True)
-                    if shear_est != 'KSB':
-                        e_in = [res.corrected_e1, res.corrected_e2] 
-                    else:
-                        e_in = [res.corrected_g1, res.corrected_g2]
-                    #e_in = [res.corrected_e1, res.corrected_e2]
-                    e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
+                shear_est = 'KSB'
+                res = galsim.hsm.EstimateShear(gal_image, psf_image, shear_est=shear_est, strict=True)
+                if shear_est != 'KSB':
+                    e_in = [res.corrected_e1, res.corrected_e2] 
+                else:
+                    e_in = [res.corrected_g1, res.corrected_g2]
+                #e_in = [res.corrected_e1, res.corrected_e2]
+                e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
 
-                    gal_image_out = galsim.Image(output_vae[i][:,:,r_band])
-                    gal_image_out.scale = pix_scale
+                gal_image_out = galsim.Image(output_vae[i][:,:,r_band])
+                gal_image_out.scale = pix_scale
 
-                    res = galsim.hsm.EstimateShear(gal_image_out, psf_image, shear_est=shear_est, strict=True)
-                    if shear_est != 'KSB':
-                        e_out = [res.corrected_e1, res.corrected_e2] 
-                    else:
-                        e_out = [res.corrected_g1, res.corrected_g2]
-                    #e_out = [res.corrected_e1, res.corrected_e2]
-                    e_beta_out = [res.observed_shape.e, res.observed_shape.beta.rad]
+                res = galsim.hsm.EstimateShear(gal_image_out, psf_image, shear_est=shear_est, strict=True)
+                if shear_est != 'KSB':
+                    e_out = [res.corrected_e1, res.corrected_e2] 
+                else:
+                    e_out = [res.corrected_g1, res.corrected_g2]
+                #e_out = [res.corrected_e1, res.corrected_e2]
+                e_beta_out = [res.observed_shape.e, res.observed_shape.beta.rad]
 
-                    ellipticities.append([e_in, e_out])
-                    e.append([e_beta_in, e_beta_out])
+                ellipticities.append([e_in, e_out])
+                e.append([e_beta_in, e_beta_out])
 
-                        
-                    # Measurement of fluxes
-                    #mask = plot.createCircularMask(im_size,im_size,None,5)
-                    #masked_img_in_simple = input_noiseless[i][:,:,r_band].copy()
-                    #masked_img_in_simple[~mask] = 0  
+                    
+                # Measurement of fluxes
+                #mask = plot.createCircularMask(im_size,im_size,None,5)
+                #masked_img_in_simple = input_noiseless[i][:,:,r_band].copy()
+                #masked_img_in_simple[~mask] = 0  
 
-                    #masked_img_out_simple = output_vae[i][:,:,r_band].copy()
-                    #masked_img_out_simple[~mask] = 0
+                #masked_img_out_simple = output_vae[i][:,:,r_band].copy()
+                #masked_img_out_simple[~mask] = 0
 
-                    # Calculate the flux
-                    #flux_in[j,i] = np.sum(input_noiseless[i][:,:,r_band])
-                    flux_in.append(np.sum(input_noiseless[i][:,:,r_band]))
-                    #flux_out[j,i] = np.sum(output_vae[i][:,:,r_band])
-                    flux_out.append(np.sum(output_vae[i][:,:,r_band]))
+                # Calculate the flux
+                #flux_in[j,i] = np.sum(input_noiseless[i][:,:,r_band])
+                flux_in.append(np.sum(input_noiseless[i][:,:,r_band]))
+                #flux_out[j,i] = np.sum(output_vae[i][:,:,r_band])
+                flux_out.append(np.sum(output_vae[i][:,:,r_band]))
 
-                except :
-                    print('error for galaxy '+str(j*100+i))
-                    #ellipticities.append([np.nan, np.nan])
-                    #e.append([np.nan, np.nan])
-                    #flux_in.append(np.nan)
-                    #flux_out.append(np.nan)
-                    pass
-                continue
+            except :
+                print('error for galaxy '+str(j*100+i))
+                #ellipticities.append([np.nan, np.nan])
+                #e.append([np.nan, np.nan])
+                #flux_in.append(np.nan)
+                #flux_out.append(np.nan)
+                pass
+            continue
         
         indices.append(input_vae[3])
 

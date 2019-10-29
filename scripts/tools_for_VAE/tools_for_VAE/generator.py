@@ -94,9 +94,9 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         else:
             self.weights_e = np.load(self.list_of_weights_e[index])[:,0]
             indices = np.random.choice(len(sample), size=self.batch_size, replace=False, p = self.weights_e/np.sum(self.weights_e))
-
+            print(indices)
         self.produced_samples += len(indices)
-
+        
         self.x = sample[indices,1][:,self.bands]
         self.y = sample[indices,0][:,self.bands]
         
@@ -121,8 +121,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.y = np.transpose(self.y, axes = (0,2,3,1))
         
         if self.trainval_or_test == 'training' or self.trainval_or_test == 'validation':
-            return self.x, self.y , indices
-
+            return self.x, self.y
         elif self.trainval_or_test == 'test':
             # indicesadius = self.scale_radius[indices]
             # self.SNR_out = self.SNR[indices]

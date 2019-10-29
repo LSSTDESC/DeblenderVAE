@@ -106,13 +106,11 @@ list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/indep
 
 training_generator = generator.BatchGenerator(bands, list_of_samples, total_sample_size=None,
                                     batch_size=batch_size, size_of_lists=None,
-                                    scale_radius=None, SNR=None,
                                     trainval_or_test='training',
                                     noisy=True, do_norm=False)#180000
 
 validation_generator = generator.BatchGenerator(bands, list_of_samples_val, total_sample_size=None,
                                     batch_size=batch_size, size_of_lists=None,
-                                    scale_radius=None, SNR=None,
                                     trainval_or_test='validation',
                                     noisy=True, do_norm=False)#180000
 

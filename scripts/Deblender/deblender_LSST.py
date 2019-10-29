@@ -65,7 +65,7 @@ decoder.trainable = False
 alpha = K.variable(1e-2)
 
 def deblender_loss(x, x_decoded_mean):
-    xent_loss = K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))#original_dim*
+    xent_loss = K.mean(K.sum(K.binary_crossentropy(x, x_decoded_mean), axis=[1,2,3]))
     kl_loss = K.get_value(alpha) * Dkl
     return xent_loss + K.mean(kl_loss)
 
@@ -73,7 +73,7 @@ def deblender_loss(x, x_decoded_mean):
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
 print(deblender.summary())
 ######## Fix the maximum learning rate in adam
-K.set_value(deblender.optimizer.lr, 0.00001)
+K.set_value(deblender.optimizer.lr, 0.0001)
 
 #######
 # Callback

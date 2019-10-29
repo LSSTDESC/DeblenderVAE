@@ -21,7 +21,7 @@ from tools_for_VAE import utils
 # The script is used as, eg,
 # # python main_blended_generation_cosmos.py training 10 1000
 # to produce 10 files in the training sample with 1000 images each.
-training_or_test = 'test' #str(sys.argv[1])
+training_or_test = 'training' #str(sys.argv[1])
 N_files = 1 #int(sys.argv[2])
 N_per_file = 10000 #int(sys.argv[3])
 assert training_or_test in ['training', 'validation', 'test']
@@ -65,7 +65,7 @@ for icat in trange(N_files):
         galaxies.append((gal_noiseless, blend_noisy))
 
     # Save noisy blended images and denoised single central galaxy images
-    np.save(os.path.join(save_dir, root_i+'_4_images.npy'), galaxies)
+    np.save(os.path.join(save_dir, root_i+'_9_images.npy'), galaxies)
 
     # If the created sample is a test sample, also save the shifts and differents data
     if training_or_test == 'test':

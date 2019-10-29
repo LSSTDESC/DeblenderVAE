@@ -48,7 +48,7 @@ vae, vae_utils, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov
 
 ######## Comment or not depending on what's necessary
 # Load weights
-vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, 6, folder=True) 
+vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, len(bands), folder=True) 
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/'))
 
 print(vae.summary())
