@@ -19,7 +19,7 @@ from tools_for_VAE import utils
 # The script is used as, eg,
 # # python main_single_generation_cosmos.py training 10 1000
 # to produce 10 files in the training sample with 1000 images each.
-training_or_test = 'training' #str(sys.argv[1])
+training_or_test = 'validation' #str(sys.argv[1])
 N_files = 1 #int(sys.argv[2])
 N_per_file = 10000 #int(sys.argv[3])
 assert training_or_test in ['training', 'validation', 'test']
@@ -57,7 +57,7 @@ for icat in trange(N_files):
         galaxies.append((gal_noiseless,gal_noisy))
 
     # Save noisy blended images and denoised single central galaxy images
-    np.save('/sps/lsst/users/barcelin/data/single_galaxies/training/galaxies_isolated_20191022_10_images.npy', galaxies)#os.path.join(save_dir, root_i+
+    np.save('/sps/lsst/users/barcelin/data/single_galaxies/training/galaxies_isolated_20191022_0_images.npy', galaxies)#os.path.join(save_dir, root_i+
     # If the created sample is a test sample, also save the shifts and differents data
     if training_or_test == 'test':
         df.to_csv(os.path.join(save_dir, root_i+'_data.csv'), index=False)

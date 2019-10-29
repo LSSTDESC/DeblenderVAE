@@ -155,7 +155,7 @@ def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, m
                     if nb_blended_gal > 1:
                         data['blendedness_total_lsst'] = utils.compute_blendedness_total(images[0], blend_img)
                         data['blendedness_closest_lsst'] = utils.compute_blendedness_single(images[0], images[idx_closest])
-                        data['blendedness_aperture_lsst'] = utils.compute_blendedness_aperture(images[0], blend_img, data['moment_sigma'])
+                        data['blendedness_aperture_lsst'] = utils.compute_blendedness_aperture(images[0], blend_img, data['moment_sigma']/pixel_scale_lsst)
                     else:
                         data['blendedness_total_lsst'] = np.nan
                         data['blendedness_closest_lsst'] = np.nan

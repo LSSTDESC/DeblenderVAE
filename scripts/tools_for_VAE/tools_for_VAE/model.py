@@ -47,7 +47,7 @@ def build_encoder(latent_dim, hidden_dim, filters, kernels,nb_of_bands, conv_act
 
 
 #### Create encooder
-def build_decoder(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation='softplus', dense_activation='softplus'):
+def build_decoder(input_shape, latent_dim, hidden_dim, filters, kernels, conv_activation=None, dense_activation=None):
     """
     Return decoder as model
     input_shape: shape of the input data

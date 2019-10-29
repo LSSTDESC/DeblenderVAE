@@ -118,7 +118,7 @@ def compute_blendedness_aperture(img_central, img_others, radius):
     mask = plot.createCircularMask(h, w, center=None, radius=radius)
     flux_central = np.sum(ic*mask.astype(float))
     flux_others = np.sum(io*mask.astype(float))
-    return flux_central / (flux_central+flux_others)
+    return flux_others / (flux_central+flux_others)
 
 ############ DELTA_R and DELTA_MAG COMPUTATION FOR MOST BLENDED GALAXY WITH THE CENTERED ONE ##########
 def compute_deltas_for_most_blended(shift,mag,blendedness):#(shift_path, mag_path):
