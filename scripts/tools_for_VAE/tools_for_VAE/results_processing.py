@@ -52,6 +52,7 @@ def VAE_processing(vae, generator, bands, r_band, im_size, N, batch_size, psf, p
     #flux_out= np.zeros((N,batch_size))#([N,batch_size,], dtype='float32')
     flux_in = []
     flux_out = []
+    indices = []
 
     for j in range(N):
         input_vae = generator.__getitem__(2)
@@ -109,19 +110,22 @@ def VAE_processing(vae, generator, bands, r_band, im_size, N, batch_size, psf, p
             #SNR.append(input_vae[3][i])
     
             except :
-                print('erreur')
+                print('error for galaxy '+str(j*100+i))
                 pass
             continue
 
+        indices.append(input_vae[3])
+
     ellipticities = np.array(ellipticities)
     e_beta = np.array(e)
-    scale_radius = np.array(scale_radius)
-    SNR = np.array(SNR)
+    indices = np.concatenate(indices)
+    #scale_radius = np.array(scale_radius)
+    #SNR = np.array(SNR)
 
     flux_in = np.array(flux_in)#np.concatenate(flux_in)
     flux_out = np.array(flux_out)#np.concatenate(flux_out)
 
-    return ellipticities, e_beta, flux_in, flux_out, scale_radius, SNR 
+    return ellipticities, e_beta, flux_in, flux_out, indices#, scale_radius, SNR 
 
 
 

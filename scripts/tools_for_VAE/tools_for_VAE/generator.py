@@ -19,7 +19,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, trainval_or_test, do_norm, list_of_weights_e):
+    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, trainval_or_test, do_norm,denorm, list_of_weights_e):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -45,6 +45,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         # self.size = 100
         self.epoch = 0
         self.do_norm = do_norm
+        self.denorm = denorm
 
         # self.scale_radius = scale_radius
         # self.SNR = SNR
@@ -96,7 +97,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             indices = np.random.choice(len(sample), size=self.batch_size, replace=False, p = self.weights_e/np.sum(self.weights_e))
             print(indices)
         self.produced_samples += len(indices)
-        
+
         self.x = sample[indices,1][:,self.bands]
         self.y = sample[indices,0][:,self.bands]
         
@@ -104,6 +105,9 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         if self.do_norm:
             self.x = utils.norm(self.x, self.bands)
             self.y = utils.norm(self.y, self.bands)
+        if self.denorm:
+            self.x = utils.denorm(self.x, self.bands)
+            self.y = utils.denorm(self.y, self.bands)
 
         #  flip : flipping the image array
         rand = np.random.randint(4)

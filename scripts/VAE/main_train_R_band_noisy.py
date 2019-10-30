@@ -31,14 +31,14 @@ from tools_for_VAE.callbacks import changeAlpha
 ######## Set some parameters
 batch_size = 100
 latent_dim = 32
-epochs = 2
+epochs = 2000
 bands = [6]
 
 ######## Import data for callback (Only if VAEHistory is used)
-x = np.load('/sps/lsst/users/barcelin/data/single_galaxies/training/galaxies_isolated_20191022_9_images.npy', mmap_mode = 'c')
-x_val = utils.norm(np.expand_dims(x[:500,1,6], axis = 1), bands).transpose([0,2,3,1])
+x_val= np.load('/sps/lsst/users/barcelin/data/single_galaxies/validation/galaxies_isolated_20191022_0_images.npy', mmap_mode = 'c')[:500,:,bands].transpose([0,1,3,4,2])
+#x_val = utils.norm(np.expand_dims(x[:500,1,6], axis = 1), bands).transpose([0,2,3,1])
 
-path_output = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v21/bis_bis/mse/'
+path_output = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v26/mse/'
 
 
 ######## Load encoder, decoder
@@ -67,7 +67,7 @@ def vae_loss(x, x_decoded_mean):
 vae.compile('adam', loss=vae_loss, metrics=['mse'])
 
 ######## Fix the maximum learning rate in adam
-K.set_value(vae.optimizer.lr, 0.0001)
+K.set_value(vae.optimizer.lr, 0.000001)
 
 #######
 # Callback
@@ -88,37 +88,28 @@ checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'/l
 callbacks = [vae_hist, checkpointer_mse,checkpointer_loss]#,checkpointer_loss, tbCallBack]#, alphaChanger earlystop,vae_hist, checkpointer,  
  
 ######## List of data samples
-# list_of_samples=['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_1_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_2_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_3_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_4_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_5_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_6_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_7_v5_test.npy'#,
-#                 ]
 images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/'
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
-
-
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
-#['/sps/lsst/users/barcelin/data/single_galaxies/training/galaxies_isolated_20191022_9_images.npy']
-
-
 
 ######## Define the generators
 training_generator = generator.BatchGenerator(bands, list_of_samples,total_sample_size=None, 
                                              batch_size= batch_size, 
                                              trainval_or_test = 'training', 
-                                             do_norm = False, list_of_weights_e = None)
+                                             do_norm = False,
+                                             denorm = False,
+                                             list_of_weights_e = None)
 
 validation_generator = generator.BatchGenerator(bands, list_of_samples_val,total_sample_size=None, 
                                              batch_size= batch_size, 
                                              trainval_or_test = 'validation', 
-                                             do_norm = False, list_of_weights_e = None)
+                                             do_norm = False,
+                                             denorm = False,
+                                             list_of_weights_e = None)
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=18,#2800
+                  steps_per_epoch=128,#2800
                   verbose=1,
                   shuffle = True,
                   validation_data=validation_generator,

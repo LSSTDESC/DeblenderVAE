@@ -14,6 +14,85 @@ import tools_for_VAE
 from tools_for_VAE import utils
 
 ############# SIZE OF STAMPS ################
+# The stamp size of NIR instrument is taken equal to the one of LSST to have a nb of pixels which is 
+# an integer and in the same time the max_stamp_size a power of 2 (works better for FFT)
+# The physical size in NIR instrument is then larger than in the other stamps but the information needed
+# for the VAE and deblender is contained in the stamp.
+pixel_scale_lsst = 0.2 # arcseconds # LSST Science book
+pixel_scale_euclid_nir = 0.3 # arcseconds # Euclid Science book
+pixel_scale_euclid_vis = 0.1 # arcseconds # Euclid Science book
+pixel_scale = [pixel_scale_euclid_nir]*3 + [pixel_scale_euclid_vis] + [pixel_scale_lsst]*6
+
+max_stamp_size = 64 #np.max((lsst_stamp_size,nir_stamp_size,vis_stamp_size))
+
+#################### FILTERS ###################
+filters = {}
+euclid_filters_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data/EUCLID_Filters/')
+lsst_filters_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data/share_galsim/bandpasses')
+
+# read in the Euclid NIR filters
+filter_names_euclid_nir = 'HJY'
+filter_names_euclid_vis = 'V'
+
+for filter_name in filter_names_euclid_nir:
+    filter_filename = os.path.join(euclid_filters_dir, 'Euclid_NISP0.{0}.dat'.format(filter_name))
+    filters[filter_name] = galsim.Bandpass(filter_filename, wave_type='Angstrom')
+    filters[filter_name] = filters[filter_name].thin(rel_err=1e-4)
+
+filter_filename = os.path.join(euclid_filters_dir, 'Euclid_VIS.dat')
+filters['V'] = galsim.Bandpass(filter_filename, wave_type='Angstrom')
+filters['V'] = filters[filter_name].thin(rel_err=1e-4)
+
+# read in the LSST filters
+filter_names_lsst = 'ugrizy'
+for filter_name in filter_names_lsst:
+    filter_filename = os.path.join(lsst_filters_dir, 'LSST_{0}.dat'.format(filter_name))
+    filters[filter_name] = galsim.Bandpass(filter_filename, wave_type='nm')
+    filters[filter_name] = filters[filter_name].thin(rel_err=1e-4)
+
+filter_names_all = 'HJYVugrizy'
+
+#################### NOISE ###################
+# Poissonian noise according to sky_level
+N_exposures_lsst = 100
+N_exposures_euclid = 1
+N_exposures = [N_exposures_euclid]*4 + [N_exposures_lsst]*6
+
+sky_level_lsst_u = (2.512 **(26.50-22.95)) * N_exposures_lsst # in e-.s-1.arcsec_2
+sky_level_lsst_g = (2.512 **(28.30-22.24)) * N_exposures_lsst # in e-.s-1.arcsec_2
+sky_level_lsst_r = (2.512 **(28.13-21.20)) * N_exposures_lsst # in e-.s-1.arcsec_2
+sky_level_lsst_i = (2.512 **(27.79-20.47)) * N_exposures_lsst # in e-.s-1.arcsec_2
+sky_level_lsst_z = (2.512 **(27.40-19.60)) * N_exposures_lsst # in e-.s-1.arcsec_2
+sky_level_lsst_y = (2.512 **(26.58-18.63)) * N_exposures_lsst # in e-.s-1.arcsec_2
+
+sky_level_pixel_lsst = [sky_level_lsst_u* 15 * pixel_scale_lsst**2,
+                        sky_level_lsst_g* 15 * pixel_scale_lsst**2,
+                        sky_level_lsst_r* 15 * pixel_scale_lsst**2,
+                        sky_level_lsst_i* 15 * pixel_scale_lsst**2,
+                        sky_level_lsst_z* 15 * pixel_scale_lsst**2,
+                        sky_level_lsst_y* 15 * pixel_scale_lsst**2]# in e-/pixel/15s
+
+# average background level for Euclid observations : 22.35 mAB.arcsec-2 in VIS (Consortium book) ##
+# For NIR bands, a coefficient is applied : it is calculated by comparing magnitudes AB of one point in the
+# sky to the magnitude AB in VIS on this point. The choosen point is (-30;30) in galactic coordinates 
+# (EUCLID and LSST overlap on this point).
+coeff_noise_y = (22.57/21.95)
+coeff_noise_j = (22.53/21.95)
+coeff_noise_h = (21.90/21.95)
+
+sky_level_nir_Y = (2.512 **(24.25-22.35*coeff_noise_y)) * N_exposures_euclid # in e-.s-1.arcsec_2
+sky_level_nir_J = (2.512 **(24.29-22.35*coeff_noise_j)) * N_exposures_euclid # in e-.s-1.arcsec_2
+sky_level_nir_H = (2.512 **(24.92-22.35*coeff_noise_h)) * N_exposures_euclid # in e-.s-1.arcsec_2
+sky_level_vis = (2.512 **(25.58-22.35)) * N_exposures_euclid # in e-.s-1.arcsec_2
+sky_level_pixel_nir = [ sky_level_nir_Y * 1800. * pixel_scale_euclid_nir**2,
+                        sky_level_nir_J * 1800. * pixel_scale_euclid_nir**2,
+                        sky_level_nir_H * 1800. * pixel_scale_euclid_nir**2] # in e-/pixel/1800s
+sky_level_pixel_vis =   sky_level_vis   * 1800. * pixel_scale_euclid_vis**2 # in e-/pixel/1800s
+
+sky_level_pixel = sky_level_pixel_nir + [sky_level_pixel_vis] + sky_level_pixel_lsst
+
+
+############# SIZE OF STAMPS ################
 #################### PSF ###################
 ### If a varying PSF is needed, uncomment this part. ####
 ###--------------------------------------------------####
@@ -93,7 +172,7 @@ def get_data(gal, gal_image, psf_image):
 
 
 # Generation function
-def cosmos_galaxy_generator(cosmos_cat_filename, training_or_test, used_idx=None, max_try=3):
+def cosmos_galaxy_generator(cosmos_cat_filename, training_or_test, used_idx=None, max_try=5, mag_cut = 28.):
     counter = 0
     np.random.seed() # important for multiprocessing !
     cosmos_cat = galsim.COSMOSCatalog(file_name=cosmos_cat_filename)
@@ -108,7 +187,8 @@ def cosmos_galaxy_generator(cosmos_cat_filename, training_or_test, used_idx=None
             else:
                 idx = np.random.randint(cosmos_cat.nobject)
             gal = cosmos_cat.makeGalaxy(idx, gal_type='parametric', chromatic=True, noise_pad_size = 0)
-
+            if gal.calculateMagnitude(filters['r'].withZeropoint(28.13)) > mag_cut:
+                continue
             gal = gal.rotate(ud() * 360. * galsim.degrees)
             
             galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
