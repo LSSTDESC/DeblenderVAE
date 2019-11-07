@@ -18,7 +18,7 @@ from tensorflow.keras.layers import Conv2D, Input, Dense, Dropout, MaxPool2D, Fl
 
 
 #### Create encooder
-def build_encoder(latent_dim, hidden_dim, filters, kernels,nb_of_bands, conv_activation='softplus', dense_activation='softplus'):#'sofplus'
+def build_encoder(latent_dim, hidden_dim, filters, kernels,nb_of_bands, conv_activation=None, dense_activation=None):#'sofplus'
     """
     Return encoder as model
     latent_dim : dimension of the latent variable
@@ -31,8 +31,8 @@ def build_encoder(latent_dim, hidden_dim, filters, kernels,nb_of_bands, conv_act
     """
     input_layer = Input(shape=(64,64,nb_of_bands))
 
-    r = Reshape((64,64,nb_of_bands))(input_layer)
-    h = BatchNormalization()(r)
+    h = Reshape((64,64,nb_of_bands))(input_layer)
+    h = BatchNormalization()(h)
     for i in range(len(filters)):
         h = Conv2D(filters[i], (kernels[i],kernels[i]), activation=conv_activation, padding='same')(h)
         h = PReLU()(h)

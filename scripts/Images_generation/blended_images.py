@@ -67,7 +67,7 @@ def shift_gal(gal, gal_to_add, method='uniform'):
     return gal_to_add.shift((shift_x,shift_y)), (shift_x,shift_y)
 
 # Generation function
-def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, max_try=3):
+def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, max_try=3, mag_cut = 100.): 
     """
     Return numpy arrays: noiseless and noisy image of single galaxy and of blended galaxies
 
@@ -100,6 +100,11 @@ def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, m
                 else:
                     idx = np.random.randint(cosmos_cat.nobject)
                 gal = cosmos_cat.makeGalaxy(idx, gal_type='parametric', chromatic=True, noise_pad_size=0)
+                if gal.calculateMagnitude(filters['r'].withZeropoint(28.13)) > mag_cut:
+                    #print(gal.calculateMagnitude(filters['r'].withZeropoint(28.13)), mag_cut)
+                    return blend_generator(cosmos_cat, training_or_test, used_idx, nmax_blend, max_try, 28.)
+                    #raise RuntimeError
+                #print(gal.calculateMagnitude(filters['r'].withZeropoint(28.13)))
                 gal = gal.rotate(ud() * 360. * galsim.degrees)
                 galaxies.append(gal)
                 mag.append(gal.calculateMagnitude(filters['r'].withZeropoint(28.13)))
@@ -107,6 +112,7 @@ def blend_generator(cosmos_cat, training_or_test, used_idx=None, nmax_blend=4, m
 
             # Optionally, find the brightest and put it first in the list
             if center_brightest:
+                #print(len(mag))
                 _idx = np.argmin(mag)
                 galaxies.insert(0, galaxies.pop(_idx))
                 mag.insert(0, mag.pop(_idx))

@@ -70,23 +70,27 @@ def VAE_processing(vae, generator, bands, r_band, im_size, N, batch_size, psf, p
                 gal_image_out.scale = pix_scale
 
                 # Measurements of shapes
-                shear_est = 'REGAUSS'#'KSB'
+                shear_est = 'KSB'
                 
-                res = galsim.hsm.EstimateShear(gal_image, psf_image)#, shear_est=shear_est, strict=True)
+                res = galsim.hsm.EstimateShear(gal_image, psf_image, shear_est=shear_est, strict=True)
                 if shear_est != 'KSB':
-                    e_in = [res.corrected_e1, res.corrected_e2] 
+                    e_in = [res.corrected_e1, res.corrected_e2]
+                    e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
                 else:
                     e_in = [res.corrected_g1, res.corrected_g2]
+                    e_beta_in = [res.observed_shape.g, res.observed_shape.beta.rad]
                 #e_in = [res.corrected_e1, res.corrected_e2]
-                e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
+                #e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
 
-                res_out = galsim.hsm.EstimateShear(gal_image_out, psf_image)#, shear_est=shear_est, strict=True)
+                res_out = galsim.hsm.EstimateShear(gal_image_out, psf_image, shear_est=shear_est, strict=True)
                 if shear_est != 'KSB':
-                    e_out = [res_out.corrected_e1, res_out.corrected_e2] 
+                    e_out = [res_out.corrected_e1, res_out.corrected_e2]
+                    e_beta_out = [res_out.observed_shape.e, res_out.observed_shape.beta.rad]
                 else:
                     e_out = [res_out.corrected_g1, res_out.corrected_g2]
+                    e_beta_out = [res_out.observed_shape.g, res_out.observed_shape.beta.rad]
                 #e_out = [res_out.corrected_e1, res_out.corrected_e2]
-                e_beta_out = [res_out.observed_shape.e, res_out.observed_shape.beta.rad]
+                #e_beta_out = [res_out.observed_shape.e, res_out.observed_shape.beta.rad]
 
                 ellipticities.append([e_in, e_out])
                 e.append([e_beta_in, e_beta_out])
@@ -175,22 +179,26 @@ def deblender_processing(deblender, generator,bands,r_band,im_size, N, batch_siz
                 shear_est = 'KSB'
                 res = galsim.hsm.EstimateShear(gal_image, psf_image, shear_est=shear_est, strict=True)
                 if shear_est != 'KSB':
-                    e_in = [res.corrected_e1, res.corrected_e2] 
+                    e_in = [res.corrected_e1, res.corrected_e2]
+                    e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
                 else:
                     e_in = [res.corrected_g1, res.corrected_g2]
+                    e_beta_in = [res.observed_shape.g, res.observed_shape.beta.rad]
                 #e_in = [res.corrected_e1, res.corrected_e2]
-                e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
+                #e_beta_in = [res.observed_shape.e, res.observed_shape.beta.rad]
 
                 gal_image_out = galsim.Image(output_vae[i][:,:,r_band])
                 gal_image_out.scale = pix_scale
 
                 res = galsim.hsm.EstimateShear(gal_image_out, psf_image, shear_est=shear_est, strict=True)
                 if shear_est != 'KSB':
-                    e_out = [res.corrected_e1, res.corrected_e2] 
+                    e_out = [res.corrected_e1, res.corrected_e2]
+                    e_beta_out = [res.observed_shape.e, res.observed_shape.beta.rad]
                 else:
                     e_out = [res.corrected_g1, res.corrected_g2]
+                    e_beta_out = [res.observed_shape.g, res.observed_shape.beta.rad]
                 #e_out = [res.corrected_e1, res.corrected_e2]
-                e_beta_out = [res.observed_shape.e, res.observed_shape.beta.rad]
+                #e_beta_out = [res.observed_shape.e, res.observed_shape.beta.rad]
 
                 ellipticities.append([e_in, e_out])
                 e.append([e_beta_in, e_beta_out])

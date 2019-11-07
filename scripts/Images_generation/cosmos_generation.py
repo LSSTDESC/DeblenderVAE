@@ -172,7 +172,7 @@ def get_data(gal, gal_image, psf_image):
 
 
 # Generation function
-def cosmos_galaxy_generator(cosmos_cat_filename, training_or_test, used_idx=None, max_try=5, mag_cut = 28.):
+def cosmos_galaxy_generator(cosmos_cat_filename, training_or_test, used_idx=None, max_try=5, mag_cut = 100.):
     counter = 0
     np.random.seed() # important for multiprocessing !
     cosmos_cat = galsim.COSMOSCatalog(file_name=cosmos_cat_filename)

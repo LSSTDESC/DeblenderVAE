@@ -27,9 +27,9 @@ N_per_file = 10000 #int(sys.argv[3])
 assert training_or_test in ['training', 'validation', 'test']
 
 # where to save images and data
-save_dir = '/sps/lsst/users/barcelin/data/blended_images/' + training_or_test
+save_dir = '/sps/lsst/users/barcelin/data/blended_images/28/' + training_or_test
 # what to call those files
-root = 'galaxies_blended_20191022_'
+root = 'galaxies_blended_20191024_'
 
 # Loading the COSMOS catalog
 cosmos_cat = galsim.COSMOSCatalog('real_galaxy_catalog_25.2.fits', dir='/sps/lsst/users/barcelin/COSMOS_25.2_training_sample') #dir=os.path.join(galsim.meta_data.share_dir,'COSMOS_25.2_training_sample'))#
@@ -53,7 +53,7 @@ for icat in trange(N_files):
     if training_or_test == 'test':
         df = pd.DataFrame(index=np.arange(N_per_file), columns=keys)
 
-    res = utils.apply_ntimes(blend_generator, N_per_file, (cosmos_cat, training_or_test, used_idx, nmax_blend, 100))
+    res = utils.apply_ntimes(blend_generator, N_per_file, (cosmos_cat, training_or_test, used_idx, nmax_blend, 100, 28.))
     for i in trange(N_per_file):
         if training_or_test == 'test':
             gal_noiseless, blend_noisy, data, shift = res[i]
@@ -65,7 +65,7 @@ for icat in trange(N_files):
         galaxies.append((gal_noiseless, blend_noisy))
 
     # Save noisy blended images and denoised single central galaxy images
-    np.save(os.path.join(save_dir, root_i+'_9_images.npy'), galaxies)
+    np.save(os.path.join(save_dir, root_i+'_7_images.npy'), galaxies)
 
     # If the created sample is a test sample, also save the shifts and differents data
     if training_or_test == 'test':

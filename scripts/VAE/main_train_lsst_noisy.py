@@ -34,11 +34,11 @@ latent_dim = 32
 epochs = 10000
 bands = [4,5,6,7,8,9]
 
-images_dir = '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/'
-path_output = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v_uni/weights/'
+images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/validation/'
+path_output = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v15/mse/'
 
 ######## Import data for callback (Only if VAEHistory is used)
-x_val = np.load(os.path.join(images_dir, 'galaxies_COSMOS_5_v5_test.npy'))[:,:,bands].transpose([0,1,3,4,2])
+x_val = np.load(os.path.join(images_dir, 'galaxies_isolated_20191022_0_images.npy'))[:,:,bands].transpose([0,1,3,4,2])
 
 ######## Load VAE
 encoder, decoder = model.vae_model(latent_dim, len(bands))
@@ -48,7 +48,7 @@ vae, vae_utils, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov
 
 ######## Comment or not depending on what's necessary
 # Load weights
-vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, len(bands), folder=True) 
+#vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, len(bands), folder=True) 
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/'))
 
 print(vae.summary())
@@ -71,8 +71,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v_uni/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/v_uni/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v16/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/v16/'
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = changeAlpha(alpha, vae, vae_loss, path_output)# path_weights)
@@ -80,54 +80,62 @@ alphaChanger = changeAlpha(alpha, vae, vae_loss, path_output)# path_weights)
 vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=[1,2,3], figroot=path_plots, period=5)
 # Keras Callbacks
 #earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
-checkpointer_mse = ModelCheckpoint(filepath=path_weights+'weights/weights_mse_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-#checkpointer_loss = ModelCheckpoint(filepath=os.path.join(path_output,'weights/weights_loss_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt'), monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=True, mode='min', period=1)
+checkpointer_mse = ModelCheckpoint(filepath=path_weights+'mse/weights_mse_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_loss = ModelCheckpoint(filepath=path_weights+'loss/weights_loss_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=True, mode='min', period=1)
 
 ######## Define all used callbacks
-callbacks = [checkpointer_mse, vae_hist]#, ReduceLROnPlateau(), TerminateOnNaN()]# checkpointer_mse earlystop, checkpointer_loss,vae_hist,, alphaChanger
+callbacks = [checkpointer_mse, checkpointer_loss, vae_hist]#, ReduceLROnPlateau(), TerminateOnNaN()]# checkpointer_mse earlystop, checkpointer_loss,vae_hist,, alphaChanger
 
 ######## Create generators
 #list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 #list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
 
-list_of_samples=['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_1.npy',
+#list_of_samples=['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_1.npy',
                   #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_2.npy',
                   #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_3.npy',
-                  '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_4.npy'#,
+                  #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_4.npy'#,
                   #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_5.npy',
                   #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_6.npy',
                   #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_7.npy'#,
-                ]
+#                ]
 
-list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_val.npy']
+#list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/images_cropped_val.npy']
 
 
-list_of_weights_e_training = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_1.npy',
+#list_of_weights_e_training = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_1.npy',
                     #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_2.npy',
                     #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_3.npy',
-                    '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_4.npy'#,
+                    #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_4.npy'#,
                     #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_5.npy',
                     #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_6.npy',
                     #'/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_7.npy'
-                    ]
+#                    ]
 
-list_of_weights_e_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_val.npy']
+#list_of_weights_e_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/e_beta_val.npy']
+
+images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/'
+list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
+list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
+
+
 
 training_generator = generator.BatchGenerator(bands, list_of_samples, total_sample_size=None,
-                                    batch_size=batch_size, size_of_lists=None,
-                                    scale_radius=None, SNR=None,
+                                    batch_size=batch_size, 
                                     trainval_or_test='training',
-                                    noisy=True, do_norm=False, list_of_weights_e=list_of_weights_e_training)#180000
+                                    do_norm=False,
+                                    denorm = False,
+                                    list_of_weights_e=None)#180000
 
 validation_generator = generator.BatchGenerator(bands, list_of_samples_val, total_sample_size=None,
-                                    batch_size=batch_size, size_of_lists=None,
-                                    scale_radius=None, SNR=None,
+                                    batch_size=batch_size, 
                                     trainval_or_test='validation',
-                                    noisy=True, do_norm=False, list_of_weights_e= list_of_weights_e_val)#180000
+                                    do_norm=False,
+                                    denorm = False,
+                                    list_of_weights_e= None)#180000
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=18,
+                  steps_per_epoch=128,
                   verbose=2,
                   shuffle=True,
                   validation_data=validation_generator,
