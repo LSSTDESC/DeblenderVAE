@@ -36,15 +36,15 @@ bands = [0,1,2,3,4,5,6,7,8,9]
 steps_per_epoch = 128 #256
 validation_steps = 2 #16
 
-load_from_vae_or_deblender = 'vae'
+load_from_vae_or_deblender = 'deblender'
 
 images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/validation/'
-path_output = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v5/train_7/mse/'
-path_output_vae = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v13/bis/'
+path_output = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v8/mse/'
+path_output_vae = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v14/'#v13/bis
 
 
 ######## Import data for callback (Only if VAEHistory is used)
-x_val = np.load(os.path.join(images_dir, 'galaxies_blended_20191022_0_images.npy'))[:500,:,bands].transpose([0,1,3,4,2])
+x_val = np.load(os.path.join(images_dir, 'galaxies_blended_20191024_0_images.npy'))[:500,:,bands].transpose([0,1,3,4,2])
 
 
 # ####### Load deblender
@@ -70,21 +70,21 @@ def deblender_loss(x, x_decoded_mean):
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
 
 ######## Fix the maximum learning rate in adam
-K.set_value(deblender.optimizer.lr, 1e-5)
+K.set_value(deblender.optimizer.lr, 1e-4)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v6/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/deblender/v6/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v8/bis/'#v7/bis_bis/#6/bis_bis
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/deblender/v8/bis/'#v7/bis_bis/#6/bis_bis
 #path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst_euclid/'
 
 #tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
-vae_hist = vae_functions.VAEHistory(x_val[:500], deblender_utils, latent_dim, alpha, plot_bands=[1,2,3], figroot=os.path.join(path_plots, 'test_noisy_LSST_v4'), period=2)
+vae_hist = vae_functions.VAEHistory(x_val[:500], deblender_utils, latent_dim, alpha, plot_bands=[1,2,3], figroot=os.path.join(path_plots, 'test_noisy_LSST_v4'), period=10)
 checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
-checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'loss/weights_noisy_v4.{epoch:02d}-{val_los:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
+checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 
 ######## Define all used callbacks
-callbacks = [checkpointer_mse, vae_hist, ReduceLROnPlateau(), TerminateOnNaN()]
+callbacks = [checkpointer_mse, vae_hist, checkpointer_loss]
  
 ######## List of data samples
 # list_of_samples=['/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_1_v5.npy',

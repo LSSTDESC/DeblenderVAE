@@ -213,37 +213,6 @@ class VAEHistory(Callback):
             #plt.show()
         
 
-
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Conv2D, Input
-from tensorflow.keras.callbacks import Callback
-import tensorflow.keras.backend as K
-
-from . import layers
-
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import numpy as np
-import scipy
-from IPython.display import clear_output, set_matplotlib_formats
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-def build_vanilla_vae(encoder, decoder, coeff_KL,full_cov=False):
-    """
-    Returns the model to train and parameters to plot relevant information during training using the VAEHistory callback
-    """
-    input_vae = Input(shape=encoder.input.shape[1:])
-    output_encoder = encoder(input_vae)
-
-    z, Dkl = layers.SampleMultivariateGaussian(full_cov=full_cov, add_KL=False, return_KL=True, coeff_KL=coeff_KL)(output_encoder)
-    
-    vae = Model(input_vae, decoder(z))
-    vae_utils = Model(input_vae, [*encoder(input_vae), z, Dkl, decoder(z)])
-
-    return vae, vae_utils, Dkl
-
-
-
 class VAEHistory_2(Callback):
     def __init__(self, xval_sub, vae_utils, latent_dim, alpha, plot_bands=0, figroot=None, period=1):
         self.xval_sub = xval_sub

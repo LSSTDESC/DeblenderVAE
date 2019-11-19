@@ -26,7 +26,7 @@ assert training_or_test in ['training', 'validation', 'test']
 #training_or_test = 'training'
 
 # where to save images and data
-save_dir = '/sps/lsst/users/barcelin/data/single_galaxies/' + training_or_test
+save_dir = '/sps/lsst/users/barcelin/data/' + training_or_test #single_galaxies/
 # what to call those files
 root = 'galaxies_isolated_20191022_'
 
@@ -57,7 +57,7 @@ for icat in trange(N_files):
         galaxies.append((gal_noiseless,gal_noisy))
 
     # Save noisy blended images and denoised single central galaxy images
-    np.save('/sps/lsst/users/barcelin/data/single_galaxies/training/galaxies_isolated_20191022_10_images.npy', galaxies)#os.path.join(save_dir, root_i+
+    np.save('/sps/lsst/users/barcelin/data/single_galaxies/28/training/galaxies_isolated_20191022_16_images.npy', galaxies)#os.path.join(save_dir, root_i+       single_galaxies/training
     # If the created sample is a test sample, also save the shifts and differents data
     if training_or_test == 'test':
         df.to_csv(os.path.join(save_dir, root_i+'_data.csv'), index=False)

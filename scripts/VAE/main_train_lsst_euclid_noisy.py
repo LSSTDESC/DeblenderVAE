@@ -34,11 +34,11 @@ latent_dim = 32
 epochs = 10000
 bands = [0,1,2,3,4,5,6,7,8,9]
 
-images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/validation/'
-path_output = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v13/'
+images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter/validation/'#'/sps/lsst/users/barcelin/data/single_galaxies/28/validation/'
+path_output = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v14/'
 
 ######## Import data for callback (Only if VAEHistory is used)
-x_val = np.load(os.path.join(images_dir, 'galaxies_isolated_20191022_0_images.npy'))[:,:,bands].transpose([0,1,3,4,2])
+x_val = np.load(os.path.join(images_dir, 'galaxies_blended_20191024_0_images.npy'))[:,:,bands].transpose([0,1,3,4,2])#galaxies_isolated_20191022_0_images.npy
 
 ######## Load VAE
 encoder, decoder = model.vae_model(latent_dim, len(bands))
@@ -48,7 +48,7 @@ vae, vae_utils, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov
 
 ######## Comment or not depending on what's necessary
 # Load weights
-vae, vae_utils, encoder, Dkl = utils.load_vae_conv(os.path.join(path_output, 'mse'), 10, folder=True) 
+#vae, vae_utils, encoder, Dkl = utils.load_vae_conv(os.path.join(path_output, 'mse'), 10, folder=True) 
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/'))
 
 print(vae.summary())
@@ -66,13 +66,13 @@ def vae_loss(x, x_decoded_mean):
 vae.compile('adam', loss=vae_loss, metrics=['mse'])
 
 ######## Fix the maximum learning rate in adam
-K.set_value(vae.optimizer.lr, 0.00001)
+K.set_value(vae.optimizer.lr, 0.0001)
 
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v13/bis/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v13/bis/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v16/' #v14/bis/#v13/bis/
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v16/'
 #path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 
@@ -102,7 +102,7 @@ callbacks = [checkpointer_mse, checkpointer_loss, vae_hist]# checkpointer_mse ea
 
 # list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_val_v5_test.npy']
 
-images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/'
+images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter/'
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
 

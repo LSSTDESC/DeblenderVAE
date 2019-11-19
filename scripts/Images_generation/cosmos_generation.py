@@ -54,8 +54,8 @@ filter_names_all = 'HJYVugrizy'
 
 #################### NOISE ###################
 # Poissonian noise according to sky_level
-N_exposures_lsst = 100
-N_exposures_euclid = 1
+N_exposures_lsst = 500
+N_exposures_euclid = 4
 N_exposures = [N_exposures_euclid]*4 + [N_exposures_lsst]*6
 
 sky_level_lsst_u = (2.512 **(26.50-22.95)) * N_exposures_lsst # in e-.s-1.arcsec_2
@@ -75,7 +75,7 @@ sky_level_pixel_lsst = [sky_level_lsst_u* 15 * pixel_scale_lsst**2,
 # average background level for Euclid observations : 22.35 mAB.arcsec-2 in VIS (Consortium book) ##
 # For NIR bands, a coefficient is applied : it is calculated by comparing magnitudes AB of one point in the
 # sky to the magnitude AB in VIS on this point. The choosen point is (-30;30) in galactic coordinates 
-# (EUCLID and LSST overlap on this point).
+# (EUCLID and LSST overlap on this point).https://irsa.ipac.caltech.edu/applications/BackgroundModel/
 coeff_noise_y = (22.57/21.95)
 coeff_noise_j = (22.53/21.95)
 coeff_noise_h = (21.90/21.95)
@@ -84,10 +84,10 @@ sky_level_nir_Y = (2.512 **(24.25-22.35*coeff_noise_y)) * N_exposures_euclid # i
 sky_level_nir_J = (2.512 **(24.29-22.35*coeff_noise_j)) * N_exposures_euclid # in e-.s-1.arcsec_2
 sky_level_nir_H = (2.512 **(24.92-22.35*coeff_noise_h)) * N_exposures_euclid # in e-.s-1.arcsec_2
 sky_level_vis = (2.512 **(25.58-22.35)) * N_exposures_euclid # in e-.s-1.arcsec_2
-sky_level_pixel_nir = [ sky_level_nir_Y * 1800. * pixel_scale_euclid_nir**2,
-                        sky_level_nir_J * 1800. * pixel_scale_euclid_nir**2,
-                        sky_level_nir_H * 1800. * pixel_scale_euclid_nir**2] # in e-/pixel/1800s
-sky_level_pixel_vis =   sky_level_vis   * 1800. * pixel_scale_euclid_vis**2 # in e-/pixel/1800s
+sky_level_pixel_nir = [ sky_level_nir_Y * 450. * pixel_scale_euclid_nir**2,
+                        sky_level_nir_J * 450. * pixel_scale_euclid_nir**2,
+                        sky_level_nir_H * 450. * pixel_scale_euclid_nir**2] # in e-/pixel/1800s
+sky_level_pixel_vis =   sky_level_vis   * 450. * pixel_scale_euclid_vis**2 # in e-/pixel/1800s
 
 sky_level_pixel = sky_level_pixel_nir + [sky_level_pixel_vis] + sky_level_pixel_lsst
 
@@ -146,7 +146,7 @@ beta = 2.5
 PSF_euclid_nir = galsim.Moffat(fwhm=fwhm_euclid_nir, beta=beta)
 PSF_euclid_vis = galsim.Moffat(fwhm=fwhm_euclid_vis, beta=beta)
 
-PSF = [PSF_euclid_vis]*3 + [PSF_euclid_vis] + [PSF_lsst]*6
+PSF = [PSF_euclid_nir]*3 + [PSF_euclid_vis] + [PSF_lsst]*6
 
 #################### EXPOSURE AND LUMISOITY ###################
 # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             

@@ -21,10 +21,10 @@ def listdir_fullpath(d):
     return [os.path.join(d, f) for f in os.listdir(d)]
 
 ############# Normalize data ############# 
-def norm(x, bands, channel_last=False, inplace=True):
+def norm(x, bands,n_years, channel_last=False, inplace=True):
     #I = [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
     #beta = 5.
-    I = [5925.8097, 3883.7892, 1974.2465,  413.3895,  255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145]
+    I = n_years*np.array([5925.8097, 3883.7892, 1974.2465,  413.3895,  255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145])
     beta = 2.5
     if not inplace:
         y = np.copy(x)
@@ -42,8 +42,8 @@ def norm(x, bands, channel_last=False, inplace=True):
                 y[i,ib] = np.tanh(np.arcsinh(y[i,ib]/(I[b]/beta)))
     return y
 
-def denorm(x, bands, channel_last=False, inplace=True):
-    I = [5925.8097, 3883.7892, 1974.2465,  413.3895,  255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145]
+def denorm(x, bands,n_years, channel_last=False, inplace=True):
+    I = n_years*np.array([5925.8097, 3883.7892, 1974.2465,  413.3895,  255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145])
     beta = 2.5
     if not inplace:
         y = np.copy(x)
@@ -244,6 +244,25 @@ def load_vae_conv(path,nb_of_bands,folder = False):
 
     return vae_loaded, vae_utils, encoder, Dkl
 
+def load_vae_conv_2(path,nb_of_bands,folder = False):
+    """
+    Return the loaded VAE located at the path given when the function is called
+    """        
+    latent_dim = 32
+    
+    # Build the encoder and decoder
+    encoder, decoder = model.vae_model_2(latent_dim, nb_of_bands)
+
+    #### Build the model
+    vae_loaded, vae_utils,  Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
+
+    if folder == False: 
+        vae_loaded.load_weights(path)
+    else:
+        latest = tf.train.latest_checkpoint(path)
+        vae_loaded.load_weights(latest)
+
+    return vae_loaded, vae_utils, encoder, Dkl
 
 def load_vae_full(path, nb_of_bands, folder=False):
     """
@@ -365,7 +384,7 @@ def delta_r_min(shift_path):
 ##############   MULTIPROCESSING    ############
 import multiprocessing
 import time
-from tqdm.auto import tqdm, trange
+from tqdm import tqdm, trange
 
 def apply_ntimes(func, n, args, verbose=True, timeout=None):
     """
@@ -388,7 +407,7 @@ def apply_ntimes(func, n, args, verbose=True, timeout=None):
     multiple_results = [pool.apply_async(func, args) for _ in range(n)]
 
     pool.close()
-
+    
     return [res.get(timeout) for res in tqdm(multiple_results, desc='# castor.parallel.apply_ntimes', disable = True)]
 
 

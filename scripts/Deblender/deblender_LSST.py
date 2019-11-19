@@ -45,7 +45,7 @@ validation_steps = 2 #16
 load_from_vae_or_deblender = 'deblender'
 
 images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/validation/'
-path_output = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v7/mse/'
+path_output = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v8/bis/mse/'#7/mse
 path_output_vae = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v15/bis/'
 
 ######## Import data for callback (Only if VAEHistory is used)
@@ -73,13 +73,13 @@ def deblender_loss(x, x_decoded_mean):
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
 print(deblender.summary())
 ######## Fix the maximum learning rate in adam
-K.set_value(deblender.optimizer.lr, 0.000001)
+K.set_value(deblender.optimizer.lr, 1e-4)
 
 #######
 # Callback
 
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v7/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v7/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v8/bis_bis/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v8/bis_bis/'
 path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst/'
 
 # alphaChanger = callbacks.changeAlpha(alpha, deblender, deblender_loss, path_weights)
@@ -88,14 +88,14 @@ path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst/'
 
 #alphaChanger = changeAlpha(alpha, deblender, deblender_loss, path_output)# path_weights)
 # Callback to display evolution of training
-vae_hist = vae_functions.VAEHistory(x_val[:500], deblender_utils, latent_dim, alpha, plot_bands=[1,2,3], figroot=os.path.join(path_output, 'test_noisy_LSST_v4'), period=2)
+vae_hist = vae_functions.VAEHistory(x_val[:500], deblender_utils, latent_dim, alpha, plot_bands=[1,2,3], figroot=os.path.join(path_plots, 'test_noisy_LSST_v4'), period=10)
 # Keras Callbacks
 #earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
 checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 
 ######## Define all used callbacks
-callbacks = [checkpointer_mse, vae_hist, ReduceLROnPlateau(), TerminateOnNaN()]
+callbacks = [checkpointer_mse, vae_hist, checkpointer_loss]
  
 ######## List of data samples
 
@@ -132,7 +132,7 @@ validation_generator = generator.BatchGenerator(bands, list_of_samples_val, tota
 ######## Train the network
 hist = deblender.fit_generator(generator=training_generator, epochs=epochs,
                   steps_per_epoch=steps_per_epoch,
-                  verbose=1,
+                  verbose=2,
                   shuffle=True,
                   validation_data=validation_generator,
                   validation_steps=validation_steps,
