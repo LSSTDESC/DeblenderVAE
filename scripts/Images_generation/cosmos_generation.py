@@ -54,7 +54,8 @@ filter_names_all = 'HJYVugrizy'
 
 #################### NOISE ###################
 # Poissonian noise according to sky_level
-N_exposures_lsst = 500
+n_years = 5
+N_exposures_lsst = 100*n_years 
 N_exposures_euclid = 4
 N_exposures = [N_exposures_euclid]*4 + [N_exposures_lsst]*6
 

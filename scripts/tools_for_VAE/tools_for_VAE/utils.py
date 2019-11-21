@@ -102,8 +102,12 @@ def compute_blendedness_single(image1, image2):
     return blnd
 
 def compute_blendedness_total(img_central, img_others):
-    ic = np.array(img_central.array.data)
-    io = np.array(img_others.array.data)
+    if isinstance(img_central, galsim.image.Image):
+        ic = np.array(img_central.array.data)
+        io = np.array(img_others.array.data)
+    else :
+        ic = img_central
+        io = img_others
     itot = ic + io
     # print(image,image_new)
     # blnd = np.sum(ic*io)/np.sum(io**2)
@@ -112,8 +116,12 @@ def compute_blendedness_total(img_central, img_others):
     return blnd
 
 def compute_blendedness_aperture(img_central, img_others, radius):
-    ic = np.array(img_central.array.data)
-    io = np.array(img_others.array.data)
+    if isinstance(img_central, galsim.image.Image):
+        ic = np.array(img_central.array.data)
+        io = np.array(img_others.array.data)
+    else :
+        ic = img_central
+        io = img_others
     h, w = ic.shape
     mask = plot.createCircularMask(h, w, center=None, radius=radius)
     flux_central = np.sum(ic*mask.astype(float))

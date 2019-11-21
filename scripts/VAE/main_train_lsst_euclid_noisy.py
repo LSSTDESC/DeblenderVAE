@@ -34,11 +34,11 @@ latent_dim = 32
 epochs = 10000
 bands = [0,1,2,3,4,5,6,7,8,9]
 
-images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter/validation/'#'/sps/lsst/users/barcelin/data/single_galaxies/28/validation/'
+images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter_19112019/validation/'#'/sps/lsst/users/barcelin/data/single_galaxies/28/validation/'
 path_output = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v14/'
 
 ######## Import data for callback (Only if VAEHistory is used)
-x_val = np.load(os.path.join(images_dir, 'galaxies_blended_20191024_0_images.npy'))[:,:,bands].transpose([0,1,3,4,2])#galaxies_isolated_20191022_0_images.npy
+x_val = np.load(os.path.join(images_dir, 'galaxies_isolated_20191024_0_images.npy'))[:,:,bands].transpose([0,1,3,4,2])#galaxies_isolated_20191022_0_images.npy
 
 ######## Load VAE
 encoder, decoder = model.vae_model(latent_dim, len(bands))
@@ -71,14 +71,14 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v16/' #v14/bis/#v13/bis/
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v16/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v17/' #v14/bis/#v13/bis/
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/VAE/noisy/v17/'
 #path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 
 #alphaChanger = changeAlpha(alpha, vae, vae_loss, path_output)# path_weights)
 # Callback to display evolution of training
-vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=[1,2,3], figroot=os.path.join(path_plots, 'test_noisy_LSST_v4'), period=2)
+vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=[5,6,7], figroot=os.path.join(path_plots, 'test_noisy_LSST_v4'), period=2)
 # Keras Callbacks
 #earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
 checkpointer_mse = ModelCheckpoint(filepath=os.path.join(path_weights, 'mse/weights_mse_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt'), monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
@@ -88,21 +88,7 @@ checkpointer_loss = ModelCheckpoint(filepath=os.path.join(path_weights,'loss/wei
 callbacks = [checkpointer_mse, checkpointer_loss, vae_hist]# checkpointer_mse earlystop, checkpointer_loss,vae_hist,, alphaChanger
 
 ######## Create generators
-#list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
-#list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
-
-# list_of_samples=['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_1_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_2_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_3_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_4_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_5_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_6_v5_test.npy',
-#                   '/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_7_v5_test.npy'#,
-#                 ]
-
-# list_of_samples_val = ['/sps/lsst/users/barcelin/data/single/PSF_lsst_O.65/independant/galaxies_COSMOS_val_v5_test.npy']
-
-images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter/'
+images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter_19112019/'
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
 
@@ -127,6 +113,6 @@ hist = vae.fit_generator(generator=training_generator, epochs=epochs,
                   verbose=2,
                   shuffle=True,
                   validation_data=validation_generator,
-                  validation_steps=2,
+                  validation_steps=32,
                   callbacks=callbacks,
                   workers=0)

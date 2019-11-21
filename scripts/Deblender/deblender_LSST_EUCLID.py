@@ -36,11 +36,11 @@ bands = [0,1,2,3,4,5,6,7,8,9]
 steps_per_epoch = 128 #256
 validation_steps = 2 #16
 
-load_from_vae_or_deblender = 'deblender'
+load_from_vae_or_deblender = 'vae'
 
-images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/validation/'
+images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/miscenter/validation/'
 path_output = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v8/mse/'
-path_output_vae = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v14/'#v13/bis
+path_output_vae = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/VAE/noisy/v16/'#v13/bis
 
 
 ######## Import data for callback (Only if VAEHistory is used)
@@ -70,12 +70,12 @@ def deblender_loss(x, x_decoded_mean):
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
 
 ######## Fix the maximum learning rate in adam
-K.set_value(deblender.optimizer.lr, 1e-4)
+K.set_value(deblender.optimizer.lr, 1e-3)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v8/bis/'#v7/bis_bis/#6/bis_bis
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/deblender/v8/bis/'#v7/bis_bis/#6/bis_bis
+path_weights = '/sps/lsst/users/barcelin/weights/LSST_EUCLID/deblender/v9_mis/'#v8/bis/#v7/bis_bis/#6/bis_bis
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST_EUCLID/deblender/v9_mis/'#v8/bis/#v7/bis_bis/#6/bis_bis
 #path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst_euclid/'
 
 #tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'noiseless/', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
@@ -98,7 +98,7 @@ callbacks = [checkpointer_mse, vae_hist, checkpointer_loss]
 
 # list_of_samples_val=['/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_val_v5.npy']
 
-images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/'
+images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/miscenter/'
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
 

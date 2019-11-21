@@ -32,11 +32,11 @@ latent_dim = 32
 epochs = 10000
 bands = [4,5,6,7,8,9]
 
-images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/validation/'
+images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter_19112019/validation/'
 path_output = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v16/mse/'
 
 ######## Import data for callback (Only if VAEHistory is used)
-x_val = np.load(os.path.join(images_dir, 'galaxies_isolated_20191022_0_images.npy'))[:,:,bands].transpose([0,1,3,4,2])
+x_val = np.load(os.path.join(images_dir, 'galaxies_isolated_20191024_0_images.npy'))[:,:,bands].transpose([0,1,3,4,2])
 
 ######## Load VAE
 encoder, decoder = model.vae_model(latent_dim, len(bands))
@@ -46,7 +46,7 @@ vae, vae_utils, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov
 
 ######## Comment or not depending on what's necessary
 # Load weights
-vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, len(bands), folder=True) 
+#vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, len(bands), folder=True) 
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/'))
 
 print(vae.summary())
@@ -69,8 +69,8 @@ K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v16/bis/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/v16/bis/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v17/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/v17/'
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
 alphaChanger = changeAlpha(alpha, vae, vae_loss, path_output)# path_weights)
@@ -118,7 +118,7 @@ callbacks = [checkpointer_mse, checkpointer_loss, vae_hist]#, ReduceLROnPlateau(
 
 # list_of_weights_e_val = [images_dir+'validation/cropped/e_beta_1.npy']
 
-images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/'
+images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter_19112019/'
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
 
@@ -144,6 +144,6 @@ hist = vae.fit_generator(generator=training_generator, epochs=epochs,
                   verbose=2,
                   shuffle=True,
                   validation_data=validation_generator,
-                  validation_steps=2,
+                  validation_steps=32,
                   callbacks=callbacks,
                   workers=0)
