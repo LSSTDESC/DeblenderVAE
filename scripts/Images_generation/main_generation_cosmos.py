@@ -12,13 +12,11 @@ from multiprocess import *
 import pandas as pd
 from tqdm import tqdm, trange
 
-from blended_images import blend_generator
-
 sys.path.insert(0,'../tools_for_VAE/')
 import tools_for_VAE
 from tools_for_VAE import utils
 
-from images_generator import image_generator, image_generator_2
+from images_generator import image_generator
 
 # The script is used as, eg,
 # # python main_blended_generation_cosmos.py training 10 1000
@@ -26,7 +24,7 @@ from images_generator import image_generator, image_generator_2
 training_or_test = 'training'
 isolated_or_blended = 'blended'
 N_files = 1 
-N_per_file = 10000
+N_per_file = 100
 assert training_or_test in ['training', 'validation', 'test']
 
 # where to save images and data
@@ -64,7 +62,7 @@ for icat in trange(N_files):
         df = pd.DataFrame(index=np.arange(N_per_file), columns=keys)
 
     #res = [image_generator_2(cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx, nmax_blend, 100, 28.,method) for _ in range(N_per_file)]
-    res = utils.apply_ntimes(image_generator_2, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx, nmax_blend, 100, 28.,method))
+    res = utils.apply_ntimes(image_generator, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx, nmax_blend, 100, 28.,method))
     for i in trange(N_per_file):
         if training_or_test == 'test':
             gal_noiseless, blend_noisy, data, shift = res[i]
@@ -76,7 +74,7 @@ for icat in trange(N_files):
         galaxies.append((gal_noiseless, blend_noisy))
 
     # Save noisy blended images and denoised single central galaxy images
-    np.save(os.path.join(save_dir, root_i+'_4_images.npy'), galaxies)
+    np.save(os.path.join(save_dir, root_i+'_10_images.npy'), galaxies)
 
     # If the created sample is a test sample, also save the shifts and differents data
     if training_or_test == 'test':

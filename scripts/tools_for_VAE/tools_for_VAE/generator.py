@@ -98,34 +98,34 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             #print(indices)
         self.produced_samples += len(indices)
 
-        self.x = sample[indices,1][:,self.bands]
-        self.y = sample[indices,0][:,self.bands]
+        x = sample[indices,1][:,self.bands]
+        y = sample[indices,0][:,self.bands]
         
         # Preprocessing of the data to be easier for the network to learn
         if self.do_norm:
-            self.x = utils.norm(self.x, self.bands)
-            self.y = utils.norm(self.y, self.bands)
+            x = utils.norm(x, self.bands)
+            y = utils.norm(y, self.bands)
         if self.denorm:
-            self.x = utils.denorm(self.x, self.bands)
-            self.y = utils.denorm(self.y, self.bands)
+            x = utils.denorm(x, self.bands)
+            y = utils.denorm(y, self.bands)
 
         #  flip : flipping the image array
         rand = np.random.randint(4)
         if rand == 1: 
-            self.x = np.flip(self.x, axis = -1)
-            self.y = np.flip(self.y, axis = -1)
+            x = np.flip(x, axis=-1)
+            y = np.flip(y, axis=-1)
         elif rand == 2 : 
-            self.x = np.flip(self.x, axis = -2)
-            self.y = np.flip(self.y, axis = -2)
+            x = np.swapaxes(x, -1, -2)
+            y = np.swapaxes(y, -1, -2)
         elif rand == 3:
-            self.x = np.flip(self.x, axis = (-1,-2))
-            self.y = np.flip(self.y, axis = (-1,-2))
+            x = np.swapaxes(np.flip(x, axis=-1), -1, -2)
+            y = np.swapaxes(np.flip(y, axis=-1), -1, -2)
         
-        self.x = np.transpose(self.x, axes = (0,2,3,1))
-        self.y = np.transpose(self.y, axes = (0,2,3,1))
+        x = np.transpose(x, axes = (0,2,3,1))
+        y = np.transpose(y, axes = (0,2,3,1))
         
         if self.trainval_or_test == 'training' or self.trainval_or_test == 'validation':
-            return self.x, self.y
+            return x, y
         elif self.trainval_or_test == 'test':
             # indicesadius = self.scale_radius[indices]
             # self.SNR_out = self.SNR[indices]
@@ -133,4 +133,4 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
             #if self.shifts != None:
             #   return self.x, self.y, data.loc[indices], self.shifts[indices], indices
             #else:
-            return self.x, self.y, data.loc[indices], indices
+            return x, y, data.loc[indices], indices

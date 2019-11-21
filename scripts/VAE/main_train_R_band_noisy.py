@@ -33,8 +33,7 @@ epochs = 2000
 bands = [6]
 
 ######## Import data for callback (Only if VAEHistory is used)
-x_val= np.load('/sps/lsst/users/barcelin/data/single_galaxies/28/validation/galaxies_isolated_20191022_0_images.npy', mmap_mode = 'c')[:500,:,bands].transpose([0,1,3,4,2])
-#x_val = utils.norm(np.expand_dims(x[:500,1,6], axis = 1), bands).transpose([0,2,3,1])
+x_val= np.load('/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter_19112019/validation/galaxies_isolated_20191024_0_images.npy', mmap_mode = 'c')[:500,:,bands].transpose([0,1,3,4,2])
 
 path_output = '/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v29/mse/'#v21/bis_bis/mse/  #v28
 
@@ -47,7 +46,7 @@ vae, vae_utils,  Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_co
 
 ############## Comment or not depending on what's necessary
 # Load weights
-vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, len(bands), folder = True)#, output_encoder
+#vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, len(bands), folder = True)#, output_encoder
 #K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/R_band/VAE/noisy/v_test3/'))
 
 print(vae.summary())
@@ -64,7 +63,7 @@ def vae_loss(x, x_decoded_mean):
 vae.compile('adam', loss=vae_loss, metrics=['mse'])
 
 ######## Fix the maximum learning rate in adam
-K.set_value(vae.optimizer.lr, 0.001)
+K.set_value(vae.optimizer.lr, 0.0001)
 
 #######
 # Callback
@@ -82,10 +81,10 @@ checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'lo
 #tbCallBack = tf.keras.callbacks.TensorBoard(log_dir=path_tb+'v6', histogram_freq=0, batch_size = batch_size, write_graph=True, write_images=True)
 
 ######## Define all used callbacks
-callbacks = [vae_hist, checkpointer_mse,checkpointer_loss]#,checkpointer_loss, tbCallBack]#, alphaChanger earlystop,vae_hist, checkpointer,  
+callbacks = [vae_hist, checkpointer_mse,checkpointer_loss]
  
 ######## List of data samples
-images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/'
+images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/miscenter_19112019/'
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
 
@@ -106,10 +105,10 @@ validation_generator = generator.BatchGenerator(bands, list_of_samples_val,total
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=32,#2800
+                  steps_per_epoch=32,
                   verbose=1,
                   shuffle = True,
                   validation_data=validation_generator,
-                  validation_steps=2,#400
-                  callbacks=callbacks,
+                  validation_steps=2,
+                  #callbacks=callbacks,
                   workers = 0)

@@ -22,7 +22,6 @@ import tensorflow_probability as tfp
 
 # from generator_deblender import BatchGenerator
 sys.path.insert(0,'../VAE/')
-from generator_vae import BatchGenerator
 
 sys.path.insert(0,'../tools_for_VAE/')
 from tools_for_VAE import model, vae_functions, utils, generator
@@ -98,7 +97,7 @@ callbacks = [checkpointer_mse, vae_hist, checkpointer_loss]
 
 # list_of_samples_val=['/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_val_v5.npy']
 
-images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/miscenter/'
+images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/miscenter_19112019/'
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
 

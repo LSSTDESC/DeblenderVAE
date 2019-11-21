@@ -27,7 +27,6 @@ import tensorflow_probability as tfp
 
 # from generator_deblender import BatchGenerator
 sys.path.insert(0,'../VAE/')
-from generator_vae import BatchGenerator
 
 sys.path.insert(0,'../tools_for_VAE/')
 from tools_for_VAE import model, vae_functions, utils, generator
@@ -44,9 +43,9 @@ validation_steps = 2 #16
 
 load_from_vae_or_deblender = 'deblender'
 
-images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/validation/'
-path_output = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v8/bis/mse/'#7/mse
-path_output_vae = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v15/bis/'
+images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/miscenter_19112019/validation/'
+path_output = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v9_mis/mse/'#7/mse
+path_output_vae = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v17/'
 
 ######## Import data for callback (Only if VAEHistory is used)
 x_val = np.load(os.path.join(images_dir, 'galaxies_blended_20191024_0_images.npy'))[:500,:,bands].transpose([0,1,3,4,2])
@@ -73,13 +72,13 @@ def deblender_loss(x, x_decoded_mean):
 deblender.compile('adam', loss=deblender_loss, metrics=['mse'])
 print(deblender.summary())
 ######## Fix the maximum learning rate in adam
-K.set_value(deblender.optimizer.lr, 1e-4)
+K.set_value(deblender.optimizer.lr, 1e-3)
 
 #######
 # Callback
 
-path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v8/bis_bis/'
-path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v8/bis_bis/'
+path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/v9_mis/'
+path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/v9_mis/'
 path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst/'
 
 # alphaChanger = callbacks.changeAlpha(alpha, deblender, deblender_loss, path_weights)
@@ -98,19 +97,7 @@ checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'lo
 callbacks = [checkpointer_mse, vae_hist, checkpointer_loss]
  
 ######## List of data samples
-
-# list_of_samples=['/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_1_v5.npy',
-#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_2_v5.npy',
-#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_3_v5.npy',
-#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_4_v5.npy',
-#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_5_v5.npy',
-#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_6_v5.npy',
-#                 '/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_7_v5.npy']
-
-
-# list_of_samples_val=['/sps/lsst/users/barcelin/data/blended/COSMOS/PSF_lsst_0.65/uni11/galaxies_blended_val_v5.npy']
-
-images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/'
+images_dir = '/sps/lsst/users/barcelin/data/blended_images/28/miscenter_19112019/'
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
 

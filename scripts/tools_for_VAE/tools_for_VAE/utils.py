@@ -17,15 +17,17 @@ import tensorflow as tf
 
 from . import model, vae_functions, plot
 
+I_lsst = np.array([255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145])
+I_euclid = np.array([5925.8097, 3883.7892, 1974.2465,  413.3895])
+beta = 2.5
+
+
 def listdir_fullpath(d):
     return [os.path.join(d, f) for f in os.listdir(d)]
 
 ############# Normalize data ############# 
 def norm(x, bands,n_years, channel_last=False, inplace=True):
-    #I = [6.48221069e+05, 4.36202878e+05, 2.27700000e+05, 4.66676013e+04,2.91513800e+02, 2.64974100e+03, 4.66828170e+03, 5.79938030e+03,5.72952590e+03, 3.50687710e+03]
-    #beta = 5.
-    I = n_years*np.array([5925.8097, 3883.7892, 1974.2465,  413.3895,  255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145])
-    beta = 2.5
+    I = np.concatenate(I_euclid,n_years*I_lsst)
     if not inplace:
         y = np.copy(x)
     else:
@@ -43,8 +45,7 @@ def norm(x, bands,n_years, channel_last=False, inplace=True):
     return y
 
 def denorm(x, bands,n_years, channel_last=False, inplace=True):
-    I = n_years*np.array([5925.8097, 3883.7892, 1974.2465,  413.3895,  255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145])
-    beta = 2.5
+    I = np.concatenate(I_euclid,n_years*I_lsst)
     if not inplace:
         y = np.copy(x)
     else:
