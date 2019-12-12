@@ -375,6 +375,7 @@ def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, 
             if center_brightest:
                 _idx = np.argmin(mag)
                 galaxies.insert(0, galaxies.pop(_idx))
+                real_gal_list.insert(0, real_gal_list.pop(_idx))
                 mag.insert(0,mag.pop(_idx))
                 mag_ir.insert(0,mag_ir.pop(_idx))
 
@@ -384,14 +385,6 @@ def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, 
             galaxies[0], shift[0] = shift_gal(galaxies[0], method=method_first_shift, max_dx=0.1)
             for j,gal in enumerate(galaxies[1:]):
                 galaxies[j+1], shift[j+1] = shift_gal(gal, shift_x0=shift[0,0], shift_y0=shift[0,1], min_r=0.65/2., max_r=1.5, method='annulus')
-            
-            # real galaxies
-            real_gal_list[0], shift[0] = shift_gal(real_gal_list[0], method=method_first_shift, max_dx=0.1)
-            print(nb_blended_gal, len(galaxies), len(real_gal_list))
-            for k,gal in enumerate(real_gal_list[1:]):
-                real_gal_list[k+1], shift[k+1] = shift_gal(gal, shift_x0=shift[0,0], shift_y0=shift[0,1], min_r=0.65/2., max_r=1.5, method='annulus')
-
-
 
             if nb_blended_gal>1:
                 distances = [shift[j][0]**2+shift[j][1]**2 for j in range(1,nb_blended_gal)]
@@ -421,6 +414,15 @@ def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, 
                 # Modify galaxies and shift accordingly
                 galaxies = [gal.shift(-center_arc_x, -center_arc_y) for gal in galaxies]
                 shift[:nb_blended_gal] -= np.array([center_arc_x, center_arc_y])
+            
+
+
+            # real galaxies
+            real_gal_list[0], shift[0] = shift_gal(real_gal_list[0], method=method_first_shift, max_dx=0.1)
+            print(nb_blended_gal, len(galaxies), len(real_gal_list))
+            for k,gal in enumerate(real_gal_list[1:]):
+                real_gal_list[k+1]
+                #, shift[k+1] = shift_gal(gal, shift_x0=shift[0,0], shift_y0=shift[0,1], min_r=0.65/2., max_r=1.5, method='annulus')
             
             # Draw real images
             galaxies_real_psf = [galsim.Convolve([real_gal*coeff_exp[6], PSF_lsst]) for real_gal in real_gal_list]

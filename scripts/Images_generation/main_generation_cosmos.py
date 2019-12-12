@@ -68,7 +68,7 @@ for icat in trange(N_files):
         df = pd.DataFrame(index=np.arange(N_per_file), columns=keys)
 
     #res = [image_generator_2(cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx, nmax_blend, 100, 28.,method) for _ in range(N_per_file)]
-    res = utils.apply_ntimes(image_generator_real, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx, nmax_blend, 100, 28., method_shift, do_peak_detection))
+    res = utils.apply_ntimes(image_generator_real, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx, nmax_blend, 100, 26., method_shift, do_peak_detection))
     for i in trange(N_per_file):
         if training_or_test == 'test':
             gal_noiseless, blend_noisy, data, shift = res[i]
