@@ -375,6 +375,7 @@ def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, 
             if center_brightest:
                 _idx = np.argmin(mag)
                 galaxies.insert(0, galaxies.pop(_idx))
+                real_gal_list.insert(0, real_gal_list.pop(_idx))
                 mag.insert(0,mag.pop(_idx))
                 mag_ir.insert(0,mag_ir.pop(_idx))
 
@@ -385,11 +386,11 @@ def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, 
             for j,gal in enumerate(galaxies[1:]):
                 galaxies[j+1], shift[j+1] = shift_gal(gal, shift_x0=shift[0,0], shift_y0=shift[0,1], min_r=0.65/2., max_r=1.5, method='annulus')
             
-            # real galaxies
-            real_gal_list[0], shift[0] = shift_gal(real_gal_list[0], method=method_first_shift, max_dx=0.1)
-            print(nb_blended_gal, len(galaxies), len(real_gal_list))
-            for k,gal in enumerate(real_gal_list[1:]):
-                real_gal_list[k+1], shift[k+1] = shift_gal(gal, shift_x0=shift[0,0], shift_y0=shift[0,1], min_r=0.65/2., max_r=1.5, method='annulus')
+#             # real galaxies
+#             real_gal_list[0], shift[0] = shift_gal(real_gal_list[0], method=method_first_shift, max_dx=0.1)
+#             print(nb_blended_gal, len(galaxies), len(real_gal_list))
+#             for k,gal in enumerate(real_gal_list[1:]):
+#                 real_gal_list[k+1], shift[k+1] = shift_gal(gal, shift_x0=shift[0,0], shift_y0=shift[0,1], min_r=0.65/2., max_r=1.5, method='annulus')
 
 
 
@@ -421,11 +422,16 @@ def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, 
                 # Modify galaxies and shift accordingly
                 galaxies = [gal.shift(-center_arc_x, -center_arc_y) for gal in galaxies]
                 shift[:nb_blended_gal] -= np.array([center_arc_x, center_arc_y])
-            
+
+            # real galaxies
+            for k,gal in enumerate(real_gal_list):
+                real_gal_list[k], shift[k] = shift_gal(gal, shift_x0=shift[k,0], shift_y0=shift[k,1], method='noshift')
+         
             # Draw real images
             galaxies_real_psf = [galsim.Convolve([real_gal*coeff_exp[6], PSF_lsst]) for real_gal in real_gal_list]
-            images_real, blend_img_real = draw_images(galaxies_real_psf, 6, max_stamp_size, 'r', sky_level_pixel[6], real_or_param = 'real')
-
+            images_real, _ = draw_images(galaxies_real_psf, 6, max_stamp_size, 'r', sky_level_pixel[6], real_or_param = 'real')
+            
+       
             # Now draw image in all other bands
             for i, filter_name in enumerate(filter_names_all):
                 galaxies_psf = [galsim.Convolve([gal*coeff_exp[i], PSF[i]]) for gal in galaxies]
@@ -436,12 +442,18 @@ def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, 
                     n_peak = 1
                 galaxy_noiseless[i] = images[idx_closest_to_peak].array.data
                 blend_noisy[i] = blend_img.array.data
-                
+
+                # Rescale real images by flux
+                for jj, image_real in enumerate(images_real):
+                    images_real[jj] = image_real.array.data * np.sum(images[jj].array.data)/np.sum(image_real.array.data)
+                    
                 # real galaxies
-                galaxy_noiseless_real[i] = images_real[idx_closest_to_peak].array.data
-                blend_noisy_real[i] = blend_img_real.array.data
-                galaxy_noiseless_real[i] = galaxy_noiseless_real[i]*(np.sum(galaxy_noiseless[i])/np.sum(galaxy_noiseless_real[i]))
-                blend_noisy_real[i] = blend_noisy_real[i]*(np.sum(galaxy_noiseless[i])/np.sum(galaxy_noiseless_real[i]))
+                galaxy_noiseless_real[i] = images_real[idx_closest_to_peak]
+                for image_real in images_real:
+                    blend_noisy_real[i] += image_real\
+                # Add noise
+                poissonian_noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel[i])
+                blend_noisy_real[i].addNoise(poissonian_noise)
 
                 # get data for the test sample (LSST stuff)
                 if training_or_test == 'test' and filter_name == 'r':
