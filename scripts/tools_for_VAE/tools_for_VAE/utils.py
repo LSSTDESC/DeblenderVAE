@@ -27,7 +27,7 @@ def listdir_fullpath(d):
 
 ############# Normalize data ############# 
 def norm(x, bands,n_years, channel_last=False, inplace=True):
-    I = np.concatenate(I_euclid,n_years*I_lsst)
+    I = np.concatenate([I_euclid,n_years*I_lsst])
     if not inplace:
         y = np.copy(x)
     else:
@@ -45,7 +45,7 @@ def norm(x, bands,n_years, channel_last=False, inplace=True):
     return y
 
 def denorm(x, bands,n_years, channel_last=False, inplace=True):
-    I = np.concatenate(I_euclid,n_years*I_lsst)
+    I = np.concatenate([I_euclid,n_years*I_lsst])
     if not inplace:
         y = np.copy(x)
     else:

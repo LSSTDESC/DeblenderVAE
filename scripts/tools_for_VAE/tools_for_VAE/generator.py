@@ -93,7 +93,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         if self.list_of_weights_e == None:
             indices = np.random.choice(len(sample), size=self.batch_size, replace=False)
         else:
-            self.weights_e = np.load(self.list_of_weights_e[index])[:,0]
+            self.weights_e = np.load(self.list_of_weights_e[index])
             indices = np.random.choice(len(sample), size=self.batch_size, replace=False, p = self.weights_e/np.sum(self.weights_e))
             #print(indices)
         self.produced_samples += len(indices)

@@ -47,8 +47,9 @@ def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_s
     flux_out= []
 
     dfs = []
-    dfs.append(pd.read_csv(os.path.join(data_dir, root+'_0_data.csv')))
-    df = dfs[0]
+    #dfs.append(pd.read_csv(os.path.join(data_dir, root+'_0_data.csv')))
+    #df = dfs[0]
+    df = pd.DataFrame()
 
     input_sample_len = len(np.load(test_sample, mmap_mode = 'c'))
 
@@ -59,20 +60,29 @@ def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_s
         input_noisy = utils.norm(input_images[j*batch_size:(j+1)*batch_size,1,bands].transpose([0,2,3,1]), bands,n_years, channel_last = True, inplace=False)
         input_noiseless = input_images[j*batch_size:(j+1)*batch_size,0,bands].transpose([0,2,3,1])
 
-        for k in range (1):
-            if k == 1:
-                input_noiseless = np.flip(input_noiseless, axis = -2)
-                input_noisy = np.flip(input_noisy, axis = -2)
-            elif k == 2 : 
-                input_noiseless = input_noiseless.transpose([0,2,1,3])
-                input_noisy = input_noisy.transpose([0,2,1,3])
-            elif k == 3:
-                input_noiseless = np.flip(input_noiseless, axis = -2)
-                input_noisy = np.flip(input_noisy, axis = -2)
-
-            output_vae = utils.denorm(deblender.predict(input_noisy, batch_size = batch_size), bands,n_years, channel_last = True, inplace=False) 
+        for k in range (4):
+            # if k == 1:
+            #     input_noiseless = np.flip(input_noiseless, axis = -2)
+            #     input_noisy = np.flip(input_noisy, axis = -2)
+            # elif k == 2 : 
+            #     input_noiseless = input_noiseless.transpose([0,2,1,3])
+            #     input_noisy = input_noisy.transpose([0,2,1,3])
+            # elif k == 3:
+            #     input_noiseless = np.flip(input_noiseless, axis = -2)
+            #     input_noisy = np.flip(input_noisy, axis = -2)
             
-            for i in range (batch_size):
+            if k == 1: 
+                input_noiseless = np.flip(input_noiseless, axis=-2)
+                input_noisy = np.flip(input_noisy, axis=-2)
+            elif k == 2 : 
+                input_noiseless = np.swapaxes(input_noiseless, -2, -3)
+                input_noisy = np.swapaxes(input_noisy, -2, -3)
+            elif k == 3:
+                input_noiseless = np.flip(input_noiseless, axis=-2)#np.swapaxes(np.flip(input_noiseless, axis=-2), -2, -3)
+                input_noisy = np.flip(input_noisy, axis=-2)#np.swapaxes(np.flip(input_noisy, axis=-2), -2, -3)
+
+            output_vae = utils.denorm(deblender.predict(input_noisy), bands,n_years, channel_last = True, inplace=False) #, batch_size = batch_size
+            for i in range (len(output_vae)):
                 #print(i)
                 try: 
                     gal_image = galsim.Image(input_noiseless[i][:,:,r_band])
