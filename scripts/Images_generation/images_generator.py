@@ -154,7 +154,7 @@ def draw_images(galaxies_psf, band, img_size, filter_name,sky_level_pixel, real_
 
 
 
-def image_generator(cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx=None, nmax_blend=4, max_try=3, mag_cut=28., method_first_shift='noshift', do_peak_detection=True):
+def image_generator(cosmos_cat_dir, training_or_test, isolated_or_blended, save_dir, used_idx=None, nmax_blend=4, max_try=3, mag_cut=28., method_first_shift='noshift', do_peak_detection=True):
     """
     Return numpy arrays: noiseless and noisy image of single galaxy and of blended galaxies
     Parameters:
@@ -288,8 +288,8 @@ def image_generator(cosmos_cat_dir, training_or_test, isolated_or_blended, used_
 
     # For training/validation, return normalized images only
     if training_or_test in ['training', 'validation']:
-        galaxy_noiseless = utils.norm(galaxy_noiseless[None,:], bands=range(10), n_years=n_years)[0]
-        blend_noisy = utils.norm(blend_noisy[None,:], bands=range(10), n_years=n_years)[0]
+        galaxy_noiseless = utils.norm(galaxy_noiseless[None,:], bands=range(10), path = save_dir)[0]
+        blend_noisy = utils.norm(blend_noisy[None,:], bands=range(10), path = save_dir)[0]
         return galaxy_noiseless, blend_noisy
 
     # For testing, return unormalized images and data
@@ -315,7 +315,7 @@ def image_generator(cosmos_cat_dir, training_or_test, isolated_or_blended, used_
     else:
         raise ValueError
 
-def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx=None, nmax_blend=4, max_try=3, mag_cut=28., method_first_shift='noshift', do_peak_detection=True):
+def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, save_dir, used_idx=None, nmax_blend=4, max_try=3, mag_cut=28., method_first_shift='noshift', do_peak_detection=True):
     """
     Return numpy arrays: noiseless and noisy image of single galaxy and of blended galaxies
     Parameters:
@@ -490,8 +490,8 @@ def image_generator_real(cosmos_cat_dir, training_or_test, isolated_or_blended, 
 
     # For training/validation, return normalized images only
     if training_or_test in ['training', 'validation']:
-        galaxy_noiseless_real = utils.norm(galaxy_noiseless_real[None,:], bands=range(10), n_years=n_years)[0]
-        blend_noisy_real = utils.norm(blend_noisy_real[None,:], bands=range(10), n_years=n_years)[0]
+        galaxy_noiseless_real = utils.norm(galaxy_noiseless_real[None,:], bands=range(10), path = save_dir)[0]
+        blend_noisy_real = utils.norm(blend_noisy_real[None,:], bands=range(10), path = save_dir)[0]
         return galaxy_noiseless_real, blend_noisy_real
 
     # For testing, return unormalized images and data

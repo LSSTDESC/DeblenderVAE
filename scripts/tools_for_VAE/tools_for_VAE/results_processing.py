@@ -21,7 +21,7 @@ from tqdm.auto import trange
 from . import utils, plot
 
 
-def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_size, psf, pix_scale, n_years):
+def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_size, psf, pix_scale):
     """
     Returns 
 
@@ -54,13 +54,13 @@ def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_s
     input_sample_len = len(np.load(test_sample, mmap_mode = 'c'))
 
     for j in trange(int(input_sample_len/batch_size)):
-        print(j)
+        #print(j)
 
         input_images = np.load(test_sample, mmap_mode = 'c')
-        input_noisy = utils.norm(input_images[j*batch_size:(j+1)*batch_size,1,bands].transpose([0,2,3,1]), bands,n_years, channel_last = True, inplace=False)
+        input_noisy = utils.norm(input_images[j*batch_size:(j+1)*batch_size,1,bands].transpose([0,2,3,1]), bands,data_dir, channel_last = True, inplace=False)
         input_noiseless = input_images[j*batch_size:(j+1)*batch_size,0,bands].transpose([0,2,3,1])
 
-        for k in range (4):
+        for k in range (1):
             # if k == 1:
             #     input_noiseless = np.flip(input_noiseless, axis = -2)
             #     input_noisy = np.flip(input_noisy, axis = -2)
@@ -81,7 +81,7 @@ def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_s
                 input_noiseless = np.flip(input_noiseless, axis=-2)#np.swapaxes(np.flip(input_noiseless, axis=-2), -2, -3)
                 input_noisy = np.flip(input_noisy, axis=-2)#np.swapaxes(np.flip(input_noisy, axis=-2), -2, -3)
 
-            output_vae = utils.denorm(deblender.predict(input_noisy), bands,n_years, channel_last = True, inplace=False) #, batch_size = batch_size
+            output_vae = utils.denorm(deblender.predict(input_noisy), bands,data_dir, channel_last = True, inplace=False) #, batch_size = batch_size
             for i in range (len(output_vae)):
                 #print(i)
                 try: 
@@ -109,6 +109,7 @@ def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_s
                 except :
                         print('error for galaxy '+str(j*400+k*100+i))
                         e_in = [np.nan, np.nan]
+                        e_out_obs = [np.nan]
                         e_out = [np.nan, np.nan]
                 
                 e_obs.append([e_in_obs,e_out_obs])

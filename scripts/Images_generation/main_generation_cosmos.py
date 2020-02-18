@@ -67,8 +67,7 @@ for icat in trange(N_files):
     if training_or_test == 'test':
         df = pd.DataFrame(index=np.arange(N_per_file), columns=keys)
 
-    #res = [image_generator_2(cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx, nmax_blend, 100, 28.,method) for _ in range(N_per_file)]
-    res = utils.apply_ntimes(image_generator, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, used_idx, nmax_blend, 100, 26., method_shift, do_peak_detection))
+    res = utils.apply_ntimes(image_generator, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, save_dir, used_idx, nmax_blend, 100, 27.5, method_shift, do_peak_detection))
     for i in trange(N_per_file):
         if training_or_test == 'test':
             gal_noiseless, blend_noisy, data, shift = res[i]
@@ -84,6 +83,13 @@ for icat in trange(N_files):
 
     # If the created sample is a test sample, also save the shifts and differents data
     if training_or_test == 'test':
+        # Compute the normalizing constants for the generated sample
+        noisy = np.array(galaxies)[:,1]
+        max_i_noisy = []
+        for i in range (10):
+            max_i_noisy.append(np.max(noisy[:,i], axis = (1,2)))
+        np.save(os.path.join(save_dir, root_i+'_I_norm.npy'), np.array(np.mean(max_i_noisy, axis = 1)))
+
         df.to_csv(os.path.join(save_dir, root_i+'_data.csv'), index=False)
         np.save(os.path.join(save_dir, root_i+'_shifts.npy'), np.array(shifts))
     

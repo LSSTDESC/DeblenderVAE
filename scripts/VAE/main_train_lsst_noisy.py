@@ -88,39 +88,6 @@ checkpointer_loss = ModelCheckpoint(filepath=path_weights+'loss/weights_loss_noi
 callbacks = [checkpointer_mse, checkpointer_loss, vae_hist]#, ReduceLROnPlateau(), TerminateOnNaN()]# checkpointer_mse earlystop, checkpointer_loss,vae_hist,, alphaChanger
 
 ######## Create generators
-#list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
-#list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
-
-# images_dir = '/sps/lsst/users/barcelin/data/single_galaxies/28/'
-# list_of_samples=[images_dir+'training/cropped/images_cropped_1.npy',
-#                 images_dir+'training/cropped/images_cropped_2.npy',
-#                 images_dir+'training/cropped/images_cropped_3.npy',
-#                 images_dir+'training/cropped/images_cropped_4.npy',
-#                 images_dir+'training/cropped/images_cropped_5.npy',
-#                 images_dir+'training/cropped/images_cropped_6.npy',
-#                 images_dir+'training/cropped/images_cropped_7.npy',
-#                 images_dir+'training/cropped/images_cropped_8.npy',
-#                 images_dir+'training/cropped/images_cropped_9.npy',
-#                 images_dir+'training/cropped/images_cropped_10.npy',
-#                 ]
-
-# list_of_samples_val = [images_dir+'validation/cropped/images_cropped_1.npy']
-
-
-# list_of_weights_e_training = [images_dir+'training/cropped/e_beta_1.npy',
-#                 images_dir+'training/cropped/e_beta_2.npy',
-#                 images_dir+'training/cropped/e_beta_3.npy',
-#                 images_dir+'training/cropped/e_beta_4.npy',
-#                 images_dir+'training/cropped/e_beta_5.npy',
-#                 images_dir+'training/cropped/e_beta_6.npy',
-#                 images_dir+'training/cropped/e_beta_7.npy',
-#                 images_dir+'training/cropped/e_beta_8.npy',
-#                 images_dir+'training/cropped/e_beta_9.npy',
-#                 images_dir+'training/cropped/e_beta_10.npy',
-#                 ]
-
-# list_of_weights_e_val = [images_dir+'validation/cropped/e_beta_1.npy']
-
 images_dir = '/sps/lsst/users/barcelin/data/isolated_galaxies/'+str(sys.argv[2])
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
@@ -135,6 +102,7 @@ training_generator = generator.BatchGenerator(bands, list_of_samples, total_samp
                                     trainval_or_test='training',
                                     do_norm=False,
                                     denorm = False,
+                                    path = os.path.join(images_dir, "test/"),
                                     list_of_weights_e=None)#list_of_weights_e_training
 
 validation_generator = generator.BatchGenerator(bands, list_of_samples_val, total_sample_size=None,
@@ -142,16 +110,17 @@ validation_generator = generator.BatchGenerator(bands, list_of_samples_val, tota
                                     trainval_or_test='validation',
                                     do_norm=False,
                                     denorm = False,
+                                    path = os.path.join(images_dir, "test/"),
                                     list_of_weights_e= None)#list_of_weights_e_val
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=12,#128
+                  steps_per_epoch=128,#128
                   verbose=2,
                   shuffle=True,
                   validation_data=validation_generator,
-                  validation_steps=2,#16
-                  #callbacks=callbacks,
+                  validation_steps=16,#16
+                  callbacks=callbacks,
                   #max_queue_size=4,
                   workers=0,#4 
                   use_multiprocessing = True)

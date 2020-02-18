@@ -47,16 +47,16 @@ filter_names_all = 'HJYVugrizy'
 #################### NOISE ###################
 # Poissonian noise according to sky_level
 n_years = 1
-N_exposures_lsst = 100*n_years 
+N_exposures_lsst = [56, 80, 184, 184, 160, 160] #Over the ten years (https://arxiv.org/pdf/0805.2366.pdf)
 N_exposures_euclid = 4
-N_exposures = [N_exposures_euclid]*4 + [N_exposures_lsst]*6
+#N_exposures = [N_exposures_euclid]*4 + [N_exposures_lsst]*6
 
-sky_level_lsst_u = (2.512 **(26.50-22.95)) * N_exposures_lsst # in e-.s-1.arcsec_2
-sky_level_lsst_g = (2.512 **(28.30-22.24)) * N_exposures_lsst # in e-.s-1.arcsec_2
-sky_level_lsst_r = (2.512 **(28.13-21.20)) * N_exposures_lsst # in e-.s-1.arcsec_2
-sky_level_lsst_i = (2.512 **(27.79-20.47)) * N_exposures_lsst # in e-.s-1.arcsec_2
-sky_level_lsst_z = (2.512 **(27.40-19.60)) * N_exposures_lsst # in e-.s-1.arcsec_2
-sky_level_lsst_y = (2.512 **(26.58-18.63)) * N_exposures_lsst # in e-.s-1.arcsec_2
+sky_level_lsst_u = (2.512 **(26.50-22.95)) * N_exposures_lsst[0] # in e-.s-1.arcsec_2
+sky_level_lsst_g = (2.512 **(28.30-22.24)) * N_exposures_lsst[1] # in e-.s-1.arcsec_2
+sky_level_lsst_r = (2.512 **(28.13-21.20)) * N_exposures_lsst[2] # in e-.s-1.arcsec_2
+sky_level_lsst_i = (2.512 **(27.79-20.47)) * N_exposures_lsst[3] # in e-.s-1.arcsec_2
+sky_level_lsst_z = (2.512 **(27.40-19.60)) * N_exposures_lsst[4] # in e-.s-1.arcsec_2
+sky_level_lsst_y = (2.512 **(26.58-18.63)) * N_exposures_lsst[5] # in e-.s-1.arcsec_2
 
 sky_level_pixel_lsst = [sky_level_lsst_u* 15 * pixel_scale_lsst**2,
                         sky_level_lsst_g* 15 * pixel_scale_lsst**2,
@@ -80,7 +80,7 @@ sky_level_vis = (2.512 **(25.58-22.35)) * N_exposures_euclid # in e-.s-1.arcsec_
 sky_level_pixel_nir = [ sky_level_nir_Y * 450. * pixel_scale_euclid_nir**2,
                         sky_level_nir_J * 450. * pixel_scale_euclid_nir**2,
                         sky_level_nir_H * 450. * pixel_scale_euclid_nir**2] # in e-/pixel/1800s
-sky_level_pixel_vis =   sky_level_vis   * 450. * pixel_scale_euclid_vis**2 # in e-/pixel/1800s
+sky_level_pixel_vis = sky_level_vis * 450. * pixel_scale_euclid_vis**2 # in e-/pixel/1800s
 
 sky_level_pixel = sky_level_pixel_nir + [sky_level_pixel_vis] + sky_level_pixel_lsst
 
@@ -100,12 +100,20 @@ PSF = [PSF_euclid_nir]*3 + [PSF_euclid_vis] + [PSF_lsst]*6
 
 #################### EXPOSURE AND LUMISOITY ###################
 # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             
-coeff_exp_euclid =  (1800. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_euclid
-coeff_exp_lsst =  (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_lsst
-coeff_exp = [coeff_exp_euclid]*4 + [coeff_exp_lsst]*6
+coeff_exp_euclid =  (450. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_euclid
+coeff_exp_lsst =  (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) 
+coeff_exp = [coeff_exp_euclid]*4 + [coeff_exp_lsst* N_exposures_lsst[0]]+ [coeff_exp_lsst* N_exposures_lsst[1]]+[coeff_exp_lsst* N_exposures_lsst[2]]+[coeff_exp_lsst* N_exposures_lsst[3]]+[coeff_exp_lsst* N_exposures_lsst[4]]+[coeff_exp_lsst* N_exposures_lsst[5]]
 
 
-############# SIZE OF STAMPS ################
+
+
+
+
+
+
+
+
+
 #################### PSF ###################
 ### If a varying PSF is needed, uncomment this part. ####
 ###--------------------------------------------------####

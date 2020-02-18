@@ -19,7 +19,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
     """
     Class to create batch generator for the LSST VAE.
     """
-    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, trainval_or_test, do_norm,denorm, list_of_weights_e):
+    def __init__(self, bands, list_of_samples,total_sample_size, batch_size, trainval_or_test, do_norm,denorm, path, list_of_weights_e):
         """
         Initialization function
         total_sample_size: size of the whole training (or validation) sample
@@ -37,7 +37,7 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         self.batch_size = batch_size
         self.list_of_samples = list_of_samples
         self.trainval_or_test = trainval_or_test
-        
+        self.path = path
         # indices = 0
         
         #self.noisy = noisy
@@ -103,11 +103,11 @@ class BatchGenerator(tensorflow.keras.utils.Sequence):
         
         # Preprocessing of the data to be easier for the network to learn
         if self.do_norm:
-            x = utils.norm(x, self.bands)
-            y = utils.norm(y, self.bands)
+            x = utils.norm(x, self.bands, self.path)
+            y = utils.norm(y, self.bands, self.path)
         if self.denorm:
-            x = utils.denorm(x, self.bands)
-            y = utils.denorm(y, self.bands)
+            x = utils.denorm(x, self.bands, self.path)
+            y = utils.denorm(y, self.bands, self.path)
 
         #  flip : flipping the image array
         rand = np.random.randint(4)

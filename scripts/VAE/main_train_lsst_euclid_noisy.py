@@ -100,6 +100,7 @@ training_generator = generator.BatchGenerator(bands, list_of_samples, total_samp
                                     trainval_or_test='training',
                                     do_norm=False,
                                     denorm = False,
+                                    path = os.path.join(images_dir, "test/"),
                                     list_of_weights_e= None)#180000
 
 validation_generator = generator.BatchGenerator(bands, list_of_samples_val, total_sample_size=None,
@@ -107,6 +108,7 @@ validation_generator = generator.BatchGenerator(bands, list_of_samples_val, tota
                                     trainval_or_test='validation',
                                     do_norm=False,
                                     denorm = False,
+                                    path = os.path.join(images_dir, "test/"),
                                     list_of_weights_e= None)#180000
 
 ######## Train the network

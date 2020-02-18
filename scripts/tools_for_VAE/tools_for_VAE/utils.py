@@ -17,8 +17,9 @@ import tensorflow as tf
 
 from . import model, vae_functions, plot
 
-I_lsst = np.array([255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145])
-I_euclid = np.array([5925.8097, 3883.7892, 1974.2465,  413.3895])
+
+I_lsst = np.array([180.37517423,  2152.52087871,  9092.64603086, 10915.98593594, 9142.75455, 5503.738025])#([255.2383, 2048.9297, 3616.1757, 4441.0576, 4432.7823, 2864.145])
+I_euclid = np.array([6953.85672262, 4878.28571965, 2596.81215979, 656.45566853])#([5925.8097, 3883.7892, 1974.2465,  413.3895])
 beta = 2.5
 
 
@@ -26,8 +27,9 @@ def listdir_fullpath(d):
     return [os.path.join(d, f) for f in os.listdir(d)]
 
 ############# Normalize data ############# 
-def norm(x, bands,n_years, channel_last=False, inplace=True):
-    I = np.concatenate([I_euclid,n_years*I_lsst])
+def norm(x, bands, path , channel_last=False, inplace=True):
+    test_dir = os.path.join(path, "../test/")
+    I = np.load(test_dir+'galaxies_isolated_20191024_0_I_norm.npy', mmap_mode = 'c')#np.concatenate([I_euclid,n_years*I_lsst])
     if not inplace:
         y = np.copy(x)
     else:
@@ -44,8 +46,9 @@ def norm(x, bands,n_years, channel_last=False, inplace=True):
                 y[i,ib] = np.tanh(np.arcsinh(y[i,ib]/(I[b]/beta)))
     return y
 
-def denorm(x, bands,n_years, channel_last=False, inplace=True):
-    I = np.concatenate([I_euclid,n_years*I_lsst])
+def denorm(x, bands ,path , channel_last=False, inplace=True):
+    test_dir = os.path.join(path, "../test/")
+    I = np.load(test_dir+'galaxies_isolated_20191024_0_I_norm.npy', mmap_mode = 'c')#I = np.concatenate([I_euclid,n_years*I_lsst])
     if not inplace:
         y = np.copy(x)
     else:
