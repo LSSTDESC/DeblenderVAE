@@ -14,6 +14,8 @@ from tensorflow.keras.layers import Input, Dense, Lambda, Layer, Add, Multiply, 
 from tensorflow.keras.models import Model, Sequential
 from scipy.stats import norm
 import tensorflow as tf
+import pathlib
+from pathlib import Path
 
 from . import model, vae_functions, plot
 
@@ -28,8 +30,10 @@ def listdir_fullpath(d):
 
 ############# Normalize data ############# 
 def norm(x, bands, path , channel_last=False, inplace=True):
-    test_dir = os.path.join(path, "../test/")
-    I = np.load(test_dir+'galaxies_isolated_20191024_0_I_norm.npy', mmap_mode = 'c')#np.concatenate([I_euclid,n_years*I_lsst])
+    full_path = pathlib.PurePath(path)
+    isolated_or_blended = full_path.parts[6][0:len(full_path.parts[6])-9]
+    test_dir = str(Path(path).parents[0])+'/test/'
+    I = np.load(test_dir+'galaxies_'+isolated_or_blended+'_20191024_0_I_norm.npy', mmap_mode = 'c')#np.concatenate([I_euclid,n_years*I_lsst])
     if not inplace:
         y = np.copy(x)
     else:
@@ -47,8 +51,10 @@ def norm(x, bands, path , channel_last=False, inplace=True):
     return y
 
 def denorm(x, bands ,path , channel_last=False, inplace=True):
-    test_dir = os.path.join(path, "../test/")
-    I = np.load(test_dir+'galaxies_isolated_20191024_0_I_norm.npy', mmap_mode = 'c')#I = np.concatenate([I_euclid,n_years*I_lsst])
+    full_path = pathlib.PurePath(path)
+    isolated_or_blended = full_path.parts[6][0:len(full_path.parts[6])-9]
+    test_dir = str(Path(path).parents[0])+'/test/'
+    I = np.load(test_dir+'galaxies_'+isolated_or_blended+'_20191024_0_I_norm.npy', mmap_mode = 'c')#I = np.concatenate([I_euclid,n_years*I_lsst])
     if not inplace:
         y = np.copy(x)
     else:
