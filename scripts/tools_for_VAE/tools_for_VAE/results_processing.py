@@ -21,7 +21,7 @@ from tqdm.auto import trange
 from . import utils, plot
 
 
-def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_size, psf, pix_scale):
+def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_size, psf, pix_scale, cut_mag):
     """
     Returns 
 
@@ -138,8 +138,11 @@ def processing(deblender, data_dir,root,test_sample,bands,r_band,im_size,batch_s
     df['e_out_obs'] = e_obs[:,1]
     df['e_obs_error'] = df['e_out_obs'] - df['e_in_obs']
 
-    df['mag_in'] = -2.5*np.log10(flux_in)+38.4147
-    df['mag_out']= -2.5*np.log10(flux_out)+38.4147
+    df['flux_in'] = flux_in
+    df['flux_out']= flux_out
+    cst = cut_mag - (np.max(-2.5*np.log10(flux_in)))
+    df['mag_in'] = -2.5*np.log10(flux_in)+cst
+    df['mag_out']= -2.5*np.log10(flux_out)+cst
     df['delta_mag'] = df['mag_out'] - df['mag_in']
 
     return df
