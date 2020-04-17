@@ -16,9 +16,6 @@ from tensorflow.keras import metrics
 import vae_functions
 import model
 
-
-
-
 ###### Callbacks
 # Create a callback for changing KL coefficient in the loss
 class changeAlpha(Callback):
@@ -29,7 +26,9 @@ class changeAlpha(Callback):
         self.epochs = epochs
     
     def on_epoch_end(self, alpha, vae):
+        # Alpha stable during first 10 epochs
         stable = 10
+        # First value of the alpha tensor
         new_alpha = 0.0001
         if self.epoch > stable :
             coef = self.epoch - (self.epochs + stable)/2
@@ -50,10 +49,12 @@ class changelr(Callback):
         self.vae = vae
     
     def on_epoch_end(self, alpha, vae):
+        # Change every 100 epochs
         if (self.epoch == 100):
             self.epoch =0
             actual_value = K.get_value(self.vae.optimizer.lr)
-            if (actual_value > 0.000009):
+            # Change learning rate until it is lower than 1.10-5
+            if (actual_value > 0.00001):
                 new_value = actual_value/2
                 K.set_value(self.vae.optimizer.lr, new_value)
                 print(K.get_value(self.vae.optimizer.lr))

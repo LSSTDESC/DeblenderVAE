@@ -49,7 +49,6 @@ filter_names_all = 'HJYVugrizy'
 n_years = 1
 N_exposures_lsst = [56, 80, 184, 184, 160, 160] #Over the ten years (https://arxiv.org/pdf/0805.2366.pdf)
 N_exposures_euclid = 4
-#N_exposures = [N_exposures_euclid]*4 + [N_exposures_lsst]*6
 
 sky_level_lsst_u = (2.512 **(26.50-22.95)) * N_exposures_lsst[0] # in e-.s-1.arcsec_2
 sky_level_lsst_g = (2.512 **(28.30-22.24)) * N_exposures_lsst[1] # in e-.s-1.arcsec_2
@@ -102,7 +101,7 @@ PSF = [PSF_euclid_nir]*3 + [PSF_euclid_vis] + [PSF_lsst]*6
 # The luminosity is multiplied by the ratio of the noise in the LSST R band and the assumed cosmos noise             
 coeff_exp_euclid =  (450. * ((1.25)**2 - (0.37)**2)/((2.4**2)*(1.-0.33**2))) * N_exposures_euclid
 coeff_exp_lsst =  (15. * (6.68**2)/((2.4**2)*(1.-0.33**2))) 
-coeff_exp = [coeff_exp_euclid]*4 + [coeff_exp_lsst* N_exposures_lsst[0]]+ [coeff_exp_lsst* N_exposures_lsst[1]]+[coeff_exp_lsst* N_exposures_lsst[2]]+[coeff_exp_lsst* N_exposures_lsst[3]]+[coeff_exp_lsst* N_exposures_lsst[4]]+[coeff_exp_lsst* N_exposures_lsst[5]]
+coeff_exp = [coeff_exp_euclid*N_exposures_euclid]*4 + [coeff_exp_lsst* N_exposures_lsst[0]]+ [coeff_exp_lsst* N_exposures_lsst[1]]+[coeff_exp_lsst* N_exposures_lsst[2]]+[coeff_exp_lsst* N_exposures_lsst[3]]+[coeff_exp_lsst* N_exposures_lsst[4]]+[coeff_exp_lsst* N_exposures_lsst[5]]
 
 
 

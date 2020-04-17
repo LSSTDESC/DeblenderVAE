@@ -5,63 +5,6 @@ from tensorflow.keras.layers import Layer
 import tensorflow.keras.backend as K
 
 
-class AddPoissonNoise(Layer):
-    """
-    Apply additive Poisson noise to a multichannel image, removing the expected value of the noise.
-    Modified from GaussianNoise.
-
-    # Arguments
-        training_only: boolean, applies noise at training only or always
-        sky_level: float or array (same dim as number of channels) in e-/pixel/exposure
-        N_exposures: int, the number of total exposures to scale the noise
-
-    # Input shape
-        Arbitrary. Use the keyword argument `input_shape`
-        (tuple of integers, does not include the samples axis)
-        when using this layer as the first layer in a model.
-
-    # Output shape
-        Same shape as input.
-    """
-
-    # @interfaces.legacy_gaussiannoise_support
-    def __init__(self, training_only, sky_level=None, N_exposures=None, **kwargs):
-        """
-        LSST default for e-/pixel/15s exposure, from http://slideplayer.com/slide/6955702/
-        sky_level_pixel = np.array([43, 234, 543, 900, 1388, 1807])
-        N_exposures = 100 # 1 year
-
-        """
-
-        super(AddPoissonNoise, self).__init__(**kwargs)
-        self.supports_masking = True
-
-        self.training_only = not(training_only)
-
-        if sky_level is None:
-            self.sky_level = np.array([43, 234, 543, 900, 1388, 1807])
-        else:
-            self.sky_level = sky_level
-
-        if N_exposures is None:
-            self.N_exposures = 100
-        else:
-            self.N_exposures = N_exposures
-
-    def call(self, inputs, training=None):
-        def noised():
-            return ((tf.random_poisson((inputs + self.sky_level) * self.N_exposures, [1])[0]) / self.N_exposures) - self.sky_level
-        return K.in_train_phase(noised, inputs, training=training or not(self.training_only))
-
-    def get_config(self):
-        config = {'training_only': self.training_only,
-                  'sky_level': self.sky_level, 'N_exposures': self.N_exposures}
-        base_config = super(AddPoissonNoise, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
-
-    def compute_output_shape(self, input_shape):
-        return input_shape
-
 
 class ImageScaleLayer(Layer):
     """
@@ -131,8 +74,6 @@ class SampleMultivariateGaussian(Layer):
 
         z = dist_z.sample()
         
-        #self.coeff_KL = self.coeff_KL * 1.5
-        #print(self.coeff_KL)
         if self.add_KL or self.return_KL:
             kl_divergence = tfp.distributions.kl_divergence(
                 dist_z, dist_0, name='KL_divergence_full_cov')

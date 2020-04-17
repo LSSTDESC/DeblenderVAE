@@ -8,7 +8,9 @@ import scipy
 # Function adapted from matplotlib.cbook
 def my_boxplot_stats(X, whis=1.5, bootstrap=None, labels=None,
                   autorange=False, percents=[25, 75]):
-
+    '''
+    Return statistics computed for boxplot
+    '''
     def _bootstrap_median(data, N=5000):
         # determine 95% confidence intervals of the median
         M = len(data)
@@ -138,6 +140,8 @@ def my_boxplot_stats(X, whis=1.5, bootstrap=None, labels=None,
     return bxpstats
 
 
+
+
 def boxplot_func(df_in, x, y, z,
             xlim, ylim, ylim2, 
             x_scale, 
@@ -147,7 +151,22 @@ def boxplot_func(df_in, x, y, z,
             legend_remove = False,
             palette = ["#3498db","#e74c3c"],
             nbins = 11):
-    
+    '''
+    Return boxplot figure, median and standard deviation
+
+    Parameters:
+    ----------
+    df_in: input data
+    x, y, z: labels for x, y and z 
+    xlim, ylim, ylim2: limits for plots
+    x_scale: choice 'log' or not
+    legend: legend to display
+    x_label, y_label, y_label_hist, y_label_2: 
+    errors: errors to drop if necessary
+    legend_remove: boolean to remove the legend
+    palette: color palette
+    nbins: number of bins to split data
+    '''
     median = []
     q1 = []
     q3 = []
@@ -157,13 +176,16 @@ def boxplot_func(df_in, x, y, z,
     import matplotlib as mpl
     mpl.rcdefaults()
     
+    # Drop error if necessary
     if errors is not None:
         df_plot = df_in.drop(errors)
     else:
         df_plot = df_in
 
+    # Drop NaN in dataframe
     df_plot = df_plot.dropna()
-    print(len(df_plot))
+
+    # Define bins
     if x_scale == 'log':
         x_bins = np.geomspace(xlim[0], xlim[1], nbins+1)
     else :
@@ -174,19 +196,22 @@ def boxplot_func(df_in, x, y, z,
     
     idx = np.digitize(df_plot[x], x_bins)    
 
+    # Initialize figure
     fig, axes = plt.subplots(3,1, figsize=(5,4), gridspec_kw={'height_ratios': [1, 3, 1]})
     
+    # Top plot: distribution of the parameter
     if x_scale == 'log':
-        sns.distplot(np.log10(df_plot[x]), ax=axes[0], color='0.8')
+        sns.distplot(np.log10(df_plot[x]), kde = False, ax=axes[0], color='0.8')
         axes[0].set_xlim(np.log10(xlim[0]), np.log10(xlim[1]))
     else:
-        sns.distplot(df_plot[x], ax=axes[0], color='0.8')
+        sns.distplot(df_plot[x], kde = False, ax=axes[0], color='0.8')
         axes[0].set_xlim(xlim[0], xlim[1])
     
     axes[0].set_yticks([])
     axes[0].set_ylabel(y_label_hist)
     axes[0].set_xticks([])
 
+    # Second plot: boxplot generated with seaborn split as a function of the parameter
     ax = axes[1]
     exp = np.unique(df_plot[z])
     N_exp = len(exp)
@@ -195,6 +220,7 @@ def boxplot_func(df_in, x, y, z,
     for ik, key in enumerate(exp):
         print(ik, key)
         stats = {}
+        # Compute and save statistics
         for i in range(1,len(x_bins)):
             stats[i] = my_boxplot_stats(df_plot[y][np.logical_and(idx==i,df_plot[z]==key)].values, whis=[100*scipy.stats.norm.cdf(-2),100*scipy.stats.norm.cdf(2)], percents=[100*scipy.stats.norm.cdf(-1),100*scipy.stats.norm.cdf(1)])[0]
             median.append(stats[i]['med'])
@@ -228,17 +254,11 @@ def boxplot_func(df_in, x, y, z,
     ax.set_xlim(xlim[0], xlim[1])
     if x_scale == 'log':
         ax.set_xscale('log')
-    #ax.tick_params(
-    #    axis='x',          # changes apply to the x-axis
-    #    which='both',      # both major and minor ticks are affected
-    #    bottom=False,      # ticks along the bottom edge are off
-    #    top=False,         # ticks along the top edge are off
-    #    labelbottom=False)    
     ax.set_xticks([])
     ax.xaxis.tick_bottom()
     
+    # Median of boxplot, as a function of the parameter
     ax = axes[2]
-    #ax = ax.twiny()
     ax.axhline(y=0, c='0.5', zorder=32, lw=0.5)
     med_array = np.array(median).reshape(N_exp,int(len(median)/N_exp))
     for ik, key in enumerate(exp):

@@ -21,7 +21,7 @@ from images_generator import image_generator, image_generator_real
 # The script is used as, eg,
 # # python main_blended_generation_cosmos.py training 10 1000
 # to produce 10 files in the training sample with 1000 images each.
-case = str(sys.argv[1]) #'centered/'  # centered/ miscentered_0.1/ miscentered_peak/
+case = str(sys.argv[1]) #'centered/'  # centered/ miscentered_0.1/ miscentered_peak/ #real/
 training_or_test = str(sys.argv[2]) #'test' # training test validation
 isolated_or_blended = str(sys.argv[3]) #'blended' # isolated blended
 method_shift = str(sys.argv[4]) #'noshift' # 'noshift', 'uniform', 'uniform+betaprime'
@@ -34,13 +34,13 @@ assert training_or_test in ['training', 'validation', 'test']
 # Method to shift centered galaxy
 if isolated_or_blended == 'isolated':
     # where to save images and data
-    save_dir = '/sps/lsst/users/barcelin/data/isolated_galaxies/' + case + training_or_test #blended_images#single_galaxies
+    save_dir = '/sps/lsst/users/barcelin/data/isolated_galaxies/' + case + training_or_test
     # what to call those files
     root = 'galaxies_isolated_20191024_'
     nmax_blend = 1
 elif isolated_or_blended == 'blended':
     # where to save images and data
-    save_dir = '/sps/lsst/users/barcelin/data/blended_galaxies/' + case + training_or_test #blended_images#single_galaxies
+    save_dir = '/sps/lsst/users/barcelin/data/blended_galaxies/' + case + training_or_test
     # what to call those files
     root = 'galaxies_blended_20191024_'
     nmax_blend = 4
@@ -57,7 +57,7 @@ else:
 
 # keys for data objects
 keys = ['nb_blended_gal', 'SNR', 'SNR_peak', 'redshift', 'moment_sigma', 'e1', 'e2', 'mag', 'mag_ir', 'closest_x', 'closest_y', 'closest_redshift', 'closest_moment_sigma', 'closest_e1', 'closest_e2', 'closest_mag', 'closest_mag_ir', 'blendedness_total_lsst', 'blendedness_closest_lsst', 'blendedness_aperture_lsst', 'idx_closest_to_peak', 'n_peak_detected']
-#keys = ['nb_blended_gal', 'SNR', 'SNR_peak', 'redshift', 'moment_sigma', 'e1', 'e2', 'mag', 'mag_ir', 'closest_x', 'closest_y', 'closest_redshift', 'closest_moment_sigma', 'closest_e1', 'closest_e2', 'closest_mag','closest_mag_ir', 'blendedness_total_lsst', 'blendedness_aperture_lsst', 'blendedness_closest_lsst']#'blendedness_total_euclid', , 'blendedness_closest_euclid'
+
 for icat in trange(N_files):
     # Run params
     root_i = root+nb_of_file_i#str(icat)
@@ -67,7 +67,7 @@ for icat in trange(N_files):
     if training_or_test == 'test':
         df = pd.DataFrame(index=np.arange(N_per_file), columns=keys)
 
-    res = utils.apply_ntimes(image_generator, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, save_dir, used_idx, nmax_blend, 100, 27.5, method_shift, do_peak_detection))
+    res = utils.apply_ntimes(image_generator_real, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, save_dir, used_idx, nmax_blend, 100, 27.5, method_shift, do_peak_detection))
     for i in trange(N_per_file):
         if training_or_test == 'test':
             gal_noiseless, blend_noisy, data, shift = res[i]

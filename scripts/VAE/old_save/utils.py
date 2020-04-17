@@ -35,6 +35,27 @@ def load_vae_conv(path,nb_of_bands,folder = False):
     return vae_loaded , output_encoder
 
 
+def load_vae_full(path, nb_of_bands, folder=False):
+    """
+    Return the loaded VAE located at the path given when the function is called
+    """        
+    latent_dim = 32
+    
+    # Build the encoder and decoder
+    encoder, decoder = model.vae_model(latent_dim, nb_of_bands)
+
+    #### Build the model
+    vae_loaded, vae_utils,  Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
+
+    if folder == False: 
+        vae_loaded.load_weights(path)
+    else:
+        print(path)
+        latest = tf.train.latest_checkpoint(path)
+        vae_loaded.load_weights(latest)
+
+    return vae_loaded, vae_utils, encoder, decoder, Dkl
+
 def load_vae_decoder(path,nb_of_bands,folder = False):
     """
     Return the decoder of the VAE located at the path given when the function is called

@@ -47,10 +47,6 @@ if not load:
     vae, vae_utils, Dkl = vae_functions.build_vanilla_vae(encoder, decoder, full_cov=False, coeff_KL = 0)
 else:
     vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, len(bands), folder=True) 
-######## Comment or not depending on what's necessary
-# Load weights
-#vae, vae_utils, encoder, Dkl = utils.load_vae_conv(path_output, len(bands), folder=True) 
-#K.set_value(alpha, utils.load_alpha('/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/v10/'))
 
 print(vae.summary())
 
@@ -76,26 +72,19 @@ path_weights = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/'+str(sys.argv[3
 path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/VAE/noisy/'+str(sys.argv[3])
 path_tb = '/sps/lsst/users/barcelin/Graph/vae_lsst_r_band/noisy/'
 
-alphaChanger = changeAlpha(alpha, vae, vae_loss, path_output)# path_weights)
 # Callback to display evolution of training
 vae_hist = vae_functions.VAEHistory(x_val[:500], vae_utils, latent_dim, alpha, plot_bands=[1,2,3], figroot=os.path.join(path_plots, 'test_noisy_LSST_v4'), period=2)
 # Keras Callbacks
-#earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
 checkpointer_mse = ModelCheckpoint(filepath=path_weights+'mse/weights_mse_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 checkpointer_loss = ModelCheckpoint(filepath=path_weights+'loss/weights_loss_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True, save_weights_only=True, mode='min', period=1)
 
 ######## Define all used callbacks
-callbacks = [checkpointer_mse, checkpointer_loss, vae_hist]#, ReduceLROnPlateau(), TerminateOnNaN()]# checkpointer_mse earlystop, checkpointer_loss,vae_hist,, alphaChanger
+callbacks = [checkpointer_mse, checkpointer_loss, vae_hist]
 
 ######## Create generators
 images_dir = '/sps/lsst/users/barcelin/data/isolated_galaxies/'+str(sys.argv[2])
 list_of_samples = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training')) if x.endswith('.npy')]
 list_of_samples_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation')) if x.endswith('.npy')]
-
-# weights_dir = '/sps/lsst/users/barcelin/data/isolated_galaxies/'+str(sys.argv[2])
-# list_of_weights_e_training = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'training/weights')) if x.endswith('.npy')]
-# list_of_weights_e_val = [x for x in utils.listdir_fullpath(os.path.join(images_dir,'validation/weights')) if x.endswith('.npy')]
-
 
 training_generator = generator.BatchGenerator(bands, list_of_samples, total_sample_size=None,
                                     batch_size=batch_size, 
@@ -103,7 +92,7 @@ training_generator = generator.BatchGenerator(bands, list_of_samples, total_samp
                                     do_norm=False,
                                     denorm = False,
                                     path = os.path.join(images_dir, "test/"),
-                                    list_of_weights_e=None)#list_of_weights_e_training
+                                    list_of_weights_e=None)
 
 validation_generator = generator.BatchGenerator(bands, list_of_samples_val, total_sample_size=None,
                                     batch_size=batch_size, 
@@ -111,16 +100,15 @@ validation_generator = generator.BatchGenerator(bands, list_of_samples_val, tota
                                     do_norm=False,
                                     denorm = False,
                                     path = os.path.join(images_dir, "test/"),
-                                    list_of_weights_e= None)#list_of_weights_e_val
+                                    list_of_weights_e= None)
 
 ######## Train the network
 hist = vae.fit_generator(generator=training_generator, epochs=epochs,
-                  steps_per_epoch=128,#128
+                  steps_per_epoch=128,
                   verbose=2,
                   shuffle=True,
                   validation_data=validation_generator,
-                  validation_steps=16,#16
+                  validation_steps=16,
                   callbacks=callbacks,
-                  #max_queue_size=4,
-                  workers=0,#4 
+                  workers=0,
                   use_multiprocessing = True)

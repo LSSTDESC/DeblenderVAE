@@ -26,8 +26,6 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 
 # from generator_deblender import BatchGenerator
-sys.path.insert(0,'../VAE/')
-
 sys.path.insert(0,'../tools_for_VAE/')
 from tools_for_VAE import model, vae_functions, utils, generator
 from tools_for_VAE.callbacks import changeAlpha
@@ -35,16 +33,16 @@ from tools_for_VAE.callbacks import changeAlpha
 ######## Set some parameters
 batch_size = 100
 latent_dim = 32
-epochs = int(sys.argv[4])#10000
+epochs = int(sys.argv[4])
 bands = [4,5,6,7,8,9]
 
-steps_per_epoch = 128 #256
-validation_steps = 16 #16
+steps_per_epoch = 128 
+validation_steps = 16
 
-load_from_vae_or_deblender = str(sys.argv[5])#'deblender'
+load_from_vae_or_deblender = str(sys.argv[5])
 
 images_dir = '/sps/lsst/users/barcelin/data/blended_galaxies/'+str(sys.argv[3])+'validation/'
-path_output = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/'+str(sys.argv[6])#7/mse
+path_output = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/'+str(sys.argv[6])
 path_output_vae = '/sps/lsst/users/barcelin/weights/LSST/VAE/noisy/'+str(sys.argv[6])
 
 ######## Import data for callback (Only if VAEHistory is used)
@@ -53,8 +51,10 @@ x_val = np.load(os.path.join(images_dir, 'galaxies_blended_20191024_0_images.npy
 
 ######## Load deblender
 if load_from_vae_or_deblender == 'vae':
+    print('VAE')
     deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(path_output_vae, 6, folder=True) 
 elif load_from_vae_or_deblender == 'deblender':
+    print('deblender')
     deblender, deblender_utils, encoder, decoder, Dkl = utils.load_vae_full(path_output, 6, folder=True) 
 else:
     raise NotImplementedError
@@ -74,22 +74,14 @@ print(deblender.summary())
 ######## Fix the maximum learning rate in adam
 K.set_value(deblender.optimizer.lr, sys.argv[1])
 
-#######
-# Callback
+######## Callback
 
 path_weights = '/sps/lsst/users/barcelin/weights/LSST/deblender/noisy/'+str(sys.argv[2])
 path_plots = '/sps/lsst/users/barcelin/callbacks/LSST/deblender/noisy/'+str(sys.argv[2])
-path_tb = '/sps/lsst/users/barcelin/Graph/deblender_lsst/'
 
-# alphaChanger = callbacks.changeAlpha(alpha, deblender, deblender_loss, path_weights)
-# ######## Define all used callbacks
-# callbacks = [vae_hist,checkpointer_mse]#vae_hist, , checkpointer_loss
-
-#alphaChanger = changeAlpha(alpha, deblender, deblender_loss, path_output)# path_weights)
 # Callback to display evolution of training
 vae_hist = vae_functions.VAEHistory(x_val[:500], deblender_utils, latent_dim, alpha, plot_bands=[1,2,3], figroot=os.path.join(path_plots, 'test_noisy_LSST_v4'), period=2)
 # Keras Callbacks
-#earlystop = tf.keras.callbacks.EarlyStopping(monitor='val_mean_squared_error', min_delta=0.0000001, patience=10, verbose=0, mode='min', baseline=None)
 checkpointer_mse = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'mse/weights_noisy_v4.{epoch:02d}-{val_mean_squared_error:.2f}.ckpt', monitor='val_mean_squared_error', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 checkpointer_loss = tf.keras.callbacks.ModelCheckpoint(filepath=path_weights+'loss/weights_noisy_v4.{epoch:02d}-{val_loss:.2f}.ckpt', monitor='val_loss', verbose=1, save_best_only=True,save_weights_only=True, mode='min', period=1)
 
@@ -107,14 +99,16 @@ training_generator = generator.BatchGenerator(bands, list_of_samples, total_samp
                                     trainval_or_test='training',
                                     do_norm=False,
                                     denorm = False,
-                                    list_of_weights_e = None)#180000
+                                    path = os.path.join(images_dir, "test/"),
+                                    list_of_weights_e = None)
 
 validation_generator = generator.BatchGenerator(bands, list_of_samples_val, total_sample_size=None,
                                     batch_size=batch_size,
                                     trainval_or_test='validation',
                                     do_norm=False,
                                     denorm = False,
-                                    list_of_weights_e = None)#180000
+                                    path = os.path.join(images_dir, "test/"),
+                                    list_of_weights_e = None)
 
 ######## Train the network
 hist = deblender.fit_generator(generator=training_generator, epochs=epochs,
