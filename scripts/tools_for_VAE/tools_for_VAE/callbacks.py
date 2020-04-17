@@ -18,14 +18,14 @@ from tensorflow.keras import metrics
 # Create a callback for changing KL coefficient in the loss
 class changeAlpha(Callback):
     def __init__(self, alpha, vae, vae_loss, path):
-        ''''
+        '''
         Initialization function
         epoch: epoch number, initialized at 1
         alpha: value of the KL coefficient
         vae: network trained
         vae_loss: loss used to train the vae
         path: savepath for the value of alpha
-        ''''
+        '''
         self.epoch = 1
         self.alpha = alpha
         self.vae = vae
