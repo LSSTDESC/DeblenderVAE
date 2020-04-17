@@ -8,7 +8,7 @@ import random
 import tensorflow.keras
 import pandas as pd
 from random import choice
-from tensorflow.python.keras.utils import Sequence
+#from tensorflow.python.keras.utils import Sequence
 
 sys.path.insert(0,'../tools_for_VAE/')
 from tools_for_VAE import utils
