@@ -9,7 +9,7 @@ This folder contains the scripts for the images generation, the VAE and deblende
 
 The images are generated with GalSim (https://github.com/GalSim-developers/GalSim, doc: http://galsim-developers.github.io/GalSim/_build/html/index.html) from parametric models fitted to real galaxies from the HST COSMOS catalog (which can be found from here: https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data).
 
-# Required packages
+## Required packages
 - tensorflow : 1.13.1 (or tensorflow-gpu)
 - tensorflow-probability : 0.6.0
 - galsim
