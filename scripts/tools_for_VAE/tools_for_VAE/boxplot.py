@@ -201,10 +201,10 @@ def boxplot_func(df_in, x, y, z,
     
     # Top plot: distribution of the parameter
     if x_scale == 'log':
-        sns.distplot(np.log10(df_plot[x]), kde = False, ax=axes[0], color='0.8')
+        sns.distplot(np.log10(df_plot[x]), kde = False, ax=axes[0], color='0.5')
         axes[0].set_xlim(np.log10(xlim[0]), np.log10(xlim[1]))
     else:
-        sns.distplot(df_plot[x], kde = False, ax=axes[0], color='0.8')
+        sns.distplot(df_plot[x], kde = False, ax=axes[0], color='0.5')
         axes[0].set_xlim(xlim[0], xlim[1])
     
     axes[0].set_yticks([])
