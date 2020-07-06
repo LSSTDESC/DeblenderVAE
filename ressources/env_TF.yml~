@@ -1,0 +1,17 @@
+name: python_cpu5
+channels:
+  - conda-forge
+dependencies:
+  - scipy
+  - numpy
+  - jupyter
+  - jupyterlab
+  - matplotlib
+  - astropy
+  - keras
+  - tensorflow=1.13.1
+  - tensorflow-probability=0.6.0
+  - galsim
+  - seaborn
+  - pandas
+  - tqdm
