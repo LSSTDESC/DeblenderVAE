@@ -11,7 +11,37 @@ The images are generated with GalSim (https://github.com/GalSim-developers/GalSi
 
 The list of released versions of this package can be found [here](https://github.com/LSSTDESC/DeblenderVAE/releases), with the master branch including the most recent (non-released) development.
 
+## Installation
+1. Clone the repository
+```
+git clone https://github.com/LSSTDESC/DeblenderVAE.git
+cd DeblenderVAE
+```
+2. Install 
+- with [conda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html)
+  - if you don't want to use GPU
+    ```
+    conda env create -f ressources/env_TF.yml
+    conda activate env_vae_tensorflow
+    ```
+  - if you want to use GPU
+    ```
+    conda env create -f ressources/env_TF_gpu.yml
+    conda activate env_vae_tensorflow_gpu
+    ```
+
+
 ## Required packages
-- tensorflow : 1.13.1 (or tensorflow-gpu)
-- tensorflow-probability : 0.6.0
+- scipy
+- numpy
+- jupyter
+- jupyterlab
+- matplotlib
+- astropy
+- keras
+- tensorflow=1.13.1
+- tensorflow-probability=0.6.0
 - galsim
+- seaborn
+- pandas
+- tqdm
