@@ -30,7 +30,7 @@ rng = galsim.BaseDeviate(None)
 ############ PARAMETER MEASUREMENTS
 
 center_brightest = True
-print(n_years)
+
 beta_prime_parameters = (4.449289034920325, 12.777961268954916, -0.009031368689570645, 0.2840353229095878)#(14.022429614276358, 6.922508843325913, -0.0247188726955977, 0.04994196562063914)
 
 def get_scale_radius(gal):
@@ -149,7 +149,7 @@ def peak_detection(denormed_img, band, shifts, img_size, npeaks, nb_blended_gal,
 
 ########## DRAWING OF IMAGE WITH GALSIM
 
-def draw_images(galaxies_psf, band, img_size, filter_name,sky_level_pixel, real_or_param = 'param'):
+def draw_images(galaxies_psf, band, img_size, filter_name,sky_level_pixel, rng_shear=None, real_or_param = 'param'):
     '''
     Return single galaxy noiseless images as well as the blended noisy one
 
@@ -178,15 +178,23 @@ def draw_images(galaxies_psf, band, img_size, filter_name,sky_level_pixel, real_
         images.append(temp_img)
         blend_img += temp_img
     # add noise
-    poissonian_noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
-    blend_img.addNoise(poissonian_noise)
+    if rng_shear is None:
+        poissonian_noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
+        blend_img.addNoise(poissonian_noise)
+        #blend_img = np.array(blend_img.array.data)
+    else:
+        poissonian_noise = galsim.GaussianNoise(rng=rng_shear, sigma=np.sqrt(sky_level_pixel))#PoissonNoise(rng_shear, sky_level=sky_level_pixel)
+        blend_img.addNoise(poissonian_noise)
+        #np.random.seed(rng_shear)
+        #rng = np.random.RandomState(rng_shear)
+        #blend_img = rng.poisson(np.array(blend_img.array.data)+sky_level_pixel).astype(float) - sky_level_pixel
 
     return images, blend_img
 
 
 ########## IMAGES NUMPY ARRAYS GENERATION
 # CASE OF PARAMETRIC IMAGES
-def image_generator(cosmos_cat_dir, training_or_test, isolated_or_blended, constants_dir, used_idx=None, nmax_blend=4, max_try=3, mag_cut=28., method_first_shift='noshift', do_peak_detection=True):
+def image_generator(cosmos_cat_dir, training_or_test, isolated_or_blended, constants_dir, used_idx=None, nmax_blend=4, max_try=3, mag_cut=28., method_first_shift='noshift', do_peak_detection=True, do_add_shear=False):
     """
     Return numpy arrays: noiseless and noisy image of single galaxy and of blended galaxies as well as the pandaframe including data about the image and the shifts in the test sample generation configuration
     
@@ -261,8 +269,12 @@ def image_generator(cosmos_cat_dir, training_or_test, isolated_or_blended, const
             else:
                 idx_closest_to_peak_galaxy = 0
             
-            galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
-            blend_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
+            if do_add_shear:
+                galaxy_noiseless = np.zeros((50,max_stamp_size,max_stamp_size))
+                blend_noisy = np.zeros((50,max_stamp_size,max_stamp_size))
+            else:
+                galaxy_noiseless = np.zeros((10,max_stamp_size,max_stamp_size))
+                blend_noisy = np.zeros((10,max_stamp_size,max_stamp_size))
 
             # Realize peak detection in r-band filter if asked
             if do_peak_detection:
@@ -284,42 +296,51 @@ def image_generator(cosmos_cat_dir, training_or_test, isolated_or_blended, const
             
             # Now draw image in all filters
             for i, filter_name in enumerate(filter_names_all):
-                galaxies_psf = [galsim.Convolve([gal*coeff_exp[i], PSF[i]]) for gal in galaxies]
-                images, blend_img = draw_images(galaxies_psf, i, max_stamp_size, filter_name, sky_level_pixel[i])
-                if isolated_or_blended == 'isolated' or not do_peak_detection:
-                    idx_closest_to_peak = 0
-                    n_peak = 1
-                galaxy_noiseless[i] = images[idx_closest_to_peak].array.data
-                blend_noisy[i] = blend_img.array.data
+                shear_list = [(0,0),(0.01,0),(-0.01,0),(0,0.01),(0,-0.01)]
+                if not do_add_shear:
+                    shear_list = [shear_list[0]]
+                    r_int = None
+                else:
+                    r_int =  np.random.randint(10000000)
+                for s, shear in enumerate(shear_list):
+                    rng_shear = galsim.BaseDeviate(r_int)
+                    galaxies_psf = [galsim.Convolve([gal.shear(g1=shear[0], g2=shear[1]) * coeff_exp[i], PSF[i]]) for gal in galaxies]
+                    images, blend_img = draw_images(galaxies_psf, i, max_stamp_size, filter_name, sky_level_pixel[i], rng_shear=rng_shear)
+                    if isolated_or_blended == 'isolated' or not do_peak_detection:
+                        idx_closest_to_peak = 0
+                        n_peak = 1
+                    galaxy_noiseless[i+s*10] = images[idx_closest_to_peak].array.data
+                    blend_noisy[i+s*10] = blend_img.array.data
 
-                # get data for the test sample, data are computed in the 'r' filter
-                if training_or_test == 'test' and filter_name == 'r':
-                    # need psf to compute ellipticities
-                    psf_image = PSF[i].drawImage(nx=max_stamp_size, ny=max_stamp_size, scale=pixel_scale[i])
-                    data['redshift'], data['moment_sigma'], data['e1'], data['e2'], data['mag'] = get_data(galaxies[idx_closest_to_peak], images[idx_closest_to_peak], psf_image)
+                    if s==0:
+                        # get data for the test sample, data are computed in the 'r' filter
+                        if training_or_test == 'test' and filter_name == 'r':
+                            # need psf to compute ellipticities
+                            psf_image = PSF[i].drawImage(nx=max_stamp_size, ny=max_stamp_size, scale=pixel_scale[i])
+                            data['redshift'], data['moment_sigma'], data['e1'], data['e2'], data['mag'] = get_data(galaxies[idx_closest_to_peak], images[idx_closest_to_peak], psf_image)
 
-                    # Compute data and blendedness
-                    if nb_blended_gal > 1:
-                        data['closest_redshift'], data['closest_moment_sigma'], data['closest_e1'], data['closest_e2'], data['closest_mag'] = get_data(galaxies[idx_closest_to_peak_galaxy], images[idx_closest_to_peak_galaxy], psf_image)
-                        img_central = images[idx_closest_to_peak].array
-                        img_others = np.zeros_like(img_central)
-                        for _h, image in enumerate(images):
-                            if _h!=idx_closest_to_peak:
-                                img_others += image.array
-                        #img_others = np.array([image.array.data for _h, image in enumerate(images) if _h!=idx_closest_to_peak]).sum(axis = 0)
-                        img_closest_neighbour =images[idx_closest_to_peak_galaxy].array# np.array(images[idx_closest_to_peak_galaxy].array.data)
-                        data['blendedness_total_lsst'] = utils.compute_blendedness_total(img_central, img_others)
-                        data['blendedness_closest_lsst'] = utils.compute_blendedness_single(img_central, img_closest_neighbour)
-                        data['blendedness_aperture_lsst'] = utils.compute_blendedness_aperture(img_central, img_others, data['moment_sigma'])
-                    else:
-                        data['closest_redshift'] = np.nan
-                        data['closest_moment_sigma'] = np.nan
-                        data['closest_e1'] = np.nan
-                        data['closest_e2'] = np.nan
-                        data['closest_mag'] = np.nan
-                        data['blendedness_total_lsst'] = np.nan
-                        data['blendedness_closest_lsst'] = np.nan
-                        data['blendedness_aperture_lsst'] = np.nan
+                            # Compute data and blendedness
+                            if nb_blended_gal > 1:
+                                data['closest_redshift'], data['closest_moment_sigma'], data['closest_e1'], data['closest_e2'], data['closest_mag'] = get_data(galaxies[idx_closest_to_peak_galaxy], images[idx_closest_to_peak_galaxy], psf_image)
+                                img_central = images[idx_closest_to_peak].array
+                                img_others = np.zeros_like(img_central)
+                                for _h, image in enumerate(images):
+                                    if _h!=idx_closest_to_peak:
+                                        img_others += image.array
+                                #img_others = np.array([image.array.data for _h, image in enumerate(images) if _h!=idx_closest_to_peak]).sum(axis = 0)
+                                img_closest_neighbour =images[idx_closest_to_peak_galaxy].array# np.array(images[idx_closest_to_peak_galaxy].array.data)
+                                data['blendedness_total_lsst'] = utils.compute_blendedness_total(img_central, img_others)
+                                data['blendedness_closest_lsst'] = utils.compute_blendedness_single(img_central, img_closest_neighbour)
+                                data['blendedness_aperture_lsst'] = utils.compute_blendedness_aperture(img_central, img_others, data['moment_sigma'])
+                            else:
+                                data['closest_redshift'] = np.nan
+                                data['closest_moment_sigma'] = np.nan
+                                data['closest_e1'] = np.nan
+                                data['closest_e2'] = np.nan
+                                data['closest_mag'] = np.nan
+                                data['blendedness_total_lsst'] = np.nan
+                                data['blendedness_closest_lsst'] = np.nan
+                                data['blendedness_aperture_lsst'] = np.nan
             break
 
         except RuntimeError as e:

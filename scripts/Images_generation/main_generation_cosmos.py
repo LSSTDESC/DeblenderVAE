@@ -29,6 +29,7 @@ do_peak_detection = str(sys.argv[5]).lower() == 'true' #False
 N_files = int(sys.argv[6]) #1
 nb_of_file_i = str(sys.argv[7])
 N_per_file = 10000
+do_add_shear=True
 assert training_or_test in ['training', 'validation', 'test']
 
 # Method to shift centered galaxy
@@ -67,7 +68,10 @@ for icat in trange(N_files):
     if training_or_test == 'test':
         df = pd.DataFrame(index=np.arange(N_per_file), columns=keys)
 
-    res = utils.apply_ntimes(image_generator_real, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, save_dir, used_idx, nmax_blend, 100, 27.5, method_shift, do_peak_detection))
+    #res = utils.apply_ntimes(image_generator, N_per_file, (cosmos_cat_dir, training_or_test, isolated_or_blended, save_dir, used_idx, nmax_blend, 100, 27.5, method_shift, do_peak_detection, do_add_shear))
+    res = []
+    for z in range(N_per_file):
+        res.append(image_generator(cosmos_cat_dir, training_or_test, isolated_or_blended, save_dir, used_idx, nmax_blend, 100, 27.5, method_shift, do_peak_detection, do_add_shear))
     for i in trange(N_per_file):
         if training_or_test == 'test':
             gal_noiseless, blend_noisy, data, shift = res[i]

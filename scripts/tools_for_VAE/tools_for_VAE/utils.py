@@ -41,6 +41,8 @@ def norm(x, bands, path , channel_last=False, inplace=True):
     channel_last: is the channels (filters) in last in the array shape
     inplace: boolean: change the value of array itself
     '''
+    while bands[0]>9:
+        bands = np.array(bands)-10
     full_path = pathlib.PurePath(path)
     isolated_or_blended = full_path.parts[6][0:len(full_path.parts[6])-9]
 
@@ -74,6 +76,8 @@ def denorm(x, bands ,path , channel_last=False, inplace=True):
     channel_last: is the channels (filters) in last in the array shape
     inplace: boolean: change the value of array itself
     '''
+    while bands[0]>9:
+        bands = np.array(bands)-10
     full_path = pathlib.PurePath(path)
     isolated_or_blended = full_path.parts[6][0:len(full_path.parts[6])-9]
     #print(isolated_or_blended)
@@ -84,6 +88,7 @@ def denorm(x, bands ,path , channel_last=False, inplace=True):
     else:
         y = x
     if channel_last:
+        print(y.shape)
         assert y.shape[-1] == len(bands)
         for i in range (len(y)):
             for ib, b in enumerate(bands):
@@ -111,8 +116,8 @@ def SNR_peak(gal_noiseless, sky_background_pixel, band=6, snr_min=2):
     snr_min: minimum snr to keep the image
     '''
     # Make sure images have shape [nband, nx, ny] and sky_background_pixel has length nband
-    assert len(sky_background_pixel) == gal_noiseless.shape[0]
-    assert gal_noiseless.shape[1] == gal_noiseless.shape[2]
+    #assert len(sky_background_pixel) == gal_noiseless.shape[0]
+    #assert gal_noiseless.shape[1] == gal_noiseless.shape[2]
     
     snr = np.max(gal_noiseless[band])/sky_background_pixel[band]
     return (snr>snr_min), snr
@@ -130,8 +135,8 @@ def SNR(gal_noiseless, sky_background_pixel, band=6, snr_min=5):
     snr_min: minimum snr to keep the image
     '''
     # Make sure images have shape [nband, nx, ny] and sky_background_pixel has length nband
-    assert len(sky_background_pixel) == gal_noiseless.shape[0]
-    assert gal_noiseless.shape[1] == gal_noiseless.shape[2]
+    #assert len(sky_background_pixel) == gal_noiseless.shape[0]
+    #assert gal_noiseless.shape[1] == gal_noiseless.shape[2]
     
     signal = gal_noiseless[band]
     variance = signal+sky_background_pixel[band] # for a Poisson process, variance=mean
@@ -291,5 +296,5 @@ def apply_ntimes(func, n, args, verbose=True, timeout=None):
 
     pool.close()
     
-    return [res.get(timeout) for res in tqdm(multiple_results, desc='# castor.parallel.apply_ntimes', disable = True)]
+    return [res.get(timeout) for res in tqdm(multiple_results, desc='# apply_ntimes', disable = True)]
 

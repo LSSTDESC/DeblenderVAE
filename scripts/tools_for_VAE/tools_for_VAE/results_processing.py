@@ -51,13 +51,12 @@ def processing(network, data_dir,root,test_sample,bands,r_band,im_size,batch_siz
 
     # Load data saved during sample generation
     dfs = []
-    dfs.append(pd.read_csv(os.path.join(data_dir, root+'_0_data.csv')))
+    dfs.append(pd.read_csv(os.path.join(data_dir, root+'_data.csv')))
     df = dfs[0]
     #df = pd.DataFrame()
 
     # Load test sample
     input_sample_len = len(np.load(test_sample, mmap_mode = 'c'))
-
     for j in trange(int(input_sample_len/batch_size)):
         # Resize and reshape images
         input_images = np.load(test_sample, mmap_mode = 'c')
@@ -103,7 +102,7 @@ def processing(network, data_dir,root,test_sample,bands,r_band,im_size,batch_siz
                         e_out_obs = [res_out.observed_shape.e]
 
                 except :
-                        print('error for galaxy '+str(j*400+k*100+i))
+                        print('error for galaxy '+str(j*100+k*100+i))
                         e_in = [np.nan, np.nan]
                         e_out_obs = [np.nan]
                         e_out = [np.nan, np.nan]
