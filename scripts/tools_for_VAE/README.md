@@ -1,1 +1,1 @@
-test for creating a package 
+All necessary tools to train networks and process results.
