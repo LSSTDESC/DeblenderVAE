@@ -1,7 +1,10 @@
 # Deblender_VAE
 
-Project to do deblending of galaxies (separation of overlapped galaxies on a survey image) using deep learning.
-We use two networks:
+This repository hosts the code used in Arcelin, B., Doux, C., Aubourg, E. & Roucelle, C. _Deblending galaxies with Variational Autoencoders: a joint multi-band, multi-instrument approach_. Mon. Not. R. Astron. Soc. (2020). https://arxiv.org/abs/2005.12039.
+
+This paper presents a method to deblend (i.e. isolate) overlapping galaxies in multiband astronomical survey images. The focus is on the LSST weak lensing survey and potential improvements from including images from ESA's Euclid satellite.
+
+In brief, the method uses two networks:
 - a variational autoencoder (Kingma 2014, https://arxiv.org/abs/1312.6114) to denoise isolated galaxy images.
 - and another network, which has the same architecture as the VAE, to deblend the galaxies. In this network, only the encoder is trained, since the decoder is fixed: weights are fixed from those of the VAE's decoder.
 
