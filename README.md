@@ -1,4 +1,5 @@
 # Deblender_VAE
+Warning: If you wish to use the deblender presented in this paper, an updated version of the code is available here: [https://github.com/astrodeepnet/debvader](https://github.com/astrodeepnet/debvader)
 
 This repository hosts the code used in Arcelin, B., Doux, C., Aubourg, E. & Roucelle, C. _Deblending galaxies with Variational Autoencoders: a joint multi-band, multi-instrument approach_. Mon. Not. R. Astron. Soc. (2020). https://arxiv.org/abs/2005.12039.
 
